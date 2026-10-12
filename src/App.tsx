@@ -40,7 +40,7 @@ export default function App() {
 
       <main className="content">
         {tab === 'trilha' && <Trilha onPlay={() => setTab('brincar')} onSoon={() => setToast('Esta fase chega na próxima versão.')} />}
-        {tab === 'meucubo' && <MeuCubo />}
+        {tab === 'meucubo' && <MeuCubo sound={p.sound} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} />}
         {tab === 'brincar' && <Brincar sound={p.sound} onSolve={() => { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }} />}
       </main>
 

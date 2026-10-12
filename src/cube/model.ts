@@ -9,6 +9,8 @@ export type Vec = [number, number, number];
 export interface Sticker { color: Face; n: Vec }
 export interface Piece { id: string; home: Vec; pos: Vec; stickers: Sticker[] }
 export type CubeState = Piece[];
+/** cores vistas em cada face, 9 por face (ver faceletIndex) */
+export type Facelets = Record<Face, Face[]>;
 
 export const FACES: Face[] = ['U', 'D', 'F', 'B', 'R', 'L'];
 type Axis = 0 | 1 | 2;

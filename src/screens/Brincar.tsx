@@ -81,6 +81,7 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
         <Cube3D onReady={s => { scene.current = s; s.paint(facelets(state.current)); }}
           options={{ onMove, canTurn: () => true }} />
         <span className="stage-hint">Arraste uma face para girar. Fora do cubo, vira a vista.</span>
+        <button className="view-btn" onClick={() => scene.current?.resetView()}>Verde na frente</button>
       </div>
       <p className="counter" aria-live="polite">{moves ? `${moves} ${moves === 1 ? 'giro' : 'giros'}` : mixed ? 'Cubo embaralhado: tente arrumar!' : 'Arraste uma face para girar'}</p>
       <div className="row">

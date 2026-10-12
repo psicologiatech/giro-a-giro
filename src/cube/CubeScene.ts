@@ -33,6 +33,8 @@ export class CubeScene {
   private anim: { pivot: THREE.Group; axis: 0 | 1 | 2; angle: number; t0: number; dur: number; done: () => void } | null = null;
   private queue: (() => void)[] = [];
   private yaw = 0.0; private pitch = 0; private tYaw = 0; private tPitch = 0;
+  private right = new THREE.Vector3(1, 0, 0);
+  private qy = new THREE.Quaternion(); private qp = new THREE.Quaternion();
   private drag: { x: number; y: number; yaw: number; pitch: number; hit: THREE.Intersection | null; decided: boolean } | null = null;
   private raf = 0;
   private ro: ResizeObserver;
@@ -145,6 +147,7 @@ export class CubeScene {
     this.arrow = new THREE.Group(); this.arrow.add(tube, cone); this.root.add(this.arrow);
   }
 
+  /** volta à vista padrão: branco em cima, verde na frente */
   resetView() { this.tYaw = Math.round(this.yaw / (Math.PI * 2)) * Math.PI * 2; this.tPitch = 0; }
 
   private resize() {
@@ -155,6 +158,7 @@ export class CubeScene {
     const dist = 11.6 / Math.pow(Math.min(1, this.camera.aspect), 0.85);
     this.camera.position.set(0.55, 0.45, 0.7).normalize().multiplyScalar(dist);
     this.camera.lookAt(0, 0, 0); this.camera.updateProjectionMatrix();
+    this.right.crossVectors(new THREE.Vector3(0, 1, 0), this.camera.position).normalize();
   }
 
   private frame(now: number) {
@@ -166,7 +170,10 @@ export class CubeScene {
     }
     if (this.idleSpin && !this.drag) this.tYaw += 0.004;
     this.yaw += (this.tYaw - this.yaw) * 0.14; this.pitch += (this.tPitch - this.pitch) * 0.14;
-    this.view.rotation.set(this.pitch, this.yaw, 0);
+    // gira em volta do eixo vertical e inclina em volta do eixo "direita da tela": o cubo nunca fica torto
+    this.qy.setFromAxisAngle(AXV[1], this.yaw);
+    this.qp.setFromAxisAngle(this.right, this.pitch);
+    this.view.quaternion.copy(this.qp).multiply(this.qy);
     if (this.arrow) this.arrowMat.color.setHSL(0.92, 1, 0.55 + 0.08 * Math.sin(now / 200));
     this.renderer.render(this.scene, this.camera);
   }
@@ -194,9 +201,17 @@ export class CubeScene {
         return;
       }
       this.tYaw = d.yaw + dx * 0.012;
-      this.tPitch = Math.max(-1.1, Math.min(1.1, d.pitch + dy * 0.01));
+      this.tPitch = Math.max(-1.0, Math.min(0.9, d.pitch + dy * 0.008));
     });
-    const end = () => { this.drag = null; };
+    // ao soltar, a vista se ajeita sozinha: de quarto em quarto de volta, e reta ou espiando a base
+    const end = () => {
+      if (this.drag && !this.drag.hit) {
+        const q = Math.PI / 2;
+        this.tYaw = Math.round(this.tYaw / q) * q;
+        this.tPitch = this.tPitch < -0.45 ? -0.9 : 0;
+      }
+      this.drag = null;
+    };
     c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   }
 

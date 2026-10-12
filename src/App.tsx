@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Trilha } from './screens/Trilha';
 import { Brincar } from './screens/Brincar';
 import { MeuCubo } from './screens/MeuCubo';
+import { PassoView } from './screens/Aulas';
+import { PASSOS } from './aulas/aulas';
 import { Mascot } from './components/Mascot';
 import { Confetti } from './components/Confetti';
 import { IconCamera, IconCube, IconFlame, IconPath, IconSound, IconStar } from './components/Icons';
@@ -19,14 +21,17 @@ export default function App() {
   const [p, setP] = useState<Progress>(loadProgress);
   const [toast, setToast] = useState<string | null>(null);
   const [win, setWin] = useState(false);
+  const [passo, setPasso] = useState<number | null>(null);
+  const go = (t: Tab) => { setTab(t); setPasso(null); };
+  const aula = passo ? PASSOS.find(x => x.n === passo) : undefined;
   useEffect(() => saveProgress(p), [p]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2400); return () => clearTimeout(t); }, [toast]);
 
   return (
     <div className="app">
       <header className="topbar">
-        {tab !== 'trilha' && (
-          <button className="back-btn" onClick={() => setTab('trilha')} aria-label="Voltar para a trilha">
+        {(tab !== 'trilha' || aula) && (
+          <button className="back-btn" onClick={() => go('trilha')} aria-label="Voltar para a trilha">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
             Início
           </button>
@@ -39,14 +44,16 @@ export default function App() {
       </header>
 
       <main className="content">
-        {tab === 'trilha' && <Trilha onPlay={() => setTab('brincar')} onSoon={() => setToast('Esta fase chega na próxima versão.')} />}
+        {tab === 'trilha' && !aula && <Trilha onOpen={n => setPasso(n)} onPlay={() => go('brincar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
+        {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}
+          onNext={PASSOS.some(x => x.n === aula.n + 1) ? () => setPasso(aula.n + 1) : undefined} />}
         {tab === 'meucubo' && <MeuCubo sound={p.sound} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} onSolved={() => setP(q => ({ ...earn(q, 200), solves: q.solves + 1 }))} />}
         {tab === 'brincar' && <Brincar sound={p.sound} onSolve={() => { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }} />}
       </main>
 
       <nav className="tabbar" aria-label="Seções">
         {TABS.map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
+          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => go(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
             <t.icon /><span>{t.nome}</span>
           </button>
         ))}

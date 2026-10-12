@@ -54,6 +54,7 @@ export class CubeScene {
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     this.scene.add(new THREE.AmbientLight(0xffffff, 1.6));
     const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(4, 8, 6); this.scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xffffff, 1.1); fill.position.set(-2, -8, 5); this.scene.add(fill);
     this.scene.add(this.view); this.view.add(this.root);
     this.build();
     this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(canvas);
@@ -106,7 +107,7 @@ export class CubeScene {
   setGrey(keys: string[]) { this.grey = new Set(keys); if (this.colors) this.paint(this.colors); }
 
   /** anima um giro; ao terminar, repinta com o estado seguinte */
-  turn(move: string, next: Record<Face, Face[]>, dur = 240): Promise<void> {
+  turn(move: string, next: Record<Face, Face[]>, dur = 240, grey?: string[]): Promise<void> {
     return new Promise(res => {
       const start = () => {
         const d = moveDef(move);
@@ -122,6 +123,7 @@ export class CubeScene {
           pivot.rotation.set(0, 0, 0); pivot.updateMatrixWorld(true);
           [...pivot.children].forEach(c => this.root.attach(c));
           this.root.remove(pivot);
+          if (grey) this.grey = new Set(grey);
           this.paint(next); this.anim = null; res();
           const nx = this.queue.shift(); if (nx) nx();
         } };
@@ -156,6 +158,9 @@ export class CubeScene {
   }
 
   /** volta à vista padrão: branco em cima, verde na frente */
+  /** olhar de cima (padrão) ou espiando a base */
+  look(base: boolean) { this.tPitch = base ? -0.9 : 0; }
+
   resetView() { this.tYaw = Math.round(this.yaw / (Math.PI * 2)) * Math.PI * 2; this.tPitch = 0; }
 
   private resize() {

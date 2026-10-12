@@ -1,5 +1,11 @@
 import * as THREE from 'three';
-import { FACE_DEF, NORMAL, faceletIndex, type Face, type Vec } from './model';
+import { FACE_DEF, NORMAL, ROT_DEF, faceletIndex, isRotation, type Face, type Vec } from './model';
+
+/** eixo, camada e sentido de um giro de face ou do cubo inteiro (camada 0 = o cubo todo, para x/y/z) */
+function moveDef(m: string): { axis: 0 | 1 | 2; layer: number; dir: 1 | -1; whole: boolean } {
+  if (isRotation(m)) return { ...ROT_DEF[m[0] as 'x'], layer: 0, whole: true };
+  return { ...FACE_DEF[m[0] as Face], whole: false };
+}
 
 /**
  * Desenho 3D do cubo. As peças ficam sempre no lugar; o que muda são as cores dos adesivos.
@@ -103,12 +109,14 @@ export class CubeScene {
   turn(move: string, next: Record<Face, Face[]>, dur = 240): Promise<void> {
     return new Promise(res => {
       const start = () => {
-        const d = FACE_DEF[move[0] as Face];
+        const d = moveDef(move);
         const pivot = new THREE.Group(); this.root.add(pivot);
-        this.cubies.filter(c => Math.round(c.position[AXES[d.axis]]) === d.layer).forEach(c => pivot.attach(c));
+        this.cubies.filter(c => d.whole || Math.round(c.position[AXES[d.axis]]) === d.layer).forEach(c => pivot.attach(c));
+        if (this.arrow && d.whole) this.arrow.visible = false;
         let angle = d.dir * Math.PI / 2;
         if (move.endsWith("'")) angle = -angle;
         if (move.endsWith('2')) { angle *= 2; dur *= 1.4; }
+        if (d.whole) dur *= 1.8;
         if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) dur = 60;
         this.anim = { pivot, axis: d.axis, angle, t0: performance.now(), dur, done: () => {
           pivot.rotation.set(0, 0, 0); pivot.updateMatrixWorld(true);
@@ -127,13 +135,13 @@ export class CubeScene {
     if (this.arrow) { this.root.remove(this.arrow); this.arrow.traverse(o => (o as THREE.Mesh).geometry?.dispose()); this.arrow = null; }
     for (const s of this.stickers) (s.material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
     if (!move) return;
-    const d = FACE_DEF[move[0] as Face], ax = AXES[d.axis];
+    const d = moveDef(move), ax = AXES[d.axis];
     const sg = d.dir * (move.endsWith("'") ? -1 : 1);
     const [bu, bv] = ({ x: ['y', 'z'], y: ['z', 'x'], z: ['x', 'y'] } as const)[ax];
     this.root.updateMatrixWorld(true);
     const camL = this.root.worldToLocal(this.camera.position.clone());
     const phiC = Math.atan2(camL[bv], camL[bu]);
-    const H = 1.62, span = move.endsWith('2') ? 1.6 : 1.05, pts: THREE.Vector3[] = [];
+    const H = d.whole ? 1.75 : 1.62, span = move.endsWith('2') ? 1.6 : 1.05, pts: THREE.Vector3[] = [];
     for (let i = 0; i <= 32; i++) {
       const phi = phiC - sg * span + sg * 2 * span * i / 32, c = Math.cos(phi), sn = Math.sin(phi);
       const k = H / Math.max(Math.abs(c), Math.abs(sn)) * (1 + 0.08 * Math.min(Math.abs(c), Math.abs(sn)));

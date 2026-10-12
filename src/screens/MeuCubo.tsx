@@ -9,6 +9,8 @@ import { FACES, type Face, type Facelets } from '../cube/model';
 import { STICKER_COLORS } from '../cube/CubeScene';
 import { loadMyCube, saveMyCube } from '../scan/store';
 import { sfx, buzz } from '../feedback';
+import { Montar, loadMontar, clearMontar } from './Montar';
+import type { CubeState } from '../cube/model';
 
 /** ordem de leitura. "cima"/"baixo" = cor do centro que deve aparecer na borda de cima/baixo da imagem */
 const SCAN: { f: Face; titulo: string; dica: string; cima: Face; baixo: Face }[] = [
@@ -20,10 +22,10 @@ const SCAN: { f: Face; titulo: string; dica: string; cima: Face; baixo: Face }[]
   { f: 'D', titulo: 'Por último, o amarelo', dica: 'Volte o verde para a frente. Depois vire a base amarela para a câmera: o verde fica em cima.', cima: 'F', baixo: 'B' },
 ];
 
-type Mode = 'inicio' | 'ler' | 'revisar' | 'pronto';
+type Mode = 'inicio' | 'ler' | 'revisar' | 'pronto' | 'montar';
 const emptyNet = (): Net => Object.fromEntries(FACES.map(f => [f, Array.from({ length: 9 }, (_, i) => (i === 4 ? f : null))])) as Net;
 
-export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => void }) {
+export function MeuCubo({ sound, onSaved, onSolved }: { sound: boolean; onSaved: () => void; onSolved: () => void }) {
   const saved = useMemo(loadMyCube, []);
   const [mode, setMode] = useState<Mode>(saved ? 'pronto' : 'inicio');
   const [cube, setCube] = useState<Facelets | null>(saved);
@@ -33,6 +35,7 @@ export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => voi
   const [camError, setCamError] = useState<string | null>(null);
   const [net, setNet] = useState<Net>(emptyNet);
   const [msg, setMsg] = useState<string | null>(null);
+  const [start, setStart] = useState<CubeState | null>(null);
 
   const startScan = () => { setSamples({}); setStep(0); setShot(null); setCamError(null); setMode('ler'); };
   const startPaint = () => { setNet(emptyNet()); setMsg(null); setMode('revisar'); };
@@ -66,7 +69,7 @@ export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => voi
   };
   const confirm = () => {
     if (!check(net)) { if (sound) sfx.oops(); return; }
-    saveMyCube(net as Facelets); setCube(net as Facelets);
+    saveMyCube(net as Facelets); setCube(net as Facelets); clearMontar();
     if (sound) sfx.good(); buzz([20, 30, 40]);
     setMode('pronto'); onSaved();
   };
@@ -134,11 +137,22 @@ export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => voi
     </div>
   );
 
-  return <Pronto cube={cube!} onRescan={startScan} onFix={() => { setNet(cube as Net); setMsg(null); setMode('revisar'); }}
+  if (mode === 'montar' && start) return (
+    <Montar start={start} sound={sound} onDone={onSolved} onRescan={startScan} onExit={() => setMode('pronto')} />
+  );
+
+  const montar = () => {
+    const resume = loadMontar();
+    if (resume) { setStart(resume); setMode('montar'); return; }
+    const r = fromFacelets(cube as Facelets);
+    if (!r.ok) { setNet(cube as Net); setMsg(r.message); setMode('revisar'); return; }
+    setStart(r.state); setMode('montar');
+  };
+  return <Pronto cube={cube!} resumable={!!loadMontar()} onMontar={montar} onRescan={startScan} onFix={() => { setNet(cube as Net); setMsg(null); setMode('revisar'); }}
     onForget={() => { saveMyCube(null); setCube(null); setMode('inicio'); }} />;
 }
 
-function Pronto({ cube, onRescan, onFix, onForget }: { cube: Facelets; onRescan: () => void; onFix: () => void; onForget: () => void }) {
+function Pronto({ cube, resumable, onMontar, onRescan, onFix, onForget }: { cube: Facelets; resumable: boolean; onMontar: () => void; onRescan: () => void; onFix: () => void; onForget: () => void }) {
   return (
     <div className="screen meucubo">
       <Speech mood="festa">Pronto! O cubo da tela está igual ao seu. Gire a vista para conferir as faces.</Speech>
@@ -146,9 +160,7 @@ function Pronto({ cube, onRescan, onFix, onForget }: { cube: Facelets; onRescan:
         <Cube3D onReady={s => s.paint(cube)} options={{ canTurn: () => false }} />
         <span className="stage-hint">Arraste para virar a vista.</span>
       </div>
-      <section className="card soon">
-        <p><b>Próximo passo:</b> eu vou te mostrar, um giro de cada vez, como montar <b>este</b> cubo. Está chegando na próxima versão.</p>
-      </section>
+      <button className="btn btn-pop btn-big" onClick={onMontar}>{resumable ? 'Continuar a montagem' : 'Montar meu cubo com o Pingo'}</button>
       <div className="row">
         <button className="btn" onClick={onFix}>Corrigir cores</button>
         <button className="btn" onClick={onRescan}>Ler de novo</button>

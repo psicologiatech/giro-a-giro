@@ -174,3 +174,28 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .swatch span { font-size: 10px; font-weight: 600; background: rgba(255,255,255,.85); border-radius: 6px; padding: 0 4px; color: var(--ink); }
 .net-tip { margin: -6px 0 0; font-size: 13.5px; color: var(--muted); text-align: center; }
 .stage-sm { height: min(42dvh, 360px); }
+
+/* montar */
+.montar-head { display: grid; gap: 8px; }
+.stage-pill { justify-self: start; font-family: var(--display); font-weight: 700; font-size: 15px; background: var(--surface);
+  border: 2px solid var(--edge); border-radius: 999px; padding: 3px 12px 1px; }
+.bar { height: 10px; border-radius: 99px; background: var(--edge); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--green); border-radius: 99px; transition: width .3s; }
+.stage-montar { height: min(40dvh, 360px); }
+.lance { display: grid; gap: 6px; }
+.lance p { margin: 0; }
+.lance-n { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+.move-now { display: flex; align-items: center; gap: 12px; }
+.move-big { min-width: 64px; height: 56px; padding: 6px 12px 0; border-radius: 16px; background: var(--pop); color: #fff; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 30px; box-shadow: 0 4px 0 var(--pop-lip); }
+.move-big.whole { background: var(--blue); box-shadow: 0 4px 0 var(--blue-lip); }
+.move-desc { font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.15; }
+.lance-tip { font-size: 15px; }
+.seq { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.seq span { min-width: 30px; padding: 2px 6px 0; border-radius: 8px; text-align: center; font-family: var(--display); font-weight: 700; font-size: 14px;
+  background: var(--bg); color: var(--muted); border: 1.5px solid var(--edge); }
+.seq span.done { background: #DDF5E7; color: var(--green-lip); border-color: #BFEBD2; }
+.seq span.now { background: var(--pop); color: #fff; border-color: var(--pop-lip); }
+.next-stage { font-size: 14.5px; }
+.sheet.errei { max-height: 92dvh; overflow-y: auto; }
+.pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; text-align: left; }

@@ -102,7 +102,7 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .about h2 { font-size: 23px; margin-bottom: 4px; }
 .about p { margin: 0; }
 .journey { margin: 10px 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: j; }
-.journey li { counter-increment: j; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.journey li { counter-increment: j; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; }
 .journey li::before { content: counter(j); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
   border: var(--line); font-family: var(--display); font-weight: 800; background: var(--sun); color: #1D2140; }
 .journey li:nth-child(2)::before { background: var(--pop); color: #fff; }

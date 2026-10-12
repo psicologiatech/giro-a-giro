@@ -21,9 +21,9 @@ export function Trilha({ onPlay, onSoon }: { onPlay: () => void; onSoon: () => v
         <h2>Feito para quem está começando</h2>
         <p>Nunca montou um cubo mágico? Ótimo, é para você. O caminho tem três partes:</p>
         <ol className="journey">
-          <li><b>Conhecer</b> as peças e os giros, sem pressa.</li>
-          <li><b>Montar o cubo pela primeira vez</b>, uma etapa de cada vez.</li>
-          <li><b>Treinar</b> até a mão e a lógica fazerem sozinhas.</li>
+          <li><span><b>Conhecer</b> as peças e os giros, sem pressa.</span></li>
+          <li><span><b>Montar o cubo pela primeira vez</b>, uma etapa de cada vez.</span></li>
+          <li><span><b>Treinar</b> até a mão e a lógica fazerem sozinhas.</span></li>
         </ol>
         <p className="note">As fases ainda estão sendo construídas. Enquanto isso, brinque com o cubo.</p>
       </section>

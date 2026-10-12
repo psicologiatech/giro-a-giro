@@ -7,7 +7,7 @@ import { FACE_DEF, NORMAL, faceletIndex, type Face, type Vec } from './model';
  * são repintados com o novo estado. Assim qualquer estado (inclusive lido da câmera) pode ser mostrado.
  */
 export const STICKER_COLORS: Record<Face, string> = {
-  U: '#F7F7F2', D: '#FFD233', F: '#14A85A', B: '#1F5FE0', R: '#E8352B', L: '#FF8A12',
+  U: '#F8F9FC', D: '#FFCB1F', F: '#1DB863', B: '#2F6BF0', R: '#F2453D', L: '#FF9124',
 };
 const AXES = ['x', 'y', 'z'] as const;
 const AXV = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];

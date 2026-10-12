@@ -15,8 +15,8 @@ export default defineConfig({
         short_name: 'Giro a Giro',
         description: 'Aprenda a montar o cubo mágico 3x3, um giro de cada vez.',
         lang: 'pt-BR',
-        theme_color: '#CDE7FF',
-        background_color: '#CDE7FF',
+        theme_color: '#DCEAFF',
+        background_color: '#EEF4FF',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

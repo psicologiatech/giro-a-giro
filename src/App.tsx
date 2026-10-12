@@ -3,6 +3,7 @@ import { Trilha } from './screens/Trilha';
 import { Brincar } from './screens/Brincar';
 import { MeuCubo } from './screens/MeuCubo';
 import { PassoView } from './screens/Aulas';
+import { Intro } from './screens/Intro';
 import { PASSOS, TODOS } from './aulas/aulas';
 import { loadFeitos, marcarAte, passoAtual, saveFeitos } from './aulas/progresso';
 import { Mascot } from './components/Mascot';
@@ -32,19 +33,19 @@ export default function App() {
     if (!feitos.includes(n)) { setP(q => earn(q, 30)); setWin(false); }
     setFeitos(f => marcarAte(f, n));
     const prox = TODOS.find(e => e.n === n + 1);
-    if (prox?.pronto) { setPasso(n + 1); setToast(`Passo ${n} feito! Agora, passo ${n + 1}.`); }
-    else { setPasso(null); setToast(n >= 8 ? 'Os 8 passos feitos!' : `Passo ${n} feito! O passo ${n + 1} chega em breve.`); }
+    if (prox?.pronto) { setPasso(n + 1); setToast(n === 0 ? 'Agora, o passo 1!' : `Passo ${n} feito! Agora, passo ${n + 1}.`); }
+    else { setPasso(null); setToast(n === 0 ? 'Pronto!' : n >= 8 ? 'Os 8 passos feitos!' : `Passo ${n} feito! O passo ${n + 1} chega em breve.`); }
   };
   /** o cubo lido pela câmera está no passo n */
   const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };
-  const aula = passo ? PASSOS.find(x => x.n === passo) : undefined;
+  const aula = passo !== null ? PASSOS.find(x => x.n === passo) : undefined;
   useEffect(() => saveProgress(p), [p]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2400); return () => clearTimeout(t); }, [toast]);
 
   return (
     <div className="app">
       <header className="topbar">
-        {(tab !== 'trilha' || aula) && (
+        {(tab !== 'trilha' || passo !== null) && (
           <button className="back-btn" onClick={() => go('trilha')} aria-label="Voltar para a trilha">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
             Início
@@ -58,7 +59,8 @@ export default function App() {
       </header>
 
       <main className="content">
-        {tab === 'trilha' && !aula && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('brincar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
+        {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
+        {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('brincar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
         {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}
           onFinish={() => terminar(aula.n)} />}
         {tab === 'meucubo' && <MeuCubo sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} onSolved={() => setP(q => ({ ...earn(q, 200), solves: q.solves + 1 }))} />}

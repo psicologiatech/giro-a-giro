@@ -44,3 +44,27 @@ describe('aulas', () => {
     expect(at(esq, [-1, 1, 1]).stickers.find(t => t.n[2] === 1)?.color).toBe(facelets(esq).F[4]);
   });
 });
+
+import { demoInicio } from './aulas';
+import { emQuePasso } from './progresso';
+describe('demonstração de cada passo', () => {
+  const brancosNoLugar = (s: CubeState, n: 2 | 3) => s.filter(p => p.stickers.length === n && p.stickers.some(t => t.color === 'U')).filter(p => {
+    const c: Record<string, number[]> = {}; for (const q of s) if (q.stickers.length === 1) c[q.stickers[0].color] = q.stickers[0].n;
+    return p.stickers.every(t => t.n.every((v, i) => v === c[t.color][i]));
+  }).length;
+  for (const passo of PASSOS) it(`passo ${passo.n}: começa no passo e cada parte avança uma peça`, () => {
+    let s = demoInicio(passo);
+    expect(emQuePasso(s)).toBe(passo.n);
+    const conta = (st: CubeState) => passo.n === 1
+      ? st.filter(p => p.stickers.length === 2 && white(p) && white(p)!.n[1] === 1).length
+      : brancosNoLugar(st, passo.n === 2 ? 2 : 3);
+    let antes = conta(s);
+    for (const parte of passo.demo.partes) {
+      s = applyAlg(s, parte.m);
+      const agora = conta(s);
+      expect(agora, parte.legenda).toBe(/vira o cubo/i.test(parte.legenda) ? antes : antes + 1);
+      antes = agora;
+    }
+    expect(emQuePasso(s)).toBeGreaterThan(passo.n);
+  });
+});

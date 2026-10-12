@@ -28,6 +28,8 @@ export interface Passo {
   peca: string;
   /** o que fazer no cubo de verdade depois de cada peça */
   repetir: string;
+  /** o passo inteiro sendo feito, para ver antes de começar (sem 'inicio', parte do fim e desfaz) */
+  demo: { inicio?: string; partes: { legenda: string; m: string }[] };
   /** cubo como fica quando a situação está resolvida */
   meta: () => CubeState;
   /** cubo como fica no fim do passo, para mostrar o objetivo */
@@ -62,6 +64,15 @@ export const PASSOS: Passo[] = [
     segurar: 'Amarelo em cima, branco embaixo.',
     dica: 'Antes de subir uma peça, olhe o topo: se já tem branco no lugar, gire o topo para limpar o espaço.',
     peca: 'meio branco', repetir: 'Faça igual no seu cubo. Depois procure o próximo meio branco que ainda não está no topo.',
+    demo: {
+      inicio: "L2 R' L2 R2 F' D' B2 U L2 R2 F L U B2 L2 B R B L F'",
+      partes: [
+        { legenda: '1º meio branco sobe para o topo', m: 'F' },
+        { legenda: '2º meio branco sobe', m: 'R' },
+        { legenda: '3º meio branco: deita e sobe', m: "L B'" },
+        { legenda: '4º: limpa o espaço e sobe', m: "U' F" },
+      ],
+    },
     meta: brancosNoTopo, fim: brancosNoTopo, fimDeBaixo: false,
     foco: whiteEdge,
     pronto: s => s.filter(whiteEdge).every(p => p.pos[1] === 1 && p.stickers.find(t => t.color === 'U')!.n[1] === 1),
@@ -96,7 +107,19 @@ export const PASSOS: Passo[] = [
     objetivo: 'Levar cada meio branco do topo para baixo, no lado da cor certa. No fim, a cruz branca fica embaixo.',
     segurar: 'Amarelo em cima. A cor que você vai resolver fica de frente para você.',
     dica: 'Olhe a outra cor do meio branco, a que fica de lado. Ela tem que bater com o centro antes de descer.',
-    peca: 'meio branco', repetir: 'Faça igual no seu cubo. Depois vire o cubo inteiro para a próxima cor (vermelho, azul, laranja) ficar de frente.',
+    peca: 'meio branco', repetir: 'Faça igual no seu cubo. Depois vire o cubo inteiro para a próxima cor ficar de frente.',
+    demo: {
+      inicio: 'F2 R2 U B2 U2 L2 U2',
+      partes: [
+        { legenda: '1º: gira o topo até a cor bater e desce', m: "U' F2" },
+        { legenda: 'Vira o cubo: próxima cor de frente', m: 'y' },
+        { legenda: '2º: a cor já bate, só desce', m: 'F2' },
+        { legenda: 'Vira o cubo de novo', m: 'y' },
+        { legenda: '3º: gira o topo e desce', m: 'U F2' },
+        { legenda: 'Vira o cubo de novo', m: 'y' },
+        { legenda: '4º: gira o topo duas vezes e desce', m: 'U2 F2' },
+      ],
+    },
     meta: () => applyAlg(amareloEmCima(), 'R2 B2 L2'), fim: amareloEmCima, fimDeBaixo: true,
     foco: whiteEdge,
     pronto: (s, meta) => baseIgual(s, meta, whiteEdge),
@@ -127,6 +150,15 @@ export const PASSOS: Passo[] = [
     segurar: 'Cruz branca embaixo, amarelo em cima. O lugar da quina fica na frente, embaixo.',
     dica: 'Gire o topo até a quina ficar bem em cima do lugar dela: a cor do lado do branco bate com o centro.',
     peca: 'quina branca', repetir: 'Faça igual no seu cubo. Depois vire o cubo inteiro para o próximo lugar vazio ficar na frente.',
+    demo: {
+      partes: [
+        { legenda: '1ª quina: janela à direita', m: "R U R'" },
+        { legenda: '2ª quina: gira o topo, janela à esquerda', m: "U' L' U' L" },
+        { legenda: 'Vira o cubo: os lugares vazios vêm para a frente', m: 'y2' },
+        { legenda: '3ª quina: janela no telhado', m: "R U2 R' U' R U R'" },
+        { legenda: '4ª quina: estava embaixo, mas errada', m: "L' U' L U L' U' L" },
+      ],
+    },
     meta: amareloEmCima, fim: amareloEmCima, fimDeBaixo: true,
     foco: isWhite,
     pronto: (s, meta) => baseIgual(s, meta, isWhite),
@@ -201,6 +233,13 @@ export { clone };
 
 /** os 8 passos com título e cor, e se a aula já existe */
 export const TODOS = [
+  { n: 0, titulo: 'Conheça o cubo', cor: 'yellow' as Passo['cor'], pronto: true },
   ...PASSOS.map(p => ({ n: p.n, titulo: p.titulo, cor: p.cor, pronto: true })),
   ...PROXIMOS.map(p => ({ ...p, pronto: false })),
 ];
+
+/** o cubo do começo da demonstração do passo */
+export function demoInicio(p: Passo): CubeState {
+  if (p.demo.inicio) return applyAlg(amareloEmCima(), p.demo.inicio);
+  return applyAlg(p.fim(), invertAlg(p.demo.partes.flatMap(x => x.m.split(' '))));
+}

@@ -5,7 +5,7 @@ import { Confetti } from '../components/Confetti';
 import type { CubeScene } from '../cube/CubeScene';
 import { applyMove, clone, facelets, FACES, invertMove, type CubeState } from '../cube/model';
 import { describe } from '../cube/describe';
-import { greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
+import { demoInicio, greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 import { loadPecas, savePecas } from '../aulas/progresso';
 
@@ -43,10 +43,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
         <p><b>Objetivo:</b> {passo.objetivo}</p>
         <p className="segurar"><span className="hold" aria-hidden="true"><i style={{ background: 'var(--yellow)' }} /><i style={{ background: '#F8F9FC' }} /></span><span><b>Como segurar:</b> {passo.segurar}</span></p>
       </section>
-      <div className="stage stage-sm">
-        <Cube3D onReady={s => { s.setGrey(greyKeys(fim, passo.foco)); s.paint(facelets(fim)); s.look(passo.fimDeBaixo); }} options={{ canTurn: () => false }} />
-        <span className="stage-hint">Assim fica no fim. Cinza é o que ainda não importa.</span>
-      </div>
+      <PassoDemo passo={passo} fim={fim} />
       {pecas >= 4 ? (
         <section className="card pecas-card completo">
           <Mascot mood="trofeu" size={84} />
@@ -157,7 +154,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   };
 
   /** o professor faz: anima a partir de onde está, um lance por vez, devagar */
-  const mostrar = async (soUm: boolean) => {
+  const mostrar = async (soUm: boolean, demo = false) => {
     if (busy.current || done) return;
     busy.current = true; setMsg(null); setDica(true);
     if (pos < 0) { await resetar(true); }
@@ -174,15 +171,29 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       await sleep(350);
     }
     if (!alive.current) return;
+    if (demo) {
+      await sleep(1100); if (!alive.current) return;
+      setPlaying(false); await resetar(); setVisto(true);
+      return;
+    }
     setPlaying(false); busy.current = false; last.current = null;
     settle(false);
   };
+  /** ao abrir a situação, o professor faz uma vez; depois o cubo volta e é a sua vez */
+  const [visto, setVisto] = useState(treino);
+  useEffect(() => {
+    if (treino) return;
+    const t = setTimeout(() => mostrar(false, true), 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resetar = async (keepBusy = false) => {
     busy.current = true;
     state.current = clone(start); last.current = null;
     scene.current?.setGrey(greyKeys(start, passo.foco)); scene.current?.paint(facelets(start));
     setPos(0); setDone(false); setMsg(null); if (treino) setDica(false);
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
     if (!keepBusy) busy.current = false;
   };
 
@@ -206,10 +217,15 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       </div>
 
       {msg && <p className="warn-msg" role="status">{msg}</p>}
+      {!treino && !done && !msg && (
+        <p className={`vez-msg ${visto ? 'sua' : ''}`} role="status">{visto
+          ? <><b>Agora é a sua vez.</b> Arraste a face no cubo da tela, ou toque em Só o próximo giro.</>
+          : playing ? <><b>Olhe primeiro:</b> o professor faz, você só observa.</> : <>Preparando a situação…</>}</p>
+      )}
 
       {!done && (!treino || dica) && (
         <>
-          <button className="btn btn-pop btn-big" onClick={() => mostrar(false)} disabled={playing}>{playing ? 'Olhe o cubo…' : pos > 0 ? 'Continuar devagar' : 'Mostrar devagar'}</button>
+          <button className="btn btn-pop btn-big" onClick={() => mostrar(false)} disabled={playing}>{playing ? 'Olhe o cubo…' : pos > 0 ? 'Continuar devagar' : visto && !treino ? 'Ver de novo devagar' : 'Mostrar devagar'}</button>
           <div className="row">
             <button className="btn" onClick={() => resetar()} disabled={playing}>Do começo</button>
             <button className="btn" onClick={() => mostrar(true)} disabled={playing}>Só o próximo giro</button>
@@ -281,6 +297,53 @@ function Pecas({ feitas, agora }: { feitas: number; agora?: number }) {
   return (
     <div className="pecas" role="img" aria-label={`${feitas} de 4 peças prontas`}>
       {[1, 2, 3, 4].map(k => <span key={k} className={k <= feitas ? 'ok' : k === agora ? 'now' : ''}>{k <= feitas ? '✓' : k}</span>)}
+    </div>
+  );
+}
+
+/** o cubo do passo: mostra como fica no fim e, num toque, o passo inteiro sendo feito */
+function PassoDemo({ passo, fim }: { passo: Passo; fim: CubeState }) {
+  const scene = useRef<CubeScene | null>(null);
+  const alive = useRef(true);
+  const [legenda, setLegenda] = useState<string | null>(null);
+  const [giro, setGiro] = useState<string | null>(null);
+  const [tocando, setTocando] = useState(false);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+
+  const mostrarFim = () => { const s = scene.current; if (!s) return; s.setGrey(greyKeys(fim, passo.foco)); s.paint(facelets(fim)); s.look(passo.fimDeBaixo); };
+  const tocar = async () => {
+    const s = scene.current; if (!s || tocando) return;
+    setTocando(true);
+    const st = demoInicio(passo);
+    s.resetView(); s.setGrey(greyKeys(st, passo.foco)); s.paint(facelets(st));
+    setLegenda('Assim começa'); setGiro(null);
+    await sleep(1200);
+    for (const parte of passo.demo.partes) {
+      if (!alive.current) return;
+      setLegenda(parte.legenda);
+      for (const m of parte.m.split(' ')) {
+        if (!alive.current) return;
+        setGiro(describe(m)); s.hint(m); await sleep(450); s.hint(null);
+        applyMove(st, m);
+        await s.turn(m, facelets(st), m.endsWith('2') ? 900 : 700, greyKeys(st, passo.foco));
+        await sleep(250);
+      }
+      setGiro(null); await sleep(700);
+    }
+    if (!alive.current) return;
+    setLegenda('Pronto! Assim fica no fim.'); s.look(passo.fimDeBaixo);
+    setTocando(false);
+  };
+
+  return (
+    <div className="stage stage-sm passo-demo">
+      <Cube3D onReady={s => { scene.current = s; mostrarFim(); }} options={{ canTurn: () => false }} />
+      {legenda && <span className="destaque">{legenda}</span>}
+      {giro && <span className="demo-giro">{giro}</span>}
+      {!tocando && (
+        <button className="btn btn-pop demo-btn" onClick={tocar}>▶ {legenda ? 'Ver de novo' : 'Ver o passo inteiro'}</button>
+      )}
+      {!tocando && !legenda && <span className="stage-hint">Assim fica no fim. Cinza é o que ainda não importa.</span>}
     </div>
   );
 }

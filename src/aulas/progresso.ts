@@ -9,9 +9,9 @@ const KEY = 'giroagiro.passos.v1';
 export function loadFeitos(): number[] { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
 export function saveFeitos(f: number[]) { try { localStorage.setItem(KEY, JSON.stringify([...new Set(f)].sort((a, b) => a - b))); } catch { /* sem armazenamento */ } }
 /** marca este passo e todos os anteriores como feitos */
-export const marcarAte = (feitos: number[], n: number) => [...new Set([...feitos, ...Array.from({ length: n }, (_, i) => i + 1)])];
-/** o passo da vez: o primeiro que ainda não foi feito (9 = cubo montado) */
-export const passoAtual = (feitos: number[]) => { for (let n = 1; n <= 8; n++) if (!feitos.includes(n)) return n; return 9; };
+export const marcarAte = (feitos: number[], n: number) => [...new Set([...feitos, ...Array.from({ length: n + 1 }, (_, i) => i)])];
+/** o passo da vez: o primeiro que ainda não foi feito (0 = conhecer o cubo; 9 = tudo feito) */
+export const passoAtual = (feitos: number[]) => { for (let n = 0; n <= 8; n++) if (!feitos.includes(n)) return n; return 9; };
 
 const eq = (a: Vec, b: Vec) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 

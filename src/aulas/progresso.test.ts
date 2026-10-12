@@ -24,7 +24,8 @@ describe('em que passo está o cubo', () => {
     expect(emQuePasso(applyAlg(clone(z), "F2 U L R' F2 L' R U F2"))).toBe(8);  // só os meios trocados
   });
   it('progresso: o passo da vez é o primeiro não feito', () => {
-    expect(passoAtual([])).toBe(1);
+    expect(passoAtual([])).toBe(0);
+    expect(passoAtual(marcarAte([], 0))).toBe(1);
     expect(passoAtual(marcarAte([], 2))).toBe(3);
     expect(passoAtual(marcarAte([], 8))).toBe(9);
   });

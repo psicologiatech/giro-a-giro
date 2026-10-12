@@ -30,8 +30,7 @@ export function Mascot({ mood = 'feliz', size = 96 }: { mood?: Mood; size?: numb
         <circle cx={75 + look.dx} cy={46.5 + look.dy} r="2" fill="#fff" />
         {/* bico */}
         {mood === 'uau'
-          ? <g><path d="M52 58 L68 58 L60 63 Z" fill={ORANGE} stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M53 66 L67 66 L60 71 Z" fill="#E66A00" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" /></g>
+          ? <path d="M51 58 Q60 54 69 58 L63 63 L67 66 Q60 72 53 66 L57 63 Z" fill={ORANGE} stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" />
           : <path d="M52 59 Q60 56 68 59 Q60 68 52 59 Z" fill={ORANGE} stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" />}
         {/* cubinho no colo */}
         <g transform="translate(48 80)">

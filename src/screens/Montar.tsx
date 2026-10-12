@@ -43,11 +43,16 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
 
   const animate = (m: string, dur?: number) => { applyMove(state.current, m); return scene.current!.turn(m, facelets(state.current), dur); };
 
-  const feito = async () => {
+  const half = useRef<string | null>(null);   // metade feita de um giro duplo (ex.: R de um R2)
+  /** se havia meia volta feita na tela, desfaz antes de qualquer outra ação */
+  const undoHalf = async () => { if (half.current) { const h = half.current; half.current = null; await animate(invertMove(h), 200); } };
+
+  const feito = () => advance(true);
+  const advance = async (animated: boolean) => {
     if (busy.current || !cur) return;
     busy.current = true; scene.current?.hint(null);
     if (sound) sfx.click(); buzz(10);
-    await animate(cur.move, isWholeCube(cur.move) ? 380 : 300);
+    if (animated) { await undoHalf(); await animate(cur.move, isWholeCube(cur.move) ? 380 : 300); }
     saveMontar(state.current);
     const next = steps[i + 1];
     setNote(null);
@@ -61,7 +66,9 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
     setI(i + 1); busy.current = false;
   };
   const voltar = async () => {
-    if (busy.current || i === 0) return;
+    if (busy.current) return;
+    if (half.current) { busy.current = true; await undoHalf(); scene.current?.hint(cur?.move ?? null); setNote(null); busy.current = false; return; }
+    if (i === 0) return;
     busy.current = true;
     const prev = steps[i - 1];
     await animate(invertMove(prev.move));
@@ -70,6 +77,7 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
   const verDeNovo = async () => {
     if (busy.current || !cur) return;
     busy.current = true; scene.current?.hint(null);
+    await undoHalf();
     await animate(cur.move, 650); await new Promise(r => setTimeout(r, 350)); await animate(invertMove(cur.move), 250);
     scene.current?.hint(cur.move); busy.current = false;
   };
@@ -77,6 +85,7 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
   const fizOutro = async (x: string) => {
     setErrei(false); setStageDone(null);
     busy.current = true;
+    await undoHalf();
     await animate(x, 450);
     saveMontar(state.current);
     const fix: Step = { chunk: cur ? cur.chunk : steps[steps.length - 1].chunk, move: invertMove(x), fix: true };
@@ -84,6 +93,23 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
     setNote('Sem problema! Agora a tela está igual ao seu cubo. Primeiro, desfaça aquele giro.');
     if (sound) sfx.oops();
     busy.current = false;
+  };
+
+  /** a pessoa girou o cubo da tela com o dedo: se for o giro pedido, conta como Feito */
+  const onScreenMove = async (m: string) => {
+    if (busy.current || !cur || intro || stageDone || errei || done) return;
+    const exp = cur.move;
+    if (isWholeCube(exp)) { setNote('Para virar o cubo inteiro, vire na mão e toque em Feito.'); return; }
+    if (m === exp) { half.current = null; return advance(true); }
+    if (exp.endsWith('2') && m[0] === exp[0]) {
+      busy.current = true;
+      if (!half.current) { half.current = m; await animate(m, 260); setNote('Isso! Mais uma vez para o mesmo lado.'); scene.current?.hint(exp); }
+      else if (half.current === m) { half.current = null; busy.current = false; return advance(false); }
+      else { await undoHalf(); setNote('Voltou a meia volta. Gire duas vezes para o mesmo lado.'); scene.current?.hint(exp); }
+      busy.current = false; return;
+    }
+    if (sound) sfx.oops(); buzz([20, 40, 20]);
+    setNote(`Esse foi o ${m}. A seta pede ${exp}: ${describe(exp).toLowerCase()}.`);
   };
 
   if (plan.error) return (
@@ -101,7 +127,7 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
         <div className="bar" aria-hidden="true"><i style={{ width: `${(i / Math.max(1, steps.length)) * 100}%` }} /></div>
       </div>
       <div className="stage stage-montar">
-        <Cube3D onReady={s => { scene.current = s; s.paint(facelets(state.current)); }} options={{ canTurn: () => false }} />
+        <Cube3D onReady={s => { scene.current = s; s.paint(facelets(state.current)); }} options={{ canTurn: () => true, onMove: onScreenMove }} />
         <button className="view-btn" onClick={() => scene.current?.resetView()}>Endireitar</button>
       </div>
 
@@ -137,7 +163,7 @@ export function Montar({ start, sound, onDone, onRescan, onExit }: {
           <div className="sheet">
             <Mascot mood="aponta" size={130} />
             <h2>Vamos montar o seu cubo!</h2>
-            <p>Segure o cubo <b>igual à tela</b>. A seta rosa mostra cada giro. Faça no seu cubo e toque em <b>Feito</b>.</p>
+            <p>Segure o cubo <b>igual à tela</b>. A seta rosa mostra cada giro. Faça no seu cubo e toque em <b>Feito</b>, ou faça o mesmo giro aqui na tela, arrastando a face.</p>
             <p>Errou? Tudo bem. Toque em <b>Errei um giro</b> e eu te ajudo a voltar.</p>
             <button className="btn btn-pop btn-big" onClick={() => setIntro(false)}>Começar</button>
           </div>

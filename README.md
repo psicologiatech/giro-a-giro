@@ -2,7 +2,7 @@
 
 Um jogo para aprender a montar o cubo mágico 3x3, um giro de cada vez. Feito em português, para qualquer pessoa.
 
-Ilustrações do Pingo: Karol Alves.
+Ilustrações do Pingo: geradas com o Gemini (Google), a partir da ideia e direção da Karol Alves.
 
 **Jogar:** https://psicologiatech.github.io/giro-a-giro/
 

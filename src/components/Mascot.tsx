@@ -1,5 +1,5 @@
 /**
- * Pingo, o mascote. Ilustrações feitas pela Karol para o Giro a Giro (public/pingo/).
+ * Pingo, o mascote. Ilustrações geradas com o Gemini a partir da ideia da Karol (public/pingo/).
  * Cada pose tem um papel:
  *  oi       boas-vindas, conversa normal
  *  aponta   dicas e instruções ("olha aqui")

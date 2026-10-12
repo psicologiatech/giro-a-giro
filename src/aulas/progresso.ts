@@ -1,0 +1,38 @@
+/**
+ * Em que passo a pessoa está.
+ * - feitos: passos que ela marcou como prontos no cubo de verdade (guardado no aparelho)
+ * - emQuePasso: olha um cubo (lido pela câmera) e diz em que passo ele está
+ */
+import type { CubeState, Face, Piece, Vec } from '../cube/model';
+
+const KEY = 'giroagiro.passos.v1';
+export function loadFeitos(): number[] { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
+export function saveFeitos(f: number[]) { try { localStorage.setItem(KEY, JSON.stringify([...new Set(f)].sort((a, b) => a - b))); } catch { /* sem armazenamento */ } }
+/** marca este passo e todos os anteriores como feitos */
+export const marcarAte = (feitos: number[], n: number) => [...new Set([...feitos, ...Array.from({ length: n }, (_, i) => i + 1)])];
+/** o passo da vez: o primeiro que ainda não foi feito (9 = cubo montado) */
+export const passoAtual = (feitos: number[]) => { for (let n = 1; n <= 8; n++) if (!feitos.includes(n)) return n; return 9; };
+
+const eq = (a: Vec, b: Vec) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+
+/** em que passo está este cubo (1 a 8; 9 = montado). Vale em qualquer posição do cubo. */
+export function emQuePasso(s: CubeState): number {
+  const centro = {} as Record<Face, Vec>;
+  for (const p of s) if (p.stickers.length === 1) centro[p.stickers[0].color] = p.stickers[0].n;
+  const certa = (p: Piece) => p.stickers.every(t => eq(t.n, centro[t.color]));
+  const tem = (p: Piece, c: Face) => p.stickers.some(t => t.color === c);
+  const olha = (p: Piece, c: Face, para: Face) => eq(p.stickers.find(t => t.color === c)!.n, centro[para]);
+  const meios = s.filter(p => p.stickers.length === 2), quinas = s.filter(p => p.stickers.length === 3);
+  const W = 'U', Y = 'D'; // no modelo, branco é U e amarelo é D
+
+  const brancos = meios.filter(p => tem(p, W));
+  if (!brancos.every(certa)) return brancos.every(p => olha(p, W, Y)) ? 2 : 1;
+  if (!quinas.filter(p => tem(p, W)).every(certa)) return 3;
+  if (!meios.filter(p => !tem(p, W) && !tem(p, Y)).every(certa)) return 4;
+  const amarelos = meios.filter(p => tem(p, Y)), qAmarelas = quinas.filter(p => tem(p, Y));
+  if (!amarelos.every(p => olha(p, Y, Y))) return 5;
+  if (!qAmarelas.every(p => olha(p, Y, Y))) return 6;
+  if (!qAmarelas.every(certa)) return 7;
+  if (!amarelos.every(certa)) return 8;
+  return 9;
+}

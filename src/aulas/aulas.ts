@@ -191,3 +191,9 @@ export function greyKeys(s: CubeState, foco: (p: Piece) => boolean): string[] {
   return out;
 }
 export { clone };
+
+/** os 8 passos com título e cor, e se a aula já existe */
+export const TODOS = [
+  ...PASSOS.map(p => ({ n: p.n, titulo: p.titulo, cor: p.cor, pronto: true })),
+  ...PROXIMOS.map(p => ({ ...p, pronto: false })),
+];

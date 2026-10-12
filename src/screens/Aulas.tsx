@@ -9,8 +9,8 @@ import { greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
-export function PassoView({ passo, sound, onEarn, onNext }: {
-  passo: Passo; sound: boolean; onEarn: (xp: number) => void; onNext?: () => void;
+export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
+  passo: Passo; feito: boolean; sound: boolean; onEarn: (xp: number) => void; onFinish: () => void;
 }) {
   const [caso, setCaso] = useState<Caso | null>(null);
   const [treino, setTreino] = useState(false);
@@ -22,6 +22,7 @@ export function PassoView({ passo, sound, onEarn, onNext }: {
       onSee={() => setTreino(false)}
       onDone={() => onEarn(treino ? 15 : 5)}
       onTrain={() => setTreino(true)}
+      onFinish={onFinish}
       onAnother={() => { const others = passo.casos.filter(c => c !== caso); setCaso(others[Math.floor(Math.random() * others.length)] ?? caso); setTreino(true); }} />
   );
 
@@ -39,6 +40,11 @@ export function PassoView({ passo, sound, onEarn, onNext }: {
         <Cube3D onReady={s => { s.setGrey(greyKeys(fim, passo.foco)); s.paint(facelets(fim)); s.look(passo.fimDeBaixo); }} options={{ canTurn: () => false }} />
         <span className="stage-hint">Assim fica no fim. Cinza é o que ainda não importa.</span>
       </div>
+      <section className={`card ja-assim ${feito ? 'ok' : ''}`}>
+        <p><b>{feito ? 'Você já marcou este passo como feito.' : 'O seu cubo já está assim?'}</b> {feito ? 'Pode treinar de novo quando quiser.' : 'Então pule para o próximo.'}</p>
+        {!feito && <button className="btn btn-pop" onClick={onFinish}>Sim! Ir para o passo {passo.n + 1}</button>}
+        {feito && <button className="btn" onClick={onFinish}>Ir para o passo {passo.n + 1}</button>}
+      </section>
       <Speech mood="aponta">{passo.dica}</Speech>
       <h3 className="sec-title">Como o seu cubo está?</h3>
       <ul className="casos">
@@ -53,7 +59,6 @@ export function PassoView({ passo, sound, onEarn, onNext }: {
         ))}
       </ul>
       <button className="btn btn-pop btn-big" onClick={() => { setTreino(true); setCaso(passo.casos[Math.floor(Math.random() * passo.casos.length)]); }}>Treinar este passo</button>
-      {onNext && <button className="btn" onClick={onNext}>Ir para o passo {passo.n + 1}</button>}
     </div>
   );
 }
@@ -63,9 +68,9 @@ const QUARTER = FACES.flatMap(f => [f, f + "'"]);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** mostra uma situação e a fórmula do professor, giro a giro; no treino, a pessoa faz sozinha */
-function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain }: {
+function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish }: {
   passo: Passo; caso: Caso; treino: boolean; sound: boolean;
-  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void;
+  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void;
 }) {
   const start = useMemo(() => setupOf(passo, caso), [passo, caso]);
   const meta = useMemo(passo.meta, [passo]);
@@ -195,7 +200,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
           <Confetti />
           <Mascot mood={treino ? 'trofeu' : 'festa'} size={96} />
           <div>
-            <h3>{treino ? 'Você fez sozinha!' : 'Resolvido!'}</h3>
+            <h3>{treino ? 'Você fez sem ajuda!' : 'Resolvido!'}</h3>
             <p>{treino ? 'É assim que a mão aprende. Mais uma?' : 'Agora faça no seu cubo de verdade. Depois, tente aqui sem ajuda.'}</p>
           </div>
           <div className="row">
@@ -204,6 +209,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
               ? <button className="btn btn-pop" onClick={onAnother}>Outra situação</button>
               : <button className="btn btn-pop" onClick={onTrain}>Agora eu faço</button>}
           </div>
+          <button className="link-btn fim-passo" onClick={onFinish}>O passo {passo.n} já ficou pronto no meu cubo: ir para o passo {passo.n + 1}</button>
         </section>
       ) : treino && !dica ? (
         <section className="card treino-card">

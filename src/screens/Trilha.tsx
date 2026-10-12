@@ -1,36 +1,59 @@
 import { Speech } from '../components/Mascot';
 import { IconLock } from '../components/Icons';
-import { PASSOS, PROXIMOS } from '../aulas/aulas';
+import { TODOS } from '../aulas/aulas';
 
-/** os 8 passos, na ordem das aulas do professor */
-const TODOS = [...PASSOS.map(p => ({ n: p.n, titulo: p.titulo, cor: p.cor, pronto: true })), ...PROXIMOS.map(p => ({ ...p, pronto: false }))];
-
-export function Trilha({ onOpen, onPlay, onSoon }: { onOpen: (n: number) => void; onPlay: () => void; onSoon: () => void }) {
+export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
+  feitos: number[]; atual: number; onOpen: (n: number) => void; onPlay: () => void; onSoon: () => void;
+}) {
+  const vez = TODOS.find(e => e.n === atual);
   return (
     <div className="screen trilha">
-      <Speech>Oi, eu sou o Pingo! Vamos montar o cubo um passo de cada vez, do jeito que o professor ensina.</Speech>
-      <section className="about" aria-label="Como funciona">
-        <h2>Feito para quem está começando</h2>
-        <p>São 8 passos. Em cada um você vê:</p>
-        <ol className="journey">
-          <li><span><b>O objetivo</b> e como segurar o cubo.</span></li>
-          <li><span><b>As situações</b> que podem aparecer no seu cubo, e o que fazer em cada uma.</span></li>
-          <li><span><b>O treino</b>: você faz sozinha, até a mão lembrar.</span></li>
-        </ol>
-        <p className="note">Segue a ordem das aulas do Manual do Mundo (professor Renan Cerpe). Os passos 4 a 8 estão chegando.</p>
-      </section>
+      {atual === 1 && feitos.length === 0 ? (
+        <Speech>Oi, eu sou o Pingo! Vamos montar o cubo um passo de cada vez, do jeito que o professor ensina.</Speech>
+      ) : atual > 8 ? (
+        <Speech mood="trofeu">Você passou pelos 8 passos! Agora é treinar até a mão fazer sozinha.</Speech>
+      ) : vez?.pronto ? (
+        <Speech mood="aponta">Que bom te ver de novo! Agora é a vez do <b>passo {atual}</b>.</Speech>
+      ) : (
+        <Speech mood="festa">Você terminou o passo {atual - 1}! O passo {atual} chega na próxima versão. Enquanto isso, treine os anteriores.</Speech>
+      )}
+
+      {vez?.pronto && (
+        <button className="btn btn-pop btn-big continuar" onClick={() => onOpen(atual)}>
+          <small>{feitos.length ? 'Continuar' : 'Começar'}</small>
+          Passo {atual} · {vez.titulo}
+        </button>
+      )}
+
+      {feitos.length === 0 && (
+        <section className="about" aria-label="Como funciona">
+          <h2>Feito para quem está começando</h2>
+          <p>São 8 passos. Em cada um você vê:</p>
+          <ol className="journey">
+            <li><span><b>O objetivo</b> e como segurar o cubo.</span></li>
+            <li><span><b>As situações</b> que podem aparecer no seu cubo, e o que fazer em cada uma.</span></li>
+            <li><span><b>O treino</b>: você faz sem ajuda, até a mão lembrar.</span></li>
+          </ol>
+          <p className="note">Segue a ordem das aulas do Manual do Mundo (professor Renan Cerpe). Os passos 4 a 8 estão chegando.</p>
+        </section>
+      )}
+
       <ol className="path" aria-label="Os 8 passos">
-        {TODOS.map((e, i) => (
-          <li key={e.n} className="path-step" style={{ ['--x' as string]: `${Math.round(Math.sin(i * 1.1) * 72)}px` }}>
-            <button className={`node ${e.pronto ? '' : 'locked'}`} onClick={() => (e.pronto ? onOpen(e.n) : onSoon())}
-              aria-label={`Passo ${e.n}, ${e.titulo}${e.pronto ? '' : ': em breve'}`}
-              style={{ ['--c' as string]: `var(--${e.cor})`, ['--lip' as string]: `var(--${e.cor}-lip)` }}>
-              <span className="num">{e.n}</span>
-              {!e.pronto && <span className="lock"><IconLock /></span>}
-            </button>
-            <span className="node-label">{e.titulo}</span>
-          </li>
-        ))}
+        {TODOS.map((e, i) => {
+          const feito = feitos.includes(e.n), agora = e.n === atual;
+          return (
+            <li key={e.n} className={`path-step ${agora ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(i * 1.1) * 72)}px` }}>
+              {agora && <span className="agora-tag">agora</span>}
+              <button className={`node ${e.pronto ? '' : 'locked'} ${feito ? 'feito' : ''}`} onClick={() => (e.pronto ? onOpen(e.n) : onSoon())}
+                aria-label={`Passo ${e.n}, ${e.titulo}${feito ? ', feito' : agora ? ', é a vez dele' : ''}${e.pronto ? '' : ': em breve'}`}
+                style={{ ['--c' as string]: `var(--${e.cor})`, ['--lip' as string]: `var(--${e.cor}-lip)` }}>
+                <span className="num">{e.n}</span>
+                {feito ? <span className="check" aria-hidden="true">✓</span> : !e.pronto && <span className="lock"><IconLock /></span>}
+              </button>
+              <span className="node-label">{e.titulo}</span>
+            </li>
+          );
+        })}
       </ol>
       <button className="btn btn-big" onClick={onPlay}>Brincar com o cubo livre</button>
     </div>

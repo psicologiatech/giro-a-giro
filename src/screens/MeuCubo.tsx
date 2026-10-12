@@ -11,6 +11,8 @@ import { loadMyCube, saveMyCube } from '../scan/store';
 import { sfx, buzz } from '../feedback';
 import { Montar, loadMontar, clearMontar } from './Montar';
 import type { CubeState } from '../cube/model';
+import { emQuePasso } from '../aulas/progresso';
+import { TODOS } from '../aulas/aulas';
 
 /** ordem de leitura. "cima"/"baixo" = cor do centro que deve aparecer na borda de cima/baixo da imagem */
 const SCAN: { f: Face; titulo: string; dica: string; cima: Face; baixo: Face }[] = [
@@ -25,7 +27,7 @@ const SCAN: { f: Face; titulo: string; dica: string; cima: Face; baixo: Face }[]
 type Mode = 'inicio' | 'ler' | 'revisar' | 'pronto' | 'montar';
 const emptyNet = (): Net => Object.fromEntries(FACES.map(f => [f, Array.from({ length: 9 }, (_, i) => (i === 4 ? f : null))])) as Net;
 
-export function MeuCubo({ sound, onSaved, onSolved }: { sound: boolean; onSaved: () => void; onSolved: () => void }) {
+export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso }: { sound: boolean; onSaved: () => void; onSolved: () => void; onOpenPasso: (n: number) => void }) {
   const saved = useMemo(loadMyCube, []);
   const [mode, setMode] = useState<Mode>(saved ? 'pronto' : 'inicio');
   const [cube, setCube] = useState<Facelets | null>(saved);
@@ -148,14 +150,27 @@ export function MeuCubo({ sound, onSaved, onSolved }: { sound: boolean; onSaved:
     if (!r.ok) { setNet(cube as Net); setMsg(r.message); setMode('revisar'); return; }
     setStart(r.state); setMode('montar');
   };
-  return <Pronto cube={cube!} resumable={!!loadMontar()} onMontar={montar} onRescan={startScan} onFix={() => { setNet(cube as Net); setMsg(null); setMode('revisar'); }}
+  return <Pronto cube={cube!} onOpenPasso={onOpenPasso} resumable={!!loadMontar()} onMontar={montar} onRescan={startScan} onFix={() => { setNet(cube as Net); setMsg(null); setMode('revisar'); }}
     onForget={() => { saveMyCube(null); setCube(null); setMode('inicio'); }} />;
 }
 
-function Pronto({ cube, resumable, onMontar, onRescan, onFix, onForget }: { cube: Facelets; resumable: boolean; onMontar: () => void; onRescan: () => void; onFix: () => void; onForget: () => void }) {
+function Pronto({ cube, resumable, onMontar, onRescan, onFix, onForget, onOpenPasso }: { cube: Facelets; resumable: boolean; onOpenPasso: (n: number) => void; onMontar: () => void; onRescan: () => void; onFix: () => void; onForget: () => void }) {
+  const r = fromFacelets(cube);
+  const n = r.ok ? emQuePasso(r.state) : 0;
+  const passo = TODOS.find(e => e.n === n);
   return (
     <div className="screen meucubo">
       <Speech mood="festa">Pronto! O cubo da tela está igual ao seu. Gire a vista para conferir as faces.</Speech>
+      {n === 9 ? (
+        <section className="card ja-assim ok"><p><b>Seu cubo está montado!</b> Embaralhe e leia de novo para treinar.</p></section>
+      ) : passo && (
+        <section className="card ja-assim">
+          <p>Olhei o seu cubo: ele está no <b>passo {n} · {passo.titulo}</b>.{n === 2 ? ' O passo 1 já está feito.' : n > 2 && ` Os passos 1 ${n === 3 ? 'e 2' : `a ${n - 1}`} já estão feitos.`}</p>
+          {passo.pronto
+            ? <button className="btn btn-pop" onClick={() => onOpenPasso(n)}>Ir para o passo {n}</button>
+            : <p className="note">A aula do passo {n} chega em breve. Enquanto isso, a montagem com o Pingo leva você até o fim.</p>}
+        </section>
+      )}
       <div className="stage stage-sm">
         <Cube3D onReady={s => s.paint(cube)} options={{ canTurn: () => false }} />
         <span className="stage-hint">Arraste para virar a vista.</span>

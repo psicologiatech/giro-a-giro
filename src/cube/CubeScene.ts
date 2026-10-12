@@ -152,7 +152,7 @@ export class CubeScene {
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
-    const dist = 10.2 / Math.pow(Math.min(1, this.camera.aspect), 0.85);
+    const dist = 11.6 / Math.pow(Math.min(1, this.camera.aspect), 0.85);
     this.camera.position.set(0.55, 0.45, 0.7).normalize().multiplyScalar(dist);
     this.camera.lookAt(0, 0, 0); this.camera.updateProjectionMatrix();
   }

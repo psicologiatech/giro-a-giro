@@ -16,7 +16,7 @@ const ETAPAS = [
 export function Trilha({ onPlay, onSoon }: { onPlay: () => void; onSoon: () => void }) {
   return (
     <div className="screen trilha">
-      <Speech>Oi, eu sou o Gira! As fases estão sendo montadas. Enquanto isso, que tal brincar com o cubo?</Speech>
+      <Speech>Oi, eu sou o Pingo! As fases estão sendo montadas. Enquanto isso, que tal brincar com o cubo?</Speech>
       <button className="btn btn-pop btn-big" onClick={onPlay}>Brincar com o cubo</button>
       <ol className="path" aria-label="Trilha de fases">
         {ETAPAS.map((e, i) => (

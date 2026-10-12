@@ -25,8 +25,14 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
+        {tab !== 'trilha' && (
+          <button className="back-btn" onClick={() => setTab('trilha')} aria-label="Voltar para a trilha">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            Início
+          </button>
+        )}
         <span className="chip" title="Dias seguidos"><IconFlame />{p.streak}</span>
-        <span className="chip" title="Pontos"><IconStar />{p.xp} · nível {level(p.xp)}</span>
+        <span className="chip" title={`Pontos · nível ${level(p.xp)}`}><IconStar />{p.xp}</span>
         <button className="icon-btn" onClick={() => setP({ ...p, sound: !p.sound })} aria-label={p.sound ? 'Desligar sons' : 'Ligar sons'}>
           <IconSound on={p.sound} />
         </button>

@@ -57,7 +57,7 @@ export default function App() {
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Cubo montado">
           <Confetti />
           <div className="sheet">
-            <Mascot mood="uau" size={110} />
+            <Mascot mood="festa" size={150} />
             <h2>Você montou o cubo!</h2>
             <p>+50 pontos. Já são {p.solves} {p.solves === 1 ? 'cubo montado' : 'cubos montados'}.</p>
             <button className="btn btn-pop btn-big" onClick={() => setWin(false)}>Continuar</button>

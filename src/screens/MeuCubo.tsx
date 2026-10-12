@@ -126,7 +126,7 @@ export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => voi
 
   if (mode === 'revisar') return (
     <div className="screen meucubo">
-      <Speech mood={msg ? 'pensando' : 'feliz'}>{msg ?? 'Confira as cores. Se alguma estiver errada, toque nela para trocar.'}</Speech>
+      <Speech mood={msg ? 'hmm' : 'aponta'}>{msg ?? 'Confira as cores. Se alguma estiver errada, toque nela para trocar.'}</Speech>
       <FaceNet net={net} onChange={n => { setNet(n); setMsg(null); }} />
       <p className="net-tip">O cubo aberto: branco em cima, verde no meio, amarelo embaixo.</p>
       <button className="btn btn-pop btn-big" onClick={confirm}>Está igual ao meu cubo</button>
@@ -141,7 +141,7 @@ export function MeuCubo({ sound, onSaved }: { sound: boolean; onSaved: () => voi
 function Pronto({ cube, onRescan, onFix, onForget }: { cube: Facelets; onRescan: () => void; onFix: () => void; onForget: () => void }) {
   return (
     <div className="screen meucubo">
-      <Speech mood="uau">Pronto! O cubo da tela está igual ao seu. Gire a vista para conferir as faces.</Speech>
+      <Speech mood="festa">Pronto! O cubo da tela está igual ao seu. Gire a vista para conferir as faces.</Speech>
       <div className="stage stage-sm">
         <Cube3D onReady={s => s.paint(cube)} options={{ canTurn: () => false }} />
         <span className="stage-hint">Arraste para virar a vista.</span>

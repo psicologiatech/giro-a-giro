@@ -45,18 +45,17 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .row .btn { flex: 1 1 0; min-width: 0; padding: 12px 6px; font-size: 15px; }
 
 /* mascote e balão */
-.speech { display: flex; align-items: flex-end; gap: 8px; }
+.speech { display: flex; align-items: flex-end; gap: 6px; }
+.mascot { flex: none; user-select: none; }
 .bubble { position: relative; flex: 1; margin: 0 0 20px; background: var(--surface); border: 2px solid var(--edge); border-radius: 20px;
   padding: 12px 15px; font-size: 15.5px; box-shadow: 0 3px 0 var(--edge); }
 .bubble::before { content: ''; position: absolute; left: -10px; bottom: 16px; width: 16px; height: 16px; background: var(--surface);
   border-left: 2px solid var(--edge); border-bottom: 2px solid var(--edge); transform: rotate(45deg); }
 @media (prefers-reduced-motion: no-preference) {
-  .mascot-body { animation: bob 2.6s ease-in-out infinite; transform-origin: 60px 100px; }
-  @keyframes bob { 50% { transform: translateY(-3px) rotate(-2deg); } }
-  .mood-uau .mascot-body { animation: hop .5s ease-out 3; }
-  @keyframes hop { 50% { transform: translateY(-12px) scale(1.04); } }
-  .wing-l { animation: wave 2.6s ease-in-out infinite; transform-origin: 30px 60px; }
-  @keyframes wave { 50% { transform: rotate(-10deg); } }
+  .mascot { animation: bob 2.8s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes bob { 50% { transform: translateY(-3px) rotate(-1.5deg); } }
+  .mood-festa, .mood-trofeu { animation: hop .55s ease-out 3; }
+  @keyframes hop { 50% { transform: translateY(-14px) scale(1.04); } }
 }
 
 /* cartão "para quem é" */

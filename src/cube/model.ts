@@ -20,6 +20,11 @@ export const FACE_DEF: Record<Face, { axis: Axis; layer: number; dir: 1 | -1 }> 
   U: { axis: 1, layer: 1, dir: -1 }, D: { axis: 1, layer: -1, dir: 1 },
   F: { axis: 2, layer: 1, dir: -1 }, B: { axis: 2, layer: -1, dir: 1 },
 };
+/** giros do cubo inteiro: x acompanha o R, y acompanha o U, z acompanha o F */
+export const ROT_DEF: Record<'x' | 'y' | 'z', { axis: Axis; dir: 1 | -1 }> = {
+  x: { axis: 0, dir: -1 }, y: { axis: 1, dir: -1 }, z: { axis: 2, dir: -1 },
+};
+export const isRotation = (m: string) => m[0] === 'x' || m[0] === 'y' || m[0] === 'z';
 export const NORMAL: Record<Face, Vec> = {
   R: [1, 0, 0], L: [-1, 0, 0], U: [0, 1, 0], D: [0, -1, 0], F: [0, 0, 1], B: [0, 0, -1],
 };
@@ -56,15 +61,17 @@ export const clone = (s: CubeState): CubeState =>
 
 /** sinal do ângulo (regra da mão direita) de um giro como "R", "R'" ou "R2" */
 export function moveSign(m: string): number {
-  const d = FACE_DEF[m[0] as Face];
+  const d = isRotation(m) ? ROT_DEF[m[0] as 'x'] : FACE_DEF[m[0] as Face];
   return m.endsWith("'") ? -d.dir : d.dir;
 }
 
+/** aplica um giro de face (R, U', F2…) ou do cubo inteiro (x, y', z2…) */
 export function applyMove(state: CubeState, m: string): CubeState {
-  const d = FACE_DEF[m[0] as Face];
+  const rotation = isRotation(m);
+  const d = rotation ? { ...ROT_DEF[m[0] as 'x'], layer: 99 } : FACE_DEF[m[0] as Face];
   if (!d) throw new Error(`Giro desconhecido: ${m}`);
   const s = moveSign(m), times = m.endsWith('2') ? 2 : 1;
-  for (let t = 0; t < times; t++) for (const p of state) if (p.pos[d.axis] === d.layer) {
+  for (let t = 0; t < times; t++) for (const p of state) if (rotation || p.pos[d.axis] === d.layer) {
     p.pos = rot(p.pos, d.axis, s);
     p.stickers.forEach(st => { st.n = rot(st.n, d.axis, s); });
   }
@@ -82,6 +89,11 @@ export function applyAlg(state: CubeState, alg: string | string[]): CubeState {
 const eq = (a: Vec, b: Vec) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 export const pieceSolved = (p: Piece) => eq(p.pos, p.home) && p.stickers.every(t => faceOfNormal(t.n) === t.color);
 export const isSolved = (s: CubeState) => s.every(pieceSolved);
+/** montado em qualquer posição: cada face de uma cor só (vale mesmo depois de virar o cubo inteiro) */
+export function isSolvedAnyWay(s: CubeState): boolean {
+  const f = facelets(s);
+  return FACES.every(face => f[face].every(c => c === f[face][4]));
+}
 
 /** cor visível em cada posição de adesivo: facelets[face][0..8], lidos de cima-esquerda olhando para a face */
 export function facelets(state: CubeState): Record<Face, Face[]> {

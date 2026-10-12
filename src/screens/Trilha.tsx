@@ -16,7 +16,17 @@ const ETAPAS = [
 export function Trilha({ onPlay, onSoon }: { onPlay: () => void; onSoon: () => void }) {
   return (
     <div className="screen trilha">
-      <Speech>Oi, eu sou o Pingo! As fases estão sendo montadas. Enquanto isso, que tal brincar com o cubo?</Speech>
+      <Speech>Oi, eu sou o Pingo! Vou te ajudar a montar o cubo pela primeira vez.</Speech>
+      <section className="about" aria-label="Para quem é o Giro a Giro">
+        <h2>Feito para quem está começando</h2>
+        <p>Nunca montou um cubo mágico? Ótimo, é para você. O caminho tem três partes:</p>
+        <ol className="journey">
+          <li><b>Conhecer</b> as peças e os giros, sem pressa.</li>
+          <li><b>Montar o cubo pela primeira vez</b>, uma etapa de cada vez.</li>
+          <li><b>Treinar</b> até a mão e a lógica fazerem sozinhas.</li>
+        </ol>
+        <p className="note">As fases ainda estão sendo construídas. Enquanto isso, brinque com o cubo.</p>
+      </section>
       <button className="btn btn-pop btn-big" onClick={onPlay}>Brincar com o cubo</button>
       <ol className="path" aria-label="Trilha de fases">
         {ETAPAS.map((e, i) => (

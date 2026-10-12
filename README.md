@@ -6,6 +6,16 @@ Um jogo para aprender a montar o cubo mágico 3x3, um giro de cada vez. Feito em
 
 No celular, abra o link e escolha **Adicionar à tela inicial**. O app ganha ícone, abre em tela cheia e funciona sem internet.
 
+## Para quem é
+
+Para iniciantes: quem nunca montou um cubo mágico e quer conseguir pela primeira vez. O app acompanha três momentos:
+
+1. **Conhecer** o cubo: as peças, as cores e os giros.
+2. **Montar pela primeira vez**, uma etapa do método das camadas de cada vez.
+3. **Treinar**, repetindo até que a memória muscular e a lógica de cada etapa fiquem assimiladas e a pessoa monte sem ajuda.
+
+Não é um app de speedcubing. A meta é a primeira conquista e a autonomia depois dela.
+
 ## A ideia
 
 A maioria dos tutoriais mostra um cubo de exemplo e pede que o seu fique igual. Quase nunca fica, e a pessoa trava. O Giro a Giro faz o contrário: você mostra o seu cubo pela câmera e o app ensina a partir dele, mostrando o próximo giro com uma seta no próprio cubo.

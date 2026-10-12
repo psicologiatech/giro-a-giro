@@ -13,7 +13,7 @@ function moveDef(m: string): { axis: 0 | 1 | 2; layer: number; dir: 1 | -1; whol
  * são repintados com o novo estado. Assim qualquer estado (inclusive lido da câmera) pode ser mostrado.
  */
 export const STICKER_COLORS: Record<Face, string> = {
-  U: '#F8F9FC', D: '#FFCB1F', F: '#1DB863', B: '#2F6BF0', R: '#F2453D', L: '#FF9124',
+  U: '#F8F9FC', D: '#FFE714', F: '#1DB863', B: '#2F6BF0', R: '#F2453D', L: '#FF8216',
 };
 const AXES = ['x', 'y', 'z'] as const;
 const AXV = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];

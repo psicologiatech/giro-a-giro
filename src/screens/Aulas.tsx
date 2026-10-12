@@ -7,6 +7,7 @@ import { applyMove, clone, facelets, FACES, invertMove, type CubeState } from '.
 import { describe } from '../cube/describe';
 import { greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
+import { loadPecas, savePecas } from '../aulas/progresso';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
 export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
@@ -15,6 +16,10 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
   const [caso, setCaso] = useState<Caso | null>(null);
   const [treino, setTreino] = useState(false);
   const fim = useMemo(passo.fim, [passo]);
+  const [pecas, setPecas] = useState(() => loadPecas(passo.n));
+  useEffect(() => savePecas(passo.n, pecas), [passo.n, pecas]);
+  /** mais uma peça pronta no cubo de verdade */
+  const maisUma = () => { setCaso(null); setTreino(false); setPecas(k => Math.min(4, k + 1)); if (sound) sfx.good(); buzz(20); };
 
   if (caso) return (
     <Player key={`${caso.id}-${treino}`} passo={passo} caso={caso} treino={treino} sound={sound}
@@ -23,6 +28,8 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
       onDone={() => onEarn(treino ? 15 : 5)}
       onTrain={() => setTreino(true)}
       onFinish={onFinish}
+      pecaN={Math.min(4, pecas + 1)}
+      onPiece={maisUma}
       onAnother={() => { const others = passo.casos.filter(c => c !== caso); setCaso(others[Math.floor(Math.random() * others.length)] ?? caso); setTreino(true); }} />
   );
 
@@ -40,14 +47,27 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
         <Cube3D onReady={s => { s.setGrey(greyKeys(fim, passo.foco)); s.paint(facelets(fim)); s.look(passo.fimDeBaixo); }} options={{ canTurn: () => false }} />
         <span className="stage-hint">Assim fica no fim. Cinza é o que ainda não importa.</span>
       </div>
-      <section className={`card ja-assim ${feito ? 'ok' : ''}`}>
-        <p><b>{feito ? 'Você já marcou este passo como feito.' : 'O seu cubo já está assim?'}</b> {feito ? 'Pode treinar de novo quando quiser.' : 'Então pule para o próximo.'}</p>
-        {!feito && <button className="btn btn-pop" onClick={onFinish}>Sim! Ir para o passo {passo.n + 1}</button>}
-        {feito && <button className="btn" onClick={onFinish}>Ir para o passo {passo.n + 1}</button>}
-      </section>
+      {pecas >= 4 ? (
+        <section className="card pecas-card completo">
+          <Mascot mood="trofeu" size={84} />
+          <div>
+            <h3>Passo {passo.n} pronto no seu cubo!</h3>
+            <p>As 4 peças estão no lugar.</p>
+          </div>
+          <button className="btn btn-pop btn-big" onClick={onFinish}>Ir para o passo {passo.n + 1}</button>
+          <button className="link-btn" onClick={() => setPecas(0)}>Começar este passo de novo</button>
+        </section>
+      ) : (
+        <section className="card pecas-card">
+          <Pecas feitas={pecas} />
+          <p><b>{pecas === 0 ? `Vamos resolver um ${passo.peca} de cada vez.` : `${pecas} de 4 prontas!`}</b> Como está o {pecas === 0 ? 'primeiro' : 'próximo'} {passo.peca} no seu cubo?</p>
+          <button className="link-btn" onClick={maisUma}>Esse {passo.peca} já está certo: pular para o próximo</button>
+          <button className="link-btn" onClick={onFinish}>{feito ? `Ir para o passo ${passo.n + 1}` : `O passo inteiro já está pronto no meu cubo: ir para o passo ${passo.n + 1}`}</button>
+        </section>
+      )}
       <Speech mood="aponta">{passo.dica}</Speech>
-      <h3 className="sec-title">Como o seu cubo está?</h3>
-      <ul className="casos">
+      {pecas < 4 && <h3 className="sec-title">Escolha a situação igual à do seu cubo</h3>}
+      {pecas < 4 && <ul className="casos">
         {passo.casos.map((c, i) => (
           <li key={c.id}>
             <button className="caso" onClick={() => { setTreino(false); setCaso(c); }}>
@@ -57,8 +77,8 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
             </button>
           </li>
         ))}
-      </ul>
-      <button className="btn btn-pop btn-big" onClick={() => { setTreino(true); setCaso(passo.casos[Math.floor(Math.random() * passo.casos.length)]); }}>Treinar este passo</button>
+      </ul>}
+      <button className="btn btn-big" onClick={() => { setTreino(true); setCaso(passo.casos[Math.floor(Math.random() * passo.casos.length)]); }}>Treinar este passo</button>
     </div>
   );
 }
@@ -68,9 +88,9 @@ const QUARTER = FACES.flatMap(f => [f, f + "'"]);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** mostra uma situação e a fórmula do professor, giro a giro; no treino, a pessoa faz sozinha */
-function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish }: {
+function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish, pecaN, onPiece }: {
   passo: Passo; caso: Caso; treino: boolean; sound: boolean;
-  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void;
+  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; pecaN: number; onPiece: () => void;
 }) {
   const start = useMemo(() => setupOf(passo, caso), [passo, caso]);
   const meta = useMemo(passo.meta, [passo]);
@@ -96,6 +116,8 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   const [playing, setPlaying] = useState(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const listRef = useRef<HTMLOListElement>(null);
+  const doneRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (done) setTimeout(() => doneRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 300); }, [done]);
   useEffect(() => { listRef.current?.querySelector('li.now')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [pos]);
 
   const lanceAtual = pos >= 0 && pos < path.qs.length ? path.qs[pos].lance : -1;
@@ -176,7 +198,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       <h2 className="player-title">{caso.nome}</h2>
       {!treino && <p className="player-ver">{caso.ver}</p>}
 
-      <div className="stage stage-player">
+      <div className={`stage stage-player ${done ? "solto" : ""}`}>
         <Cube3D onReady={s => { scene.current = s; s.setGrey(greyKeys(start, passo.foco)); s.paint(facelets(start)); }}
           options={{ canTurn: () => !busy.current && !done, onMove }} />
         <button className="view-btn" onClick={() => scene.current?.resetView()}>Endireitar</button>
@@ -196,21 +218,33 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       )}
 
       {done ? (
-        <section className="card feito" aria-live="polite">
-          <Confetti />
-          <Mascot mood={treino ? 'trofeu' : 'festa'} size={96} />
-          <div>
-            <h3>{treino ? 'Você fez sem ajuda!' : 'Resolvido!'}</h3>
-            <p>{treino ? 'É assim que a mão aprende. Mais uma?' : 'Agora faça no seu cubo de verdade. Depois, tente aqui sem ajuda.'}</p>
-          </div>
-          <div className="row">
-            <button className="btn" onClick={() => resetar()}>De novo</button>
-            {treino
-              ? <button className="btn btn-pop" onClick={onAnother}>Outra situação</button>
-              : <button className="btn btn-pop" onClick={onTrain}>Agora eu faço</button>}
-          </div>
-          <button className="link-btn fim-passo" onClick={onFinish}>O passo {passo.n} já ficou pronto no meu cubo: ir para o passo {passo.n + 1}</button>
-        </section>
+        treino ? (
+          <section className="card feito" aria-live="polite">
+            <Confetti />
+            <Mascot mood="trofeu" size={96} />
+            <div>
+              <h3>Você fez sem ajuda!</h3>
+              <p>É assim que a mão aprende. Mais uma?</p>
+            </div>
+            <div className="row">
+              <button className="btn" onClick={() => resetar()}>De novo</button>
+              <button className="btn btn-pop" onClick={onAnother}>Outra situação</button>
+            </div>
+            <button className="link-btn fim-passo" onClick={onBack}>Voltar ao passo {passo.n}</button>
+          </section>
+        ) : (
+          <section className="card feito" aria-live="polite">
+            <Confetti />
+            <Mascot mood="festa" size={96} />
+            <div>
+              <h3>Isso! Agora no seu cubo</h3>
+              <p>{passo.repetir}</p>
+            </div>
+            <Pecas feitas={pecaN - 1} agora={pecaN} />
+            <button className="btn btn-pop btn-big" onClick={onPiece}>{pecaN >= 4 ? `Fiz! As 4 estão prontas` : `Fiz no meu cubo: ${passo.peca} ${pecaN} de 4`}</button>
+            <button className="link-btn fim-passo" onClick={() => resetar()}>Quero ver de novo</button>
+          </section>
+        )
       ) : treino && !dica ? (
         <section className="card treino-card">
           <p>Segure como no passo: <b>{passo.segurar.toLowerCase()}</b></p>
@@ -237,6 +271,16 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
         </section>
       )}
 
+      <div ref={doneRef} aria-hidden="true" />
+    </div>
+  );
+}
+
+/** as 4 peças do passo: prontas, a da vez e as que faltam */
+function Pecas({ feitas, agora }: { feitas: number; agora?: number }) {
+  return (
+    <div className="pecas" role="img" aria-label={`${feitas} de 4 peças prontas`}>
+      {[1, 2, 3, 4].map(k => <span key={k} className={k <= feitas ? 'ok' : k === agora ? 'now' : ''}>{k <= feitas ? '✓' : k}</span>)}
     </div>
   );
 }

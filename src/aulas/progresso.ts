@@ -36,3 +36,10 @@ export function emQuePasso(s: CubeState): number {
   if (!amarelos.every(certa)) return 8;
   return 9;
 }
+
+/** quantas peças do passo já ficaram prontas no cubo de verdade (até 4) */
+const PK = 'giroagiro.pecas.v1';
+export function loadPecas(n: number): number { try { return JSON.parse(localStorage.getItem(PK) || '{}')[n] ?? 0; } catch { return 0; } }
+export function savePecas(n: number, v: number) {
+  try { const all = JSON.parse(localStorage.getItem(PK) || '{}'); all[n] = v; localStorage.setItem(PK, JSON.stringify(all)); } catch { /* sem armazenamento */ }
+}

@@ -267,3 +267,18 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .ja-assim.ok { background: #F2FBF6; border-color: #BFEBD2; box-shadow: 0 4px 0 #BFEBD2; }
 .ja-assim .note { color: var(--muted); font-size: 14px; }
 .fim-passo { grid-column: 1 / -1; justify-self: center; text-align: center; }
+
+/* peças do passo (uma de cada vez, 4 no total) */
+.pecas { display: flex; gap: 8px; }
+.pecas span { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-family: var(--display); font-weight: 800;
+  font-size: 16px; padding-top: 2px; background: var(--bg); border: 2px solid var(--edge); color: var(--muted); }
+.pecas span.ok { background: var(--green); border-color: var(--green-lip); color: #fff; box-shadow: 0 2px 0 var(--green-lip); }
+.pecas span.now { background: var(--pop); border-color: var(--pop-lip); color: #fff; box-shadow: 0 2px 0 var(--pop-lip); }
+.pecas-card { display: grid; gap: 10px; }
+.pecas-card p { margin: 0; }
+.pecas-card .link-btn { justify-self: start; padding-left: 0; }
+.pecas-card.completo { grid-template-columns: auto 1fr; align-items: center; background: #F2FBF6; border-color: #BFEBD2; box-shadow: 0 4px 0 #BFEBD2; }
+.pecas-card.completo h3 { margin: 0; font-family: var(--display); font-size: 21px; }
+.pecas-card.completo .btn, .pecas-card.completo .link-btn { grid-column: 1 / -1; }
+.feito .pecas, .feito .btn-big { grid-column: 1 / -1; }
+.player .stage-player.solto { position: relative; }

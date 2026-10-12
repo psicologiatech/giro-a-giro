@@ -24,6 +24,10 @@ export interface Passo {
   segurar: string;
   /** o "porquê" ou o cuidado principal, em uma frase */
   dica: string;
+  /** a peça que se resolve uma de cada vez (são 4 por passo) */
+  peca: string;
+  /** o que fazer no cubo de verdade depois de cada peça */
+  repetir: string;
   /** cubo como fica quando a situação está resolvida */
   meta: () => CubeState;
   /** cubo como fica no fim do passo, para mostrar o objetivo */
@@ -57,6 +61,7 @@ export const PASSOS: Passo[] = [
     objetivo: 'Juntar os 4 meios brancos em volta do centro amarelo, com o branco virado para cima.',
     segurar: 'Amarelo em cima, branco embaixo.',
     dica: 'Antes de subir uma peça, olhe o topo: se já tem branco no lugar, gire o topo para limpar o espaço.',
+    peca: 'meio branco', repetir: 'Faça igual no seu cubo. Depois procure o próximo meio branco que ainda não está no topo.',
     meta: brancosNoTopo, fim: brancosNoTopo, fimDeBaixo: false,
     foco: whiteEdge,
     pronto: s => s.filter(whiteEdge).every(p => p.pos[1] === 1 && p.stickers.find(t => t.color === 'U')!.n[1] === 1),
@@ -91,6 +96,7 @@ export const PASSOS: Passo[] = [
     objetivo: 'Levar cada meio branco do topo para baixo, no lado da cor certa. No fim, a cruz branca fica embaixo.',
     segurar: 'Amarelo em cima. A cor que você vai resolver fica de frente para você.',
     dica: 'Olhe a outra cor do meio branco, a que fica de lado. Ela tem que bater com o centro antes de descer.',
+    peca: 'meio branco', repetir: 'Faça igual no seu cubo. Depois vire o cubo inteiro para a próxima cor (vermelho, azul, laranja) ficar de frente.',
     meta: () => applyAlg(amareloEmCima(), 'R2 B2 L2'), fim: amareloEmCima, fimDeBaixo: true,
     foco: whiteEdge,
     pronto: (s, meta) => baseIgual(s, meta, whiteEdge),
@@ -120,6 +126,7 @@ export const PASSOS: Passo[] = [
     objetivo: 'Colocar as 4 quinas brancas. No fim, a face branca e a primeira camada ficam prontas.',
     segurar: 'Cruz branca embaixo, amarelo em cima. O lugar da quina fica na frente, embaixo.',
     dica: 'Gire o topo até a quina ficar bem em cima do lugar dela: a cor do lado do branco bate com o centro.',
+    peca: 'quina branca', repetir: 'Faça igual no seu cubo. Depois vire o cubo inteiro para o próximo lugar vazio ficar na frente.',
     meta: amareloEmCima, fim: amareloEmCima, fimDeBaixo: true,
     foco: isWhite,
     pronto: (s, meta) => baseIgual(s, meta, isWhite),

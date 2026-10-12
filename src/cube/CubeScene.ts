@@ -186,7 +186,7 @@ export class CubeScene {
       const d = this.drag; if (!d) return;
       const dx = e.clientX - d.x, dy = e.clientY - d.y;
       if (d.hit) {
-        if (!d.decided && Math.hypot(dx, dy) > 14) {
+        if (!d.decided && Math.hypot(dx, dy) > 9) {
           d.decided = true;
           const m = this.moveFromDrag(d.hit, dx, dy);
           if (m) this.opts.onMove?.(m);

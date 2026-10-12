@@ -1,7 +1,17 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { STICKER_COLORS } from '../cube/CubeScene';
 import { Cube3D } from '../components/Cube3D';
 import type { CubeScene } from '../cube/CubeScene';
-import { applyMove, facelets, invertMove, isSolved, randomScramble, solved, type CubeState } from '../cube/model';
+import { applyMove, facelets, invertMove, isSolved, randomScramble, solved, type CubeState, type Face } from '../cube/model';
+
+const PAD: { m: string; dica: string }[] = [
+  { m: 'R', dica: 'direita sobe' }, { m: "R'", dica: 'direita desce' },
+  { m: 'L', dica: 'esquerda desce' }, { m: "L'", dica: 'esquerda sobe' },
+  { m: 'U', dica: 'topo p/ esquerda' }, { m: "U'", dica: 'topo p/ direita' },
+  { m: 'D', dica: 'base p/ direita' }, { m: "D'", dica: 'base p/ esquerda' },
+  { m: 'F', dica: 'frente, horário' }, { m: "F'", dica: 'frente, anti-horário' },
+  { m: 'B', dica: 'trás, horário' }, { m: "B'", dica: 'trás, anti-horário' },
+];
 import { sfx, buzz } from '../feedback';
 
 export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => void }) {
@@ -11,6 +21,7 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
   const [moves, setMoves] = useState(0);
   const [mixed, setMixed] = useState(false);
   const busy = useRef(false);
+  const [pad, setPad] = useState(false);
 
   const doMove = (m: string, opts: { record?: boolean; dur?: number; quiet?: boolean } = {}) => {
     applyMove(state.current, m);
@@ -32,6 +43,17 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
     });
   };
   const mixedRef = useRef(false);
+  const onMoveRef = useRef(onMove); onMoveRef.current = onMove;
+
+  // teclado no computador: R, L, U, D, F, B; com Shift faz ao contrário
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toUpperCase();
+      if (k.length === 1 && 'RLUDFB'.includes(k)) { e.preventDefault(); onMoveRef.current(e.shiftKey ? k + "'" : k); }
+    };
+    window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
+  }, []);
 
   const embaralhar = async () => {
     if (busy.current) return;
@@ -60,12 +82,24 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
           options={{ onMove, canTurn: () => true }} />
         <span className="stage-hint">Arraste uma face para girar. Fora do cubo, vira a vista.</span>
       </div>
-      <p className="counter" aria-live="polite">{mixed ? `${moves} ${moves === 1 ? 'giro' : 'giros'} até agora` : 'Cubo arrumado'}</p>
+      <p className="counter" aria-live="polite">{moves ? `${moves} ${moves === 1 ? 'giro' : 'giros'}` : mixed ? 'Cubo embaralhado: tente arrumar!' : 'Arraste uma face para girar'}</p>
       <div className="row">
         <button className="btn btn-pop" onClick={embaralhar}>Embaralhar</button>
         <button className="btn" onClick={desfazer} disabled={!moves}>Desfazer</button>
         <button className="btn" onClick={arrumar}>Arrumar</button>
       </div>
+      <button className="link-btn" onClick={() => setPad(!pad)} aria-expanded={pad}>{pad ? 'Esconder botões de giro' : 'Prefere botões? Mostrar botões de giro'}</button>
+      {pad && (
+        <div className="pad">
+          {PAD.map(({ m, dica }) => (
+            <button key={m} className="key" onClick={() => onMove(m)} aria-label={`${m}: ${dica}`}>
+              <span className="dot" style={{ background: STICKER_COLORS[m[0] as Face] }} />
+              <b>{m}</b><small>{dica}</small>
+            </button>
+          ))}
+          <p className="pad-tip">No computador, use as teclas R, L, U, D, F e B. Com Shift, o giro sai ao contrário.</p>
+        </div>
+      )}
     </div>
   );
 }

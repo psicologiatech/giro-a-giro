@@ -354,7 +354,7 @@ function PassoDemo({ passo, fim }: { passo: Passo; fim: CubeState }) {
       {!tocando && (
         <button className="btn btn-pop demo-btn" onClick={tocar}>▶ {legenda ? 'Ver de novo' : 'Ver o passo inteiro'}</button>
       )}
-      {!tocando && !legenda && <span className="stage-hint">Assim fica no fim. Cinza é o que ainda não importa.</span>}
+      {!tocando && !legenda && <span className="stage-hint">Assim fica no fim.{greyKeys(fim, passo.foco).length > 0 && ' Cinza é o que ainda não importa.'}</span>}
     </div>
   );
 }

@@ -60,7 +60,7 @@ describe('demonstração de cada passo', () => {
   for (const passo of PASSOS) it(`passo ${passo.n}: começa no passo e cada parte avança uma peça`, () => {
     let s = demoInicio(passo);
     expect(emQuePasso(s)).toBe(passo.n);
-    if (passo.n === 5) { s = applyAlg(s, passo.demo.partes.map(x => x.m).join(' ')); expect(emQuePasso(s)).toBeGreaterThan(5); return; }
+    if (passo.n >= 5) { s = applyAlg(s, passo.demo.partes.map(x => x.m).join(' ')); expect(emQuePasso(s)).toBeGreaterThan(passo.n); return; }
     const conta = (st: CubeState) => passo.n === 1
       ? st.filter(p => p.stickers.length === 2 && white(p) && white(p)!.n[1] === 1).length
       : passo.n === 4 ? meiosNoLugar(st)
@@ -109,5 +109,27 @@ describe('passo 5: o desenho do topo em cada situação', () => {
     expect(desenho(applyAlg(clone(ponto), A))).toBe('3h+6h');
     expect(desenho(applyAlg(clone(L), A))).toBe('3h+9h');
     expect(desenho(applyAlg(clone(linha), A))).toBe('12h+3h+6h+9h');
+  });
+});
+
+describe('passo 6: o caminho do peixinho', () => {
+  const p6 = PASSOS.find(p => p.n === 6)!;
+  const SUNE = "R U R' U R U2 R'";
+  const sobe = (s: CubeState) => s.filter(p => p.stickers.length === 3 && p.stickers.some(t => t.color === 'D' && t.n[1] === 1)).length;
+  const olha = (s: CubeState) => { const t = at(s, [-1, 1, 1]).stickers.find(t => t.color === 'D')!.n.map(v => v + 0); return t[1] === 1 ? 'cima' : t[0] === -1 ? 'esquerda' : t[2] === 1 ? 'frente' : 'outro'; };
+  it('antes de cada fórmula, o cubo está na posição que o professor ensina', () => {
+    for (const c of p6.casos) {
+      let s = setupOf(p6, c); const ms = movesOf(c);
+      const inicio = sobe(s);
+      for (let i = 0; i < ms.length; i++) {
+        if (ms.slice(i, i + 7).join(' ') === SUNE) {
+          const n = sobe(s), q = olha(s);
+          expect(n === 1 ? q === 'cima' : n === 0 ? q === 'esquerda' : q === 'frente', `${c.id}: ${n} quinas, frente-esquerda olhando para ${q}`).toBe(true);
+        }
+        s = applyAlg(s, ms[i]);
+      }
+      expect(sobe(s)).toBe(4);
+      expect([1, 1, 0, 0, 2, 2, 2][p6.casos.indexOf(c)]).toBe(inicio);
+    }
   });
 });

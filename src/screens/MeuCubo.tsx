@@ -27,9 +27,9 @@ const SCAN: { f: Face; titulo: string; dica: string; cima: Face; baixo: Face }[]
 type Mode = 'inicio' | 'ler' | 'revisar' | 'pronto' | 'montar';
 const emptyNet = (): Net => Object.fromEntries(FACES.map(f => [f, Array.from({ length: 9 }, (_, i) => (i === 4 ? f : null))])) as Net;
 
-export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso }: { sound: boolean; onSaved: () => void; onSolved: () => void; onOpenPasso: (n: number) => void }) {
+export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { lerAgora?: boolean; sound: boolean; onSaved: () => void; onSolved: () => void; onOpenPasso: (n: number) => void }) {
   const saved = useMemo(loadMyCube, []);
-  const [mode, setMode] = useState<Mode>(saved ? 'pronto' : 'inicio');
+  const [mode, setMode] = useState<Mode>(lerAgora ? 'ler' : saved ? 'pronto' : 'inicio');
   const [cube, setCube] = useState<Facelets | null>(saved);
   const [step, setStep] = useState(0);
   const [samples, setSamples] = useState<Partial<Record<Face, RGB[]>>>({});

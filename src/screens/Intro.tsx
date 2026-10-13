@@ -30,7 +30,7 @@ const SLIDES: Slide[] = [
   },
   {
     titulo: 'Quinas', keep: tipo(3),
-    texto: <>São <b>8</b>, nos cantos, com <b>três cores</b>. O professor chama o lado de uma quina de <b>janela</b>: "janela branca à direita" é a quina com o branco virado para a direita.</>,
+    texto: <>São <b>8</b>, nos cantos, com <b>três cores</b>. Aqui, o lado de uma quina se chama <b>janela</b>: "janela branca à direita" é a quina com o branco virado para a direita.</>,
   },
   {
     titulo: 'As faces',
@@ -146,7 +146,7 @@ export function Intro({ sound, onFinish }: { sound: boolean; onFinish: () => voi
       ) : (
         <section className="card intro-card fim-intro">
           <Mascot mood="trofeu" size={96} />
-          <div><h2>Pronto!</h2><p>Você já conhece as peças, as faces, os andares e os giros. Agora é com o professor.</p></div>
+          <div><h2>Pronto!</h2><p>Você já conhece as peças, as faces, os andares e os giros. Agora é só seguir a trilha.</p></div>
         </section>
       )}
 

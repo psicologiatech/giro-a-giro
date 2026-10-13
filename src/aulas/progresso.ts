@@ -32,7 +32,7 @@ export function emQuePasso(s: CubeState): number {
   const amarelos = meios.filter(p => tem(p, Y)), qAmarelas = quinas.filter(p => tem(p, Y));
   if (!amarelos.every(p => olha(p, Y, Y))) return 5;
   if (!qAmarelas.every(p => olha(p, Y, Y))) return 6;
-  // nos passos 7 e 8 vale girar a camada amarela para alinhar (o professor alinha no fim)
+  // nos passos 7 e 8 vale girar a camada amarela para alinhar (o alinhamento fica para o fim)
   const camada = faceOfNormal(centro[Y]);
   const girado = (k: number) => { const t = clone(s); for (let i = 0; i < k; i++) applyMove(t, camada); return t; };
   const certaEm = (t: CubeState) => (p: Piece) => {

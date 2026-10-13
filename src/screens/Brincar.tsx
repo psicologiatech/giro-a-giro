@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { STICKER_COLORS } from '../cube/CubeScene';
 import { Cube3D } from '../components/Cube3D';
 import type { CubeScene } from '../cube/CubeScene';
-import { applyMove, facelets, invertMove, isSolved, randomScramble, solved, type CubeState, type Face } from '../cube/model';
+import { applyMove, facelets, invertMove, isSolvedAnyWay, randomScramble, solved, type CubeState, type Face } from '../cube/model';
+import { describe } from '../cube/describe';
 
 const PAD: { m: string; dica: string }[] = [
   { m: 'R', dica: 'direita sobe' }, { m: "R'", dica: 'direita desce' },
@@ -14,7 +15,10 @@ const PAD: { m: string; dica: string }[] = [
 ];
 import { sfx, buzz } from '../feedback';
 
-export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => void }) {
+/** giros do cubo inteiro: x tomba para trás, y gira para a esquerda, z gira no sentido do relógio */
+const GIROS_CUBO = ['x', "x'", 'y', "y'", 'z', "z'"];
+
+export function Brincar({ sound, onSolve, onVoltar }: { sound: boolean; onSolve: () => void; onVoltar?: () => void }) {
   const scene = useRef<CubeScene | null>(null);
   const state = useRef<CubeState>(solved());
   const history = useRef<string[]>([]);
@@ -34,8 +38,8 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
     if (busy.current) return;
     buzz(8);
     doMove(m).then(() => {
-      setMoves(n => n + 1);
-      if (mixedRef.current && isSolved(state.current)) {
+      if (!'xyz'.includes(m[0])) setMoves(n => n + 1);
+      if (mixedRef.current && isSolvedAnyWay(state.current)) {
         mixedRef.current = false; setMixed(false);
         if (sound) sfx.win(); buzz([30, 40, 60]);
         onSolve();
@@ -51,6 +55,7 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.toUpperCase();
       if (k.length === 1 && 'RLUDFB'.includes(k)) { e.preventDefault(); onMoveRef.current(e.shiftKey ? k + "'" : k); }
+      else if (k.length === 1 && 'XYZ'.includes(k)) { e.preventDefault(); const r = k.toLowerCase(); onMoveRef.current(e.shiftKey ? r + "'" : r); }
     };
     window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
   }, []);
@@ -77,6 +82,7 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
 
   return (
     <div className="screen brincar">
+      {onVoltar && <button className="back-btn self-start" onClick={onVoltar}>‹ Praticar</button>}
       <div className="stage">
         <Cube3D onReady={s => { scene.current = s; s.paint(facelets(state.current)); }}
           options={{ onMove, canTurn: () => true }} />
@@ -89,6 +95,12 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
         <button className="btn" onClick={desfazer} disabled={!moves}>Desfazer</button>
         <button className="btn" onClick={arrumar}>Arrumar</button>
       </div>
+      <div className="girar-cubo" role="group" aria-label="Girar o cubo inteiro">
+        <span>Girar o cubo inteiro</span>
+        {GIROS_CUBO.map(m => (
+          <button key={m} className="key key-giro" onClick={() => onMove(m)} title={describe(m)} aria-label={`${m}: ${describe(m)}`}><b>{m}</b></button>
+        ))}
+      </div>
       <button className="link-btn" onClick={() => setPad(!pad)} aria-expanded={pad}>{pad ? 'Esconder botões de giro' : 'Prefere botões? Mostrar botões de giro'}</button>
       {pad && (
         <div className="pad">
@@ -98,7 +110,7 @@ export function Brincar({ sound, onSolve }: { sound: boolean; onSolve: () => voi
               <b>{m}</b><small>{dica}</small>
             </button>
           ))}
-          <p className="pad-tip">No computador, use as teclas R, L, U, D, F e B. Com Shift, o giro sai ao contrário.</p>
+          <p className="pad-tip">No computador, use as teclas R, L, U, D, F e B, e X, Y e Z para girar o cubo inteiro. Com Shift, o giro sai ao contrário.</p>
         </div>
       )}
     </div>

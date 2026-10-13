@@ -18,7 +18,7 @@ describe('aulas', () => {
     for (const passo of PASSOS.filter(p => p.n !== 7)) for (const caso of passo.casos) expect(facelets(setupOf(passo, caso)).U[4]).toBe('D');
   });
 
-  it('passo 1: cada situação é como o professor descreve', () => {
+  it('passo 1: cada situação é como o método descreve', () => {
     const [meio, limpar, base, deitada] = PASSOS[0].casos.map(c => setupOf(PASSOS[0], c));
     expect(white(at(meio, [1, 0, 1]))?.n).toEqual([0, 0, 1]);         // no andar do meio
     expect(white(at(limpar, [1, 1, 0]))?.n).toEqual([0, 1, 0]);       // em cima já tem branco
@@ -76,7 +76,7 @@ describe('demonstração de cada passo', () => {
   });
 });
 
-describe('passo 4: as situações são como o professor descreve', () => {
+describe('passo 4: as situações são como o método descreve', () => {
   const p4 = PASSOS.find(p => p.n === 4)!;
   const [dir, esq, inv] = p4.casos.map(c => setupOf(p4, c));
   const semAmarelo = (p: Piece) => p.stickers.length === 2 && !p.stickers.some(t => t.color === 'U' || t.color === 'D');
@@ -103,7 +103,7 @@ describe('passo 5: o desenho do topo em cada situação', () => {
   it('linha deitada, linha em pé, L às 12h e 9h, L em outro lugar e ponto', () => {
     expect(p5.casos.map(c => desenho(setupOf(p5, c)))).toEqual(['3h+9h', '12h+6h', '12h+9h', '3h+6h', 'ponto']);
   });
-  it('a fórmula do professor transforma: ponto → L, L → linha, linha → cruz', () => {
+  it('a fórmula transforma: ponto → L, L → linha, linha → cruz', () => {
     const [linha, , L, , ponto] = p5.casos.map(c => setupOf(p5, c));
     const A = "F R U R' U' F'";
     expect(desenho(applyAlg(clone(ponto), A))).toBe('3h+6h');
@@ -117,7 +117,7 @@ describe('passo 6: o caminho do peixinho', () => {
   const SUNE = "R U R' U R U2 R'";
   const sobe = (s: CubeState) => s.filter(p => p.stickers.length === 3 && p.stickers.some(t => t.color === 'D' && t.n[1] === 1)).length;
   const olha = (s: CubeState) => { const t = at(s, [-1, 1, 1]).stickers.find(t => t.color === 'D')!.n.map(v => v + 0); return t[1] === 1 ? 'cima' : t[0] === -1 ? 'esquerda' : t[2] === 1 ? 'frente' : 'outro'; };
-  it('antes de cada fórmula, o cubo está na posição que o professor ensina', () => {
+  it('antes de cada fórmula, o cubo está na posição que o método ensina', () => {
     for (const c of p6.casos) {
       let s = setupOf(p6, c); const ms = c.completa ? c.completa.split(' ') : movesOf(c);
       const inicio = sobe(s);
@@ -183,7 +183,7 @@ describe('passo 8: arrumar os meios', () => {
   const DIR = "F2 U L R' F2 L' R U F2";
   const prontos = (s: CubeState) => { const f = facelets(s); return (['F', 'R', 'B', 'L'] as const).filter(k => f[k].slice(0, 3).every(c => c === f[k][4])); };
   const meioDaFrente = (s: CubeState) => { const c = facelets(s).F[4]; const p = s.find(q => q.stickers.length === 2 && q.pos[1] === 1 && q.stickers.some(t => t.color === c))!.pos; return p[0] === 1 ? 'direita' : p[0] === -1 ? 'esquerda' : 'outro'; };
-  it('cada situação é como o professor descreve', () => {
+  it('cada situação é como o método descreve', () => {
     const s = Object.fromEntries(p8.casos.map(c => [c.id, setupOf(p8, c)]));
     for (const c of p8.casos) expect(emQuePasso(s[c.id]), c.id).toBe(8);
     expect(prontos(s.direita)).toEqual(['B']); expect(meioDaFrente(s.direita)).toBe('direita');

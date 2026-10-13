@@ -316,3 +316,55 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .formula { display: inline-block; margin-top: 6px; font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink);
   background: var(--bg); border: 1.5px solid var(--edge); border-radius: 8px; padding: 2px 8px 0; letter-spacing: .02em; word-spacing: .15em; }
 .toggle-lista { margin: -8px 0 0; }
+
+/* cubo livre: girar o cubo inteiro */
+.girar-cubo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.girar-cubo > span { width: 100%; font-size: 13.5px; color: var(--muted); font-weight: 600; }
+.key-giro { display: grid; place-items: center; grid-template-columns: none; flex: 1 1 0; min-width: 44px; padding: 8px 4px; }
+.self-start { align-self: flex-start; }
+
+/* praticar */
+.praticar-menu { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.praticar-item { width: 100%; display: grid; grid-template-columns: 46px 1fr auto; gap: 14px; align-items: center; text-align: left;
+  background: var(--surface); border: 2px solid var(--edge); border-radius: 22px; padding: 14px; box-shadow: 0 4px 0 var(--edge); }
+.praticar-item:active { transform: translateY(4px); box-shadow: none; }
+.praticar-item b { display: block; font-family: var(--display); font-size: 20px; line-height: 1.15; }
+.praticar-item small { display: block; color: var(--muted); font-size: 13.5px; line-height: 1.35; margin-top: 2px; }
+.praticar-ico { width: 46px; height: 42px; border-radius: 14px; background: var(--c); box-shadow: 0 4px 0 var(--lip); }
+.trancado h2 { font-size: 22px; }
+.embaralhar { display: grid; gap: 6px; }
+.embaralhar p { margin: 0; }
+.alg-grande { font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.5; word-spacing: .25em; }
+.relogio { width: 100%; min-height: 200px; border: 2px solid var(--edge); border-radius: 30px; background: var(--surface); box-shadow: 0 5px 0 var(--edge);
+  display: grid; place-items: center; align-content: center; gap: 6px; padding: 20px; touch-action: manipulation; user-select: none; }
+.relogio.rodando { background: #F2FBF6; border-color: #BFEBD2; box-shadow: 0 5px 0 #BFEBD2; min-height: 55dvh; }
+.relogio-tempo { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; }
+.relogio-dica { color: var(--muted); font-size: 15px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats > div { background: var(--surface); border: 2px solid var(--edge); border-radius: 18px; padding: 10px; text-align: center; display: grid; }
+.stats small { color: var(--muted); font-size: 12.5px; }
+.stats b { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.tempos h3 { margin: 0 0 6px; font-family: var(--display); font-size: 19px; }
+.tempos ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.tempos li { display: grid; grid-template-columns: 1fr auto 32px; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--edge); }
+.tempos li span { font-family: var(--display); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.tempos li span.melhor { color: var(--green-lip); }
+.tempos li small { color: var(--muted); }
+.tempos .x { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
+.cronometro .note, .note { color: var(--muted); font-size: 13.5px; margin: 0; text-align: center; }
+.caderno-grupo { display: grid; gap: 8px; }
+.caderno-grupo .passo-kicker { margin: 0; }
+.alg-letras { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.alg-letras span { min-width: 38px; padding: 5px 8px 2px; border-radius: 10px; text-align: center; font-family: var(--display); font-weight: 800; font-size: 20px;
+  background: var(--surface); border: 2px solid var(--edge); }
+.alg-letras span.done { background: #DDF5E7; border-color: #BFEBD2; color: var(--green-lip); }
+.alg-letras span.now { background: var(--pop); border-color: var(--pop-lip); color: #fff; }
+.formula-view .card p { margin: 0 0 6px; }
+.travei-passos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.travei-passo { border: 0; border-radius: 16px; background: var(--c); box-shadow: 0 4px 0 var(--lip); color: #fff; padding: 8px 4px 6px; display: grid; gap: 2px; }
+.travei-passo:active { transform: translateY(4px); box-shadow: none; }
+.travei-passo b { font-family: var(--display); font-size: 24px; line-height: 1; text-shadow: 0 2px 0 var(--lip); }
+.travei-passo small { font-size: 11px; line-height: 1.15; font-weight: 600; }
+.travei-camera { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.travei-camera p { margin: 0; }
+.travei-camera .btn { grid-column: 1 / -1; }

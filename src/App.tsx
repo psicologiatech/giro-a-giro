@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Trilha } from './screens/Trilha';
-import { Brincar } from './screens/Brincar';
+import { Praticar } from './screens/Praticar';
 import { MeuCubo } from './screens/MeuCubo';
 import { PassoView } from './screens/Aulas';
 import { Intro } from './screens/Intro';
@@ -11,11 +11,11 @@ import { Confetti } from './components/Confetti';
 import { IconCamera, IconCube, IconFlame, IconPath, IconSound, IconStar } from './components/Icons';
 import { earn, level, loadProgress, saveProgress, type Progress } from './progress';
 
-type Tab = 'trilha' | 'meucubo' | 'brincar';
+type Tab = 'trilha' | 'meucubo' | 'praticar';
 const TABS: { id: Tab; nome: string; icon: () => React.ReactElement }[] = [
   { id: 'trilha', nome: 'Trilha', icon: IconPath },
   { id: 'meucubo', nome: 'Meu cubo', icon: IconCamera },
-  { id: 'brincar', nome: 'Brincar', icon: IconCube },
+  { id: 'praticar', nome: 'Praticar', icon: IconCube },
 ];
 
 export default function App() {
@@ -24,6 +24,7 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [win, setWin] = useState(false);
   const [passo, setPasso] = useState<number | null>(null);
+  const [lerAgora, setLerAgora] = useState(0);
   const [feitos, setFeitos] = useState<number[]>(loadFeitos);
   useEffect(() => saveFeitos(feitos), [feitos]);
   useEffect(() => { document.querySelector('.content')?.scrollTo(0, 0); }, [tab, passo]);
@@ -61,11 +62,14 @@ export default function App() {
 
       <main className="content">
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
-        {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('brincar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
+        {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
         {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}
           onFinish={() => terminar(aula.n)} />}
-        {tab === 'meucubo' && <MeuCubo sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} onSolved={() => setP(q => ({ ...earn(q, 200), solves: q.solves + 1 }))} />}
-        {tab === 'brincar' && <Brincar sound={p.sound} onSolve={() => { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }} />}
+        {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} onSolved={() => setP(q => ({ ...earn(q, 200), solves: q.solves + 1 }))} />}
+        {tab === 'praticar' && <Praticar liberado={feitos.includes(8)} sound={p.sound}
+          onSolve={() => { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }}
+          onTrilha={() => go('trilha')} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
+          onScan={() => { setLerAgora(k => k + 1); setTab('meucubo'); setPasso(null); }} />}
       </main>
 
       <nav className="tabbar" aria-label="Seções">

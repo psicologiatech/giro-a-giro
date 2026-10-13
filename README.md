@@ -20,21 +20,25 @@ Não é um app de speedcubing. A meta é a primeira conquista e a autonomia depo
 
 ## A ideia
 
-A maioria dos tutoriais mostra um cubo de exemplo e pede que o seu fique igual. Quase nunca fica, e a pessoa trava. O Giro a Giro faz o contrário: você mostra o seu cubo pela câmera e o app ensina a partir dele, mostrando o próximo giro com uma seta no próprio cubo.
+Aprender a montar o cubo como numa boa aula: um passo de cada vez, vendo as situações que podem aparecer no seu cubo e o que fazer em cada uma, com uma linguagem visual (andares, janela, parzinho, peixinho, terremoto) e os nomes que os cubistas usam (Sune, A-perm, U-perm…).
 
 ## O que já funciona
 
-- **Meu cubo**: a câmera lê as 6 faces do seu cubo, com uma grade na tela; você confere e corrige as cores com um toque. Sem câmera, dá para pintar tocando. O app confere se as cores formam um cubo possível.
-- **Montar meu cubo**: depois de ler o seu cubo, o Pingo guia a montagem pelo método das camadas, um giro por vez, com a seta no 3D. Tem "Ver de novo", "Voltar", conferência ao fim de cada etapa e "Errei um giro" (a tela imita o engano e ensina a desfazer). O progresso fica salvo.
-- Cubo 3D que você gira arrastando as faces com o dedo
-- Modo Brincar: embaralhar, desfazer, arrumar e comemoração ao montar
-- Pontos, nível e sequência de dias, guardados no aparelho
+- **Conheça o cubo**: peças (centros, meios, quinas), faces, andares e os giros, com o dedo
+- **Trilha de 8 passos** pelo método de camadas: margarida, cruz branca, primeira camada, segunda camada, cruz amarela, face amarela (Sune), quinas (A-perm) e meios (U-perm)
+  - em cada passo: objetivo, como segurar, o passo inteiro animado e as situações possíveis
+  - em cada situação: o Pingo faz devagar, com uma fala em cada giro e as letras (dá para esconder); depois é a sua vez
+  - uma peça (ou uma fórmula) de cada vez, conferindo no seu cubo de verdade; treino sem ajuda
+  - todas as situações são testadas no cubo simulado
+- **Meu cubo**: a câmera lê as 6 faces e diz em que passo o seu cubo está, levando direto para ele. Sem câmera, dá para pintar tocando.
+- **Praticar** (abre depois do passo 8): cronômetro com embaralhamento, melhor tempo e média de 5; caderno de fórmulas com os nomes dos cubistas e a animação de cada uma; "Travei!" para voltar ao passo certo; cubo livre com giros do cubo inteiro (x, y, z)
+- Pontos, sequência de dias e progresso guardados no aparelho
 - App instalável (PWA) e publicação automática no GitHub Pages
 
 ## O que vem a seguir, por prioridade
 
-1. **Fases da trilha**: notação, cruz branca, cantos, segunda camada e última camada
-2. **Mascote e recompensas** em mais momentos do jogo
+1. **Montar sozinha, só com os nomes das fórmulas**
+2. **Atalho para a câmera dentro de cada passo**
 3. **App de loja** (Android e iOS) com Capacitor
 
 ## Para desenvolver
@@ -55,5 +59,6 @@ Cada envio para a branch `main` roda os testes e publica o site pelo GitHub Acti
 - `src/cube/fromFacelets.ts`: monta o cubo a partir das 54 cores e confere se ele é possível (cantos torcidos, meios virados, peças trocadas).
 - `src/cube/solver.ts`: o método das camadas, em lances explicados. Testado com 3000 cubos embaralhados.
 - `src/scan/`: câmera, leitura das cores (compara cada adesivo com os centros do próprio cubo, na mesma luz) e o cubo salvo no aparelho.
-- `src/screens/`: as telas Trilha, Meu cubo e Brincar.
+- `src/screens/`: as telas (Trilha, Conheça o cubo, Passos e situações, Meu cubo, Praticar, Cubo livre).
+- `src/aulas/`: os 8 passos, as situações, o caderno de fórmulas e a detecção do passo do cubo.
 - `src/progress.ts`: pontos e sequência de dias.

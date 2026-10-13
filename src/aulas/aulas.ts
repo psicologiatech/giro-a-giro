@@ -1,8 +1,8 @@
 /**
- * As aulas, na ordem e no jeito do professor Renan Cerpe (playlist do Manual do Mundo).
+ * As aulas do método de camadas para iniciantes, com uma linguagem visual (andares, janela, parzinho, peixinho, terremoto).
  * O cubo fica com o AMARELO EM CIMA e o branco embaixo (no modelo, o branco é 'U'; viramos com z2).
  *
- * Cada situação ("caso") é a fórmula do professor com a fala dele em cada giro.
+ * Cada situação ("caso") é a fórmula com uma fala simples em cada giro.
  * O cubo da situação é montado ao contrário: parte do cubo como fica no fim do passo
  * ("meta") e desfaz a fórmula. Assim a fórmula sempre resolve a situação mostrada.
  */
@@ -24,6 +24,8 @@ export interface Caso {
 export interface Passo {
   n: number;
   titulo: string;
+  /** como os cubistas chamam este passo */
+  cubista: string;
   cor: 'green' | 'red' | 'blue' | 'orange' | 'yellow';
   objetivo: string;
   segurar: string;
@@ -76,7 +78,7 @@ const brancosNoTopo = () => applyAlg(amareloEmCima(), 'F2 R2 B2 L2');
 
 export const PASSOS: Passo[] = [
   {
-    n: 1, titulo: 'Preparar a cruz branca', cor: 'green',
+    n: 1, titulo: 'Preparar a cruz branca', cubista: 'Margarida', cor: 'green',
     objetivo: 'Juntar os 4 meios brancos em volta do centro amarelo, com o branco virado para cima.',
     segurar: 'Amarelo em cima, branco embaixo.',
     dica: 'Antes de subir uma peça, olhe o topo: se já tem branco no lugar, gire o topo para limpar o espaço.',
@@ -120,7 +122,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 2, titulo: 'Finalizar a cruz branca', cor: 'red',
+    n: 2, titulo: 'Finalizar a cruz branca', cubista: 'Cruz branca', cor: 'red',
     objetivo: 'Levar cada meio branco do topo para baixo, no lado da cor certa. No fim, a cruz branca fica embaixo.',
     segurar: 'Amarelo em cima. A cor que você vai resolver fica de frente para você.',
     dica: 'Olhe a outra cor do meio branco, a que fica de lado. Ela tem que bater com o centro antes de descer.',
@@ -162,7 +164,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 3, titulo: 'Primeira camada', cor: 'blue',
+    n: 3, titulo: 'Primeira camada', cubista: 'Primeira camada (quinas brancas)', cor: 'blue',
     objetivo: 'Colocar as 4 quinas brancas. No fim, a face branca e a primeira camada ficam prontas.',
     segurar: 'Cruz branca embaixo, amarelo em cima. O lugar da quina fica na frente, embaixo.',
     dica: 'Gire o topo até a quina ficar bem em cima do lugar dela: a cor do lado do branco bate com o centro.',
@@ -223,7 +225,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 4, titulo: 'Segunda camada', cor: 'orange',
+    n: 4, titulo: 'Segunda camada', cubista: 'Segunda camada', cor: 'orange',
     objetivo: 'Colocar os 4 meios do andar do meio. No fim, os dois andares de baixo ficam prontos.',
     segurar: 'Cruz branca embaixo, amarelo em cima. A cor da peça de frente, alinhada com o centro.',
     dica: 'Procure no topo um meio sem amarelo. Gire o topo até a cor da frente dele bater com o centro: forma um T. A cor de cima diz para que lado ele vai.',
@@ -292,7 +294,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 5, titulo: 'Cruz amarela', cor: 'yellow',
+    n: 5, titulo: 'Cruz amarela', cubista: 'Cruz amarela (OLL)', cor: 'yellow',
     objetivo: 'Formar uma cruz amarela no topo: os 4 meios com o amarelo para cima. As quinas ainda não importam.',
     segurar: 'Amarelo em cima. Os dois andares de baixo já estão prontos.',
     dica: 'É sempre a mesma fórmula. O que muda é como você posiciona o desenho do topo antes de fazer.',
@@ -397,7 +399,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 6, titulo: 'Face amarela', cor: 'green',
+    n: 6, titulo: 'Face amarela', cubista: 'Orientar as quinas (OLL · Sune)', cor: 'green',
     objetivo: 'Deixar o topo todo amarelo. As cores dos lados ainda podem ficar trocadas: isso é o passo 7.',
     segurar: 'Amarelo em cima. A cruz amarela já está pronta.',
     dica: 'O objetivo é cair no peixinho. Com o peixinho, a cabeça (a quina amarela) fica na frente, à esquerda. Sem quina amarela em cima: o amarelo da quina da frente-esquerda olhando para a esquerda. Com duas: olhando para você.',
@@ -517,7 +519,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 7, titulo: 'Arrumar as quinas', cor: 'red',
+    n: 7, titulo: 'Arrumar as quinas', cubista: 'Permutar as quinas (PLL · A-perm)', cor: 'red',
     objetivo: 'Colocar as 4 quinas amarelas no lugar certo entre elas: em cada lado, as duas quinas com a mesma cor. Os meios ainda podem ficar trocados.',
     segurar: 'Terremoto no prédio! Tombe o cubo: o amarelo fica de frente para você, como a fachada do prédio.',
     dica: 'Olhe os lados da face amarela. Procure um lado em que as duas quinas mostram a mesma cor. Esse lado vai para baixo, apoiado na mesa.',
@@ -614,7 +616,7 @@ export const PASSOS: Passo[] = [
     ],
   },
   {
-    n: 8, titulo: 'Arrumar os meios', cor: 'blue',
+    n: 8, titulo: 'Arrumar os meios', cubista: 'Permutar os meios (PLL · U-perm)', cor: 'blue',
     objetivo: 'Colocar os 4 meios amarelos no lugar. É o último passo: no fim, o cubo está montado!',
     segurar: 'O amarelo volta para cima. O lado que já está todo pronto fica lá nas costas.',
     dica: 'Primeiro gire o topo até as quinas baterem com os centros dos lados. Depois procure um lado todo pronto (as três peças de cima com a cor do centro) e deixe ele atrás.',

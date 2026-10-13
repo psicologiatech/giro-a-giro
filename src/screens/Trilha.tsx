@@ -9,7 +9,7 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
   return (
     <div className="screen trilha">
       {atual === 0 ? (
-        <Speech>Oi, eu sou o Pingo! Vamos montar o cubo um passo de cada vez, do jeito que o professor ensina. Antes, vamos conhecer o cubo.</Speech>
+        <Speech>Oi, eu sou o Pingo! Vamos montar o cubo um passo de cada vez, do jeito mais fácil de aprender. Antes, vamos conhecer o cubo.</Speech>
       ) : atual > 8 ? (
         <Speech mood="trofeu">Você passou pelos 8 passos! Agora é treinar até a mão fazer sozinha.</Speech>
       ) : vez?.pronto ? (
@@ -34,7 +34,7 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
             <li><span><b>As situações</b> que podem aparecer no seu cubo, e o que fazer em cada uma.</span></li>
             <li><span><b>O treino</b>: você faz sem ajuda, até a mão lembrar.</span></li>
           </ol>
-          <p className="note">Segue a ordem das aulas do Manual do Mundo (professor Renan Cerpe).</p>
+          <p className="note">Usa o método de camadas, o mais usado por quem está começando.</p>
         </section>
       )}
 
@@ -55,7 +55,7 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
           );
         })}
       </ol>
-      <button className="btn btn-big" onClick={onPlay}>Brincar com o cubo livre</button>
+      <button className="btn btn-big" onClick={onPlay}>{atual > 8 ? 'Praticar' : 'Praticar (abre depois do passo 8)'}</button>
     </div>
   );
 }

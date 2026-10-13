@@ -42,7 +42,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
     <div className="screen passo">
       <div className="passo-head" style={{ ['--c' as string]: `var(--${passo.cor})`, ['--lip' as string]: `var(--${passo.cor}-lip)` }}>
         <span className="passo-n">{passo.n}</span>
-        <div><p className="passo-kicker">Passo {passo.n} de 8</p><h2>{passo.titulo}</h2></div>
+        <div><p className="passo-kicker">Passo {passo.n} de 8 · {passo.cubista}</p><h2>{passo.titulo}</h2></div>
       </div>
       <section className="card objetivo">
         <p><b>Objetivo:</b> {passo.objetivo}</p>
@@ -54,7 +54,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
           <Mascot mood="trofeu" size={84} />
           <div>
             <h3>{ultimo ? 'Cubo montado!' : `Passo ${passo.n} pronto no seu cubo!`}</h3>
-            <p>{ultimo ? 'Você fez os 8 passos do professor.' : total > 1 ? `As ${total} peças estão no lugar.` : 'Tudo certo neste passo.'}</p>
+            <p>{ultimo ? 'Você fez os 8 passos.' : total > 1 ? `As ${total} peças estão no lugar.` : 'Tudo certo neste passo.'}</p>
           </div>
           <button className="btn btn-pop btn-big" onClick={onFinish}>{ultimo ? 'Comemorar!' : `Ir para o passo ${passo.n + 1}`}</button>
           <button className="link-btn" onClick={() => setPecas(0)}>Começar este passo de novo</button>
@@ -90,7 +90,7 @@ const key = (s: CubeState) => { const f = facelets(s); return FACES.map(x => f[x
 const QUARTER = FACES.flatMap(f => [f, f + "'"]);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-/** mostra uma situação e a fórmula do professor, giro a giro; no treino, a pessoa faz sozinha */
+/** mostra uma situação e a fórmula, giro a giro; no treino, a pessoa faz sozinha */
 function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish, total, pecaN, onPiece }: {
   passo: Passo; caso: Caso; treino: boolean; sound: boolean;
   onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; total: number; pecaN: number; onPiece: () => void;
@@ -184,7 +184,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     settle(true);
   };
 
-  /** o professor faz: anima a partir de onde está, um lance por vez, devagar */
+  /** o Pingo faz: anima a partir de onde está, um lance por vez, devagar */
   const mostrar = async (soUm: boolean, demo = false) => {
     if (busy.current || done) return;
     busy.current = true; setMsg(null); setDica(true);
@@ -213,7 +213,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     setPlaying(false); busy.current = false; last.current = null;
     settle(false);
   };
-  /** ao abrir a situação, o professor faz uma vez; depois o cubo volta e é a sua vez */
+  /** ao abrir a situação, o Pingo faz uma vez; depois o cubo volta e é a sua vez */
   const [visto, setVisto] = useState(treino);
   useEffect(() => {
     if (treino) return;
@@ -258,7 +258,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       {!treino && !done && !msg && (
         <p className={`vez-msg ${visto ? 'sua' : ''}`} role="status">{visto
           ? giroInteiro ? <><b>Agora é a sua vez.</b> Primeiro gire o cubo inteiro: toque em ↻ Girar o cubo inteiro, em cima do cubo.</> : <><b>Agora é a sua vez.</b> Arraste a face no cubo da tela, ou toque em Só o próximo giro.</>
-          : playing ? <><b>Olhe primeiro:</b> o professor faz, você só observa.</> : <>Preparando a situação…</>}</p>
+          : playing ? <><b>Olhe primeiro:</b> o Pingo faz, você só observa.</> : <>Preparando a situação…</>}</p>
       )}
 
       {!done && (!treino || dica) && (
@@ -314,7 +314,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
           <p>Reconheceu a situação? Faça a fórmula girando as faces.</p>
           <div className="row">
             <button className="btn" onClick={() => setDica(true)}>Me dá uma dica</button>
-            <button className="btn" onClick={onSee}>Ver o professor fazer</button>
+            <button className="btn" onClick={onSee}>Ver o Pingo fazer</button>
           </div>
         </section>
       ) : (

@@ -34,7 +34,7 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
             <li><span><b>As situações</b> que podem aparecer no seu cubo, e o que fazer em cada uma.</span></li>
             <li><span><b>O treino</b>: você faz sem ajuda, até a mão lembrar.</span></li>
           </ol>
-          <p className="note">Segue a ordem das aulas do Manual do Mundo (professor Renan Cerpe). Os passos 5 a 8 estão chegando.</p>
+          <p className="note">Segue a ordem das aulas do Manual do Mundo (professor Renan Cerpe). Os passos 6 a 8 estão chegando.</p>
         </section>
       )}
 

@@ -24,8 +24,12 @@ export interface Passo {
   segurar: string;
   /** o "porquê" ou o cuidado principal, em uma frase */
   dica: string;
-  /** a peça que se resolve uma de cada vez (são 4 por passo) */
+  /** a peça que se resolve uma de cada vez */
   peca: string;
+  /** quantas vezes repetir no cubo de verdade (padrão: 4 peças) */
+  total?: number;
+  /** a pergunta da lista de situações (padrão: como está o próximo/primeiro <peça>) */
+  pergunta?: string;
   /** o que fazer no cubo de verdade depois de cada peça */
   repetir: string;
   /** o passo inteiro sendo feito, para ver antes de começar (sem 'inicio', parte do fim e desfaz) */
@@ -280,11 +284,115 @@ export const PASSOS: Passo[] = [
       },
     ],
   },
+  {
+    n: 5, titulo: 'Cruz amarela', cor: 'yellow',
+    objetivo: 'Formar uma cruz amarela no topo: os 4 meios com o amarelo para cima. As quinas ainda não importam.',
+    segurar: 'Amarelo em cima. Os dois andares de baixo já estão prontos.',
+    dica: 'É sempre a mesma fórmula. O que muda é como você posiciona o desenho do topo antes de fazer.',
+    peca: 'cruz amarela', total: 1,
+    pergunta: 'Que desenho os meios amarelos formam no topo do seu cubo? Olhe só os meios: as quinas não importam agora.',
+    repetir: 'Faça igual no seu cubo, posicionando o desenho do mesmo jeito. Pronto: cruz amarela!',
+    demo: {
+      partes: [
+        { legenda: 'Só o ponto: faz a fórmula', m: "F R U R' U' F'" },
+        { legenda: 'Virou um L: gira o topo até as 12h e 9h', m: 'U2' },
+        { legenda: 'Faz a fórmula de novo', m: "F R U R' U' F'" },
+        { legenda: 'Virou linha deitada: mais uma vez', m: "F R U R' U' F'" },
+      ],
+    },
+    meta: amareloEmCima, fim: amareloEmCima, fimDeBaixo: false,
+    foco: p => isWhite(p) || meioDoMeio(p) || (isEdge(p) && p.stickers.some(t => t.color === 'D')),
+    pronto: (s, meta) => andaresIguais(s, meta, p => isWhite(p) || meioDoMeio(p))
+      && s.filter(p => isEdge(p) && p.stickers.some(t => t.color === 'D')).every(p => p.stickers.find(t => t.color === 'D')!.n[1] === 1),
+    casos: [
+      {
+        id: 'linha', nome: 'Linha deitada', ver: 'Dois meios amarelos fazem uma linha de um lado ao outro, deitada na sua frente.',
+        lances: [
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Cruz amarela!' },
+        ],
+      },
+      {
+        id: 'emPe', nome: 'Linha em pé', ver: 'A linha amarela vai de você até lá atrás.',
+        lances: [
+          { m: 'U', fala: 'Gira o topo uma vez: a linha fica deitada.' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Cruz amarela!' },
+        ],
+      },
+      {
+        id: 'L', nome: 'L nas 12h e 9h', ver: 'Dois meios amarelos formam um L, como ponteiros do relógio às 12h e 9h: lá atrás e à esquerda.',
+        lances: [
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Virou linha deitada!' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Cruz amarela!' },
+        ],
+      },
+      {
+        id: 'Loutro', nome: 'L em outra posição', ver: 'Tem um L, mas apontando para outro lado (por exemplo, 3h e 6h).',
+        lances: [
+          { m: 'U2', fala: 'Gira o topo até o L apontar para as 12h e 9h.' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Virou linha deitada!' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Cruz amarela!' },
+        ],
+      },
+      {
+        id: 'ponto', nome: 'Só o ponto', ver: 'Só o centro amarelo. Nenhum meio tem amarelo para cima.',
+        lances: [
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Virou um L!' },
+          { m: 'U2', fala: 'Gira o topo até o L apontar para as 12h e 9h.' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Virou linha deitada!' },
+          { m: "F", fala: 'Gira a frente no sentido do relógio.' },
+          { m: "R", fala: 'A direita sobe.' },
+          { m: "U", fala: 'Gira o topo.' },
+          { m: "R'", fala: 'Volta a direita.' },
+          { m: "U'", fala: 'Volta o topo.' },
+          { m: "F'", fala: 'Volta a frente. Cruz amarela!' },
+        ],
+      },
+    ],
+  },
 ];
 
 /** os passos que ainda vão chegar, só para a trilha */
 export const PROXIMOS: { n: number; titulo: string; cor: Passo['cor'] }[] = [
-  { n: 5, titulo: 'Cruz amarela', cor: 'yellow' },
   { n: 6, titulo: 'Face amarela', cor: 'green' },
   { n: 7, titulo: 'Arrumar as quinas', cor: 'red' },
   { n: 8, titulo: 'Arrumar os meios', cor: 'blue' },

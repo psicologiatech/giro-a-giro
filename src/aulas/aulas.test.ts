@@ -60,6 +60,7 @@ describe('demonstração de cada passo', () => {
   for (const passo of PASSOS) it(`passo ${passo.n}: começa no passo e cada parte avança uma peça`, () => {
     let s = demoInicio(passo);
     expect(emQuePasso(s)).toBe(passo.n);
+    if (passo.n === 5) { s = applyAlg(s, passo.demo.partes.map(x => x.m).join(' ')); expect(emQuePasso(s)).toBeGreaterThan(5); return; }
     const conta = (st: CubeState) => passo.n === 1
       ? st.filter(p => p.stickers.length === 2 && white(p) && white(p)!.n[1] === 1).length
       : passo.n === 4 ? meiosNoLugar(st)
@@ -92,5 +93,21 @@ describe('passo 4: as situações são como o professor descreve', () => {
     const fora = inv.filter(p => semAmarelo(p) && !p.stickers.every(t => t.n.every((v, i) => v === c[t.color][i])));
     expect(fora).toHaveLength(1);
     expect(fora[0].pos[1]).toBe(0);
+  });
+});
+
+describe('passo 5: o desenho do topo em cada situação', () => {
+  const p5 = PASSOS.find(p => p.n === 5)!;
+  const desenho = (s: CubeState) => s.filter(p => p.stickers.length === 2 && p.stickers.some(t => t.color === 'D' && t.n[1] === 1))
+    .map(p => p.pos[2] === 1 ? '6h' : p.pos[2] === -1 ? '12h' : p.pos[0] === -1 ? '9h' : '3h').sort().join('+') || 'ponto';
+  it('linha deitada, linha em pé, L às 12h e 9h, L em outro lugar e ponto', () => {
+    expect(p5.casos.map(c => desenho(setupOf(p5, c)))).toEqual(['3h+9h', '12h+6h', '12h+9h', '3h+6h', 'ponto']);
+  });
+  it('a fórmula do professor transforma: ponto → L, L → linha, linha → cruz', () => {
+    const [linha, , L, , ponto] = p5.casos.map(c => setupOf(p5, c));
+    const A = "F R U R' U' F'";
+    expect(desenho(applyAlg(clone(ponto), A))).toBe('3h+6h');
+    expect(desenho(applyAlg(clone(L), A))).toBe('3h+9h');
+    expect(desenho(applyAlg(clone(linha), A))).toBe('12h+3h+6h+9h');
   });
 });

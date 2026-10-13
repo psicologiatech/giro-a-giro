@@ -16,10 +16,11 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
   const [caso, setCaso] = useState<Caso | null>(null);
   const [treino, setTreino] = useState(false);
   const fim = useMemo(passo.fim, [passo]);
+  const total = passo.total ?? 4;
   const [pecas, setPecas] = useState(() => loadPecas(passo.n));
   useEffect(() => savePecas(passo.n, pecas), [passo.n, pecas]);
   /** mais uma peça pronta no cubo de verdade */
-  const maisUma = () => { setCaso(null); setTreino(false); setPecas(k => Math.min(4, k + 1)); if (sound) sfx.good(); buzz(20); };
+  const maisUma = () => { setCaso(null); setTreino(false); setPecas(k => Math.min(total, k + 1)); if (sound) sfx.good(); buzz(20); };
 
   if (caso) return (
     <Player key={`${caso.id}-${treino}`} passo={passo} caso={caso} treino={treino} sound={sound}
@@ -28,7 +29,8 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
       onDone={() => onEarn(treino ? 15 : 5)}
       onTrain={() => setTreino(true)}
       onFinish={onFinish}
-      pecaN={Math.min(4, pecas + 1)}
+      total={total}
+      pecaN={Math.min(total, pecas + 1)}
       onPiece={maisUma}
       onAnother={() => { const others = passo.casos.filter(c => c !== caso); setCaso(others[Math.floor(Math.random() * others.length)] ?? caso); setTreino(true); }} />
   );
@@ -44,27 +46,27 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
         <p className="segurar"><span className="hold" aria-hidden="true"><i style={{ background: 'var(--yellow)' }} /><i style={{ background: '#F8F9FC' }} /></span><span><b>Como segurar:</b> {passo.segurar}</span></p>
       </section>
       <PassoDemo passo={passo} fim={fim} />
-      {pecas >= 4 ? (
+      {pecas >= total ? (
         <section className="card pecas-card completo">
           <Mascot mood="trofeu" size={84} />
           <div>
             <h3>Passo {passo.n} pronto no seu cubo!</h3>
-            <p>As 4 peças estão no lugar.</p>
+            <p>{total > 1 ? `As ${total} peças estão no lugar.` : `${passo.peca[0].toUpperCase()}${passo.peca.slice(1)} pronta.`}</p>
           </div>
           <button className="btn btn-pop btn-big" onClick={onFinish}>Ir para o passo {passo.n + 1}</button>
           <button className="link-btn" onClick={() => setPecas(0)}>Começar este passo de novo</button>
         </section>
       ) : (
         <section className="card pecas-card">
-          <Pecas feitas={pecas} />
-          <p><b>{pecas === 0 ? `Vamos resolver um ${passo.peca} de cada vez.` : `${pecas} de 4 prontas!`}</b> Como está o {pecas === 0 ? 'primeiro' : 'próximo'} {passo.peca} no seu cubo?</p>
-          <button className="link-btn" onClick={maisUma}>Esse {passo.peca} já está certo: pular para o próximo</button>
+          {total > 1 && <Pecas feitas={pecas} total={total} />}
+          <p>{total > 1 && <b>{pecas === 0 ? `Vamos resolver um ${passo.peca} de cada vez. ` : `${pecas} de ${total} prontas! `}</b>}{passo.pergunta ?? `Como está o ${pecas === 0 ? 'primeiro' : 'próximo'} ${passo.peca} no seu cubo?`}</p>
+          {total > 1 && <button className="link-btn" onClick={maisUma}>Esse {passo.peca} já está certo: pular para o próximo</button>}
           <button className="link-btn" onClick={onFinish}>{feito ? `Ir para o passo ${passo.n + 1}` : `O passo inteiro já está pronto no meu cubo: ir para o passo ${passo.n + 1}`}</button>
         </section>
       )}
       <Speech mood="aponta">{passo.dica}</Speech>
-      {pecas < 4 && <h3 className="sec-title">Escolha a situação igual à do seu cubo</h3>}
-      {pecas < 4 && <ul className="casos">
+      {pecas < total && <h3 className="sec-title">Escolha a situação igual à do seu cubo</h3>}
+      {pecas < total && <ul className="casos">
         {passo.casos.map((c, i) => (
           <li key={c.id}>
             <button className="caso" onClick={() => { setTreino(false); setCaso(c); }}>
@@ -85,9 +87,9 @@ const QUARTER = FACES.flatMap(f => [f, f + "'"]);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** mostra uma situação e a fórmula do professor, giro a giro; no treino, a pessoa faz sozinha */
-function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish, pecaN, onPiece }: {
+function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish, total, pecaN, onPiece }: {
   passo: Passo; caso: Caso; treino: boolean; sound: boolean;
-  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; pecaN: number; onPiece: () => void;
+  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; total: number; pecaN: number; onPiece: () => void;
 }) {
   const start = useMemo(() => setupOf(passo, caso), [passo, caso]);
   const meta = useMemo(passo.meta, [passo]);
@@ -101,6 +103,15 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   }, [start, caso]);
 
   const state = useRef<CubeState>(clone(start));
+  /** onde o cubo está no caminho. Procura a partir da posição atual, porque o caminho pode
+   *  passar duas vezes pelo mesmo estado (ex.: "volta a frente" seguido de "gira a frente") */
+  const posRef = useRef(0);
+  const onde = (k: string, de = posRef.current) => {
+    let i = de >= 0 ? path.states.indexOf(k, de) : -1;
+    if (i < 0) i = path.states.indexOf(k);
+    posRef.current = i;
+    return i;
+  };
   const scene = useRef<CubeScene | null>(null);
   const busy = useRef(false);
   const alive = useRef(true);
@@ -132,7 +143,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     await scene.current!.turn(m, facelets(state.current), dur, greyKeys(state.current, passo.foco));
   };
   const settle = (fromUser: boolean) => {
-    const p = path.states.indexOf(key(state.current));
+    const p = onde(key(state.current));
     setPos(p);
     if (passo.pronto(state.current, meta)) {
       setDone(true); setMsg(null);
@@ -158,7 +169,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     if (busy.current || done) return;
     busy.current = true; setMsg(null); setDica(true);
     if (pos < 0) { await resetar(true); }
-    let p = path.states.indexOf(key(state.current));
+    let p = onde(key(state.current));
     setPlaying(true); scene.current?.hint(null);
     while (alive.current && p >= 0 && p < path.qs.length) {
       const lance = path.qs[p].lance, m = caso.lances[lance].m;
@@ -166,7 +177,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
       await sleep(soUm ? 150 : 500);
       if (!alive.current) return;
       await turn(m, m.endsWith('2') ? 800 : 650);
-      p = path.states.indexOf(key(state.current));
+      p = onde(key(state.current), p);
       if (soUm) break;
       await sleep(350);
     }
@@ -192,7 +203,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     busy.current = true;
     state.current = clone(start); last.current = null;
     scene.current?.setGrey(greyKeys(start, passo.foco)); scene.current?.paint(facelets(start));
-    setPos(0); setDone(false); setMsg(null); if (treino) setDica(false);
+    setPos(0); posRef.current = 0; setDone(false); setMsg(null); if (treino) setDica(false);
     document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
     if (!keepBusy) busy.current = false;
   };
@@ -256,8 +267,8 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
               <h3>Isso! Agora no seu cubo</h3>
               <p>{passo.repetir}</p>
             </div>
-            <Pecas feitas={pecaN - 1} agora={pecaN} />
-            <button className="btn btn-pop btn-big" onClick={onPiece}>{pecaN >= 4 ? `Fiz! As 4 estão prontas` : `Fiz no meu cubo: ${passo.peca} ${pecaN} de 4`}</button>
+            {total > 1 && <Pecas feitas={pecaN - 1} agora={pecaN} total={total} />}
+            <button className="btn btn-pop btn-big" onClick={onPiece}>{total === 1 ? 'Fiz no meu cubo!' : pecaN >= total ? `Fiz! As ${total} estão prontas` : `Fiz no meu cubo: ${passo.peca} ${pecaN} de ${total}`}</button>
             <button className="link-btn fim-passo" onClick={() => resetar()}>Quero ver de novo</button>
           </section>
         )
@@ -292,11 +303,11 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   );
 }
 
-/** as 4 peças do passo: prontas, a da vez e as que faltam */
-function Pecas({ feitas, agora }: { feitas: number; agora?: number }) {
+/** as peças do passo: prontas, a da vez e as que faltam */
+function Pecas({ feitas, agora, total = 4 }: { feitas: number; agora?: number; total?: number }) {
   return (
-    <div className="pecas" role="img" aria-label={`${feitas} de 4 peças prontas`}>
-      {[1, 2, 3, 4].map(k => <span key={k} className={k <= feitas ? 'ok' : k === agora ? 'now' : ''}>{k <= feitas ? '✓' : k}</span>)}
+    <div className="pecas" role="img" aria-label={`${feitas} de ${total} peças prontas`}>
+      {Array.from({ length: total }, (_, i) => i + 1).map(k => <span key={k} className={k <= feitas ? 'ok' : k === agora ? 'now' : ''}>{k <= feitas ? '✓' : k}</span>)}
     </div>
   );
 }

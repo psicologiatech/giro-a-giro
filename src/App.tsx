@@ -10,7 +10,7 @@ import { loadFeitos, marcarAte, passoAtual, saveFeitos } from './aulas/progresso
 import { Mascot } from './components/Mascot';
 import { CartaoConta, JanelaConta } from './components/Conta';
 import { useConta } from './nuvem/conta';
-import { passosDoTreino } from './aulas/revisao';
+import { loadRevisao, passosDoPlano } from './aulas/revisao';
 import { Confetti } from './components/Confetti';
 import { IconCamera, IconCube, IconFlame, IconHome, IconPath, IconSound, IconStar } from './components/Icons';
 import { earn, loadProgress, saveProgress, type Progress } from './progress';
@@ -93,7 +93,7 @@ export default function App() {
         {tab === 'trilha' && aula && <PassoView key={`${aula.n}-${treinoAgora}`} treinoAgora={treinoAgora} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
           onFinish={() => terminar(aula.n)} onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} />}
         {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => setToast('Cubo lido!')} onSolved={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); }} />}
-        {tab === 'praticar' && <Praticar key={praticarEm.k} passosTreino={passosDoTreino(feitos)} inicial={praticarEm.parte} onTreinarPasso={n => { setTab('trilha'); setPasso(n); setTreinoAgora(true); }} liberado={feitos.includes(8)} sound={p.sound}
+        {tab === 'praticar' && <Praticar key={praticarEm.k} passosTreino={passosDoPlano(loadRevisao(), feitos)} inicial={praticarEm.parte} onTreinarPasso={n => { setTab('trilha'); setPasso(n); setTreinoAgora(true); }} liberado={feitos.includes(8)} sound={p.sound}
           onSolve={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); setWin(true); }} onPratica={praticou}
           onTrilha={() => go('trilha')} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           onScan={() => { setLerAgora(k => k + 1); setTab('meucubo'); setPasso(null); }} />}

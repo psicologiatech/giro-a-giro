@@ -2,7 +2,7 @@ import { Speech, type Mood } from '../components/Mascot';
 import { TODOS } from '../aulas/aulas';
 import { formatar, loadTempos } from './Praticar';
 import type { Progress } from '../progress';
-import { partesHoje, passosDoTreino } from '../aulas/revisao';
+import { loadRevisao, partesHoje, passosDoPlano } from '../aulas/revisao';
 import { diasSemTreino, estrelas, loadDominio, loadTreino, naSemana, passoMaisFraco, setMeta, totalEstrelas } from '../aulas/dominio';
 import { IconCamera, IconCube, IconPath } from '../components/Icons';
 
@@ -48,10 +48,10 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
         <span className="continuar-go" aria-hidden="true">›</span>
       </button>
 
-      {!montou && passosDoTreino(feitos).length > 0 && (
+      {!montou && passosDoPlano(loadRevisao(), feitos).length > 0 && (
         <button className="card treino-mini" onClick={onTreinoDia}>
           <span className="parte-n">{partesHoje().includes(1) && partesHoje().includes(2) ? '✓' : '★'}</span>
-          <span><b>Treino do dia</b><small>{partesHoje().includes(1) && partesHoje().includes(2) ? 'Feito hoje. Até amanhã!' : `Fixe os passos que você já fez (${passosDoTreino(feitos).join(', ')}). Uns 5 minutos.`}</small></span>
+          <span><b>Treino do dia</b><small>{partesHoje().includes(1) && partesHoje().includes(2) ? 'Feito hoje. Até amanhã!' : `Treinando ${passosDoPlano(loadRevisao(), feitos).length === 1 ? 'o passo 1' : `os passos 1 a ${passosDoPlano(loadRevisao(), feitos).slice(-1)[0]}`}. Uns 5 minutos.`}</small></span>
           <span className="caso-go" aria-hidden="true">›</span>
         </button>
       )}

@@ -12,9 +12,9 @@ export type Revisao = Record<string, Cartao>;
 /** dias até voltar, por caixa (1 a 5) */
 export const INTERVALOS = [0, 1, 2, 4, 7, 14];
 
-/** as situações que entram na revisão: as que usam fórmula (passos 3 a 8) */
+/** as situações que entram na revisão: todas, do passo 1 ao 8 */
 export const SITUACOES: { id: string; passo: Passo; caso: Caso }[] =
-  PASSOS.filter(p => p.n >= 3).flatMap(p => p.casos.map(c => ({ id: `${p.n}.${c.id}`, passo: p, caso: c })));
+  PASSOS.filter(p => p.n >= 1).flatMap(p => p.casos.map(c => ({ id: `${p.n}.${c.id}`, passo: p, caso: c })));
 
 const dia = (d: Date) => d.toLocaleDateString('sv-SE');
 export const somaDias = (iso: string, n: number) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return dia(d); };
@@ -84,5 +84,18 @@ export function marcarParte(parte: number, agora = new Date()) {
 /** um passo está dominado quando todas as situações dele chegaram ao nível 5 */
 export const passoDominado = (rev: Revisao, passo: number) =>
   SITUACOES.filter(s => s.passo.n === passo).every(s => nivelDe(rev, s.id) === 5 && !!rev[s.id]);
-/** o treino abre a partir do passo 3 (o primeiro com fórmula) */
-export const passosDoTreino = (feitos: number[]) => feitos.filter(n => n >= 3 && n <= 8);
+/** o passo seguinte entra no treino quando todas as situações do passo atual chegam a este nível */
+export const LIMIAR = 2;
+/**
+ * O plano de treino é uma escada: começa só com o passo 1. O passo seguinte entra quando
+ * (a) a pessoa já fez esse passo na trilha e (b) todas as situações do passo anterior chegaram ao nível LIMIAR.
+ */
+export function passosDoPlano(rev: Revisao, feitos: number[]): number[] {
+  const out: number[] = [];
+  for (let n = 1; n <= 8; n++) {
+    if (!feitos.includes(n)) break;
+    out.push(n);
+    if (!SITUACOES.filter(s => s.passo.n === n).every(s => rev[s.id] && nivelDe(rev, s.id) >= LIMIAR)) break;
+  }
+  return out;
+}

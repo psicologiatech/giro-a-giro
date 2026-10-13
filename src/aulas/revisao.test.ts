@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { escolher, intercalar, nivelDe, passoDominado, passosDoTreino, responder, SITUACOES, type Revisao } from './revisao';
+import { escolher, intercalar, nivelDe, passoDominado, passosDoPlano, responder, SITUACOES, type Revisao } from './revisao';
 
 const dia = new Date('2026-10-13T10:00:00');
 let seed = 3; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
 describe('revisão espaçada', () => {
-  it('tem as situações dos passos 3 a 8', () => {
-    expect(SITUACOES.length).toBeGreaterThan(20);
-    expect(new Set(SITUACOES.map(s => s.passo.n))).toEqual(new Set([3, 4, 5, 6, 7, 8]));
+  it('tem as situações dos passos 1 a 8', () => {
+    expect(SITUACOES.length).toBeGreaterThan(25);
+    expect(new Set(SITUACOES.map(s => s.passo.n))).toEqual(new Set([1, 2, 3, 4, 5, 6, 7, 8]));
   });
   it('acertou sobe de nível e demora mais para voltar; errou desce um nível', () => {
     let r: Revisao = {};
@@ -18,9 +18,14 @@ describe('revisão espaçada', () => {
     r = responder(r, '6.peixe', false, dia); expect(r['6.peixe']).toMatchObject({ caixa: 2, proxima: '2026-10-15' });
     r = responder(r, '6.peixe', false, dia); r = responder(r, '6.peixe', false, dia); expect(r['6.peixe'].caixa).toBe(1);
   });
-  it('o treino cresce com a trilha: só passos já feitos, a partir do 3', () => {
-    expect(passosDoTreino([0, 1, 2])).toEqual([]);
-    expect(passosDoTreino([0, 1, 2, 3, 4])).toEqual([3, 4]);
+  it('o plano é uma escada: começa no passo 1 e abre o próximo quando o atual chega ao nível 2', () => {
+    const todos = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    expect(passosDoPlano({}, [0])).toEqual([]);
+    expect(passosDoPlano({}, todos)).toEqual([1]);
+    const nivel2 = (n: number): Revisao => Object.fromEntries(SITUACOES.filter(s => s.passo.n === n).map(s => [s.id, { caixa: 2, proxima: '2026-10-20', visto: 1 }]));
+    expect(passosDoPlano(nivel2(1), todos)).toEqual([1, 2]);
+    expect(passosDoPlano({ ...nivel2(1), ...nivel2(2) }, todos)).toEqual([1, 2, 3]);
+    expect(passosDoPlano({ ...nivel2(1), ...nivel2(2) }, [0, 1, 2])).toEqual([1, 2]);   // o 3 só entra depois de feito na trilha
     const e = escolher({}, 5, dia, rnd, [3]);
     expect(e.length).toBe(4);   // o passo 3 tem 4 situações
     expect(e.every(id => id.startsWith('3.'))).toBe(true);

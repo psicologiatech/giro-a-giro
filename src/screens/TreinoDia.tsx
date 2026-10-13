@@ -8,7 +8,7 @@ import { describe } from '../cube/describe';
 import { greyKeys, movesOf, setupOf, TODOS, type Caso, type Passo } from '../aulas/aulas';
 import { estrelas, loadDominio, subir, SEI } from '../aulas/dominio';
 import {
-  escolher, loadRevisao, marcarParte, nivelDe, NIVEIS, partesHoje, passoDominado, responder, saveRevisao, SITUACOES,
+  LIMIAR, escolher, loadRevisao, marcarParte, nivelDe, NIVEIS, partesHoje, passoDominado, responder, saveRevisao, SITUACOES,
 } from '../aulas/revisao';
 import { sfx, buzz } from '../feedback';
 
@@ -29,13 +29,12 @@ export function TreinoDia({ sound, passos, onVoltar, onTreinarPasso, onPratica }
   // ponto fraco: entre os passos do treino, o de menos estrelas
   const fraco = passos.length ? passos.reduce((m, n) => (estrelas(dom, n) < estrelas(dom, m) ? n : m), passos[0]) : 3;
   const fracoT = TODOS.find(t => t.n === fraco)!;
-  const montou = passos.includes(8);
 
   if (aquecendo) return <Aquecimento sound={sound} passos={passos} onFim={() => { marcarParte(1); onPratica(); atualizar(); setAquecendo(false); }} onSair={() => setAquecendo(false)} />;
   if (plano) return <MeuPlano passos={passos} onVoltar={() => setPlano(false)} />;
 
   const PARTES = [
-    { n: 1, titulo: 'Aquecimento: qual é a situação?', texto: 'Algumas situações dos passos que você já fez. Cada uma no seu nível.', ir: () => setAquecendo(true) },
+    { n: 1, titulo: 'Aquecimento: qual é a situação?', texto: `Situações ${passos.length === 1 ? 'do passo 1' : `dos passos 1 a ${passos[passos.length - 1]}`}, cada uma no seu nível.`, ir: () => setAquecendo(true) },
     { n: 2, titulo: `Ponto fraco: passo ${fraco}`, texto: `${fracoT.titulo}, com ${estrelas(dom, fraco)} de 3 estrelas. Treine sem pedir dica.`, ir: () => { marcarParte(2); onTreinarPasso(fraco); } },
   ];
   const tudo = feitas.includes(1) && feitas.includes(2);
@@ -57,7 +56,7 @@ export function TreinoDia({ sound, passos, onVoltar, onTreinarPasso, onPratica }
         ))}
       </ol>
       <button className="btn" onClick={() => setPlano(true)}>Meu plano: ver o nível de cada situação</button>
-      {!montou && <p className="note">O treino cresce com a trilha: cada passo que você termina entra aqui.</p>}
+      <p className="note">O treino é uma escada: começa no passo 1. Quando todas as situações de um passo chegam ao nível {LIMIAR}, o próximo passo entra.</p>
     </div>
   );
 }
@@ -73,12 +72,12 @@ function MeuPlano({ passos, onVoltar }: { passos: number[]; onVoltar: () => void
       <section className="card niveis-legenda">
         {NIVEIS.map(n => <p key={n.n}><span className={`nivel-dot n${n.n}`}>{n.n}</span><b>{n.nome}:</b> {n.texto}</p>)}
       </section>
-      {[3, 4, 5, 6, 7, 8].map(n => {
+      {[1, 2, 3, 4, 5, 6, 7, 8].map(n => {
         const t = TODOS.find(x => x.n === n)!, sits = SITUACOES.filter(s => s.passo.n === n), aberto = passos.includes(n);
         const no5 = sits.filter(s => rev[s.id] && nivelDe(rev, s.id) === 5).length;
         return (
           <section key={n} className={`card plano-passo ${aberto ? '' : 'fechado'}`}>
-            <p className="passo-kicker">Passo {n} · {t.titulo}{aberto ? ` · ${no5} de ${sits.length} no nível 5` : ' · abre quando você terminar este passo na trilha'}</p>
+            <p className="passo-kicker">Passo {n} · {t.titulo}{aberto ? ` · ${no5} de ${sits.length} no nível 5` : n === passos.length + 1 ? ` · abre quando as situações do passo ${n - 1} chegarem ao nível ${LIMIAR}` : ''}</p>
             {aberto && (
               <ul>
                 {sits.map(s => {
@@ -146,7 +145,7 @@ function Aquecimento({ sound, passos, onFim, onSair }: { sound: boolean; passos:
   );
   if (!item) return (
     <div className="screen treino-dia">
-      <Speech mood="cubo">Ainda não tem situação para treinar. Termine o passo 3 da trilha para começar.</Speech>
+      <Speech mood="cubo">Ainda não tem situação para treinar. Termine o passo 1 da trilha para começar.</Speech>
       <button className="btn btn-big" onClick={onSair}>Voltar</button>
     </div>
   );

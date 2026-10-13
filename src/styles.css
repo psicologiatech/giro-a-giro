@@ -308,3 +308,11 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .vez-msg { margin: 0; border-radius: 16px; padding: 10px 14px; font-size: 15px; background: var(--surface); border: 2px solid var(--edge); }
 .vez-msg.sua { background: var(--pop-soft); border-color: #FFC2DC; }
 .feito > .btn { grid-column: 1 / -1; }
+
+/* parar a apresentação; fórmula em letras */
+.btn-parar { --face: #FFF4E0; --lip: #FFD89A; color: #7A4A00; }
+.demo-parar { padding: 6px 16px; font-size: 15px; --face: #FFFFFF; }
+.passo-demo .demo-parar ~ .demo-giro, .passo-demo:has(.demo-parar) .demo-giro { bottom: 76px; }
+.formula { display: inline-block; margin-top: 6px; font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink);
+  background: var(--bg); border: 1.5px solid var(--edge); border-radius: 8px; padding: 2px 8px 0; letter-spacing: .02em; word-spacing: .15em; }
+.toggle-lista { margin: -8px 0 0; }

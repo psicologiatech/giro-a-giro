@@ -8,6 +8,7 @@ import { describe } from '../cube/describe';
 import { demoInicio, greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 import { loadPecas, savePecas } from '../aulas/progresso';
+import { useLetras } from '../aulas/letras';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
 export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
@@ -17,6 +18,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
   const [treino, setTreino] = useState(false);
   const fim = useMemo(passo.fim, [passo]);
   const total = passo.total ?? 4;
+  const [letras, setLetras] = useLetras();
   const [pecas, setPecas] = useState(() => loadPecas(passo.n));
   useEffect(() => savePecas(passo.n, pecas), [passo.n, pecas]);
   /** mais uma peça pronta no cubo de verdade */
@@ -66,12 +68,13 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
       )}
       <Speech mood="aponta">{passo.dica}</Speech>
       {pecas < total && <h3 className="sec-title">Escolha a situação igual à do seu cubo</h3>}
+      {pecas < total && <label className="toggle toggle-lista"><input type="checkbox" checked={letras} onChange={e => setLetras(e.target.checked)} /> Mostrar a fórmula em letras (R, U, F…)</label>}
       {pecas < total && <ul className="casos">
         {passo.casos.map((c, i) => (
           <li key={c.id}>
             <button className="caso" onClick={() => { setTreino(false); setCaso(c); }}>
               <span className="caso-n">{String.fromCharCode(65 + i)}</span>
-              <span><b>{c.nome}</b><small>{c.ver}</small></span>
+              <span><b>{c.nome}</b><small>{c.ver}</small>{letras && <code className="formula">{c.lances.map(l => l.m).join(' ')}</code>}</span>
               <span className="caso-go" aria-hidden="true">›</span>
             </button>
           </li>
@@ -118,7 +121,8 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   const last = useRef<string | null>(null);
   const [pos, setPos] = useState(0);          // posição no caminho (-1 = saiu do caminho)
   const [done, setDone] = useState(false);
-  const [letras, setLetras] = useState(false);
+  const [letras, setLetras] = useLetras();
+  const parar = useRef(false);
   const [dica, setDica] = useState(!treino);
   const [msg, setMsg] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -171,19 +175,22 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     if (pos < 0) { await resetar(true); }
     let p = onde(key(state.current));
     setPlaying(true); scene.current?.hint(null);
-    while (alive.current && p >= 0 && p < path.qs.length) {
+    parar.current = false;
+    while (alive.current && !parar.current && p >= 0 && p < path.qs.length) {
       const lance = path.qs[p].lance, m = caso.lances[lance].m;
       setPos(p);
       await sleep(soUm ? 150 : 500);
       if (!alive.current) return;
+      if (parar.current) break;
       await turn(m, m.endsWith('2') ? 800 : 650);
       p = onde(key(state.current), p);
       if (soUm) break;
       await sleep(350);
     }
     if (!alive.current) return;
+    const parou = parar.current; parar.current = false;
     if (demo) {
-      await sleep(1100); if (!alive.current) return;
+      if (!parou) { await sleep(1100); if (!alive.current) return; }
       setPlaying(false); await resetar(); setVisto(true);
       return;
     }
@@ -224,7 +231,9 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
         <Cube3D onReady={s => { scene.current = s; s.setGrey(greyKeys(start, passo.foco)); s.paint(facelets(start)); }}
           options={{ canTurn: () => !busy.current && !done, onMove }} />
         <button className="view-btn" onClick={() => scene.current?.resetView()}>Endireitar</button>
-        <span className="stage-hint">{treino ? 'Faça você: arraste a face para girar.' : 'Você também pode girar a face com o dedo.'}</span>
+        {playing
+          ? <button className="btn demo-btn demo-parar" onClick={() => { parar.current = true; }}>■ Parar</button>
+          : <span className="stage-hint">{treino ? 'Faça você: arraste a face para girar.' : 'Você também pode girar a face com o dedo.'}</span>}
       </div>
 
       {msg && <p className="warn-msg" role="status">{msg}</p>}
@@ -236,7 +245,9 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
 
       {!done && (!treino || dica) && (
         <>
-          <button className="btn btn-pop btn-big" onClick={() => mostrar(false)} disabled={playing}>{playing ? 'Olhe o cubo…' : pos > 0 ? 'Continuar devagar' : visto && !treino ? 'Ver de novo devagar' : 'Mostrar devagar'}</button>
+          {playing
+            ? <button className="btn btn-big btn-parar" onClick={() => { parar.current = true; }}>■ Parar a apresentação</button>
+            : <button className="btn btn-pop btn-big" onClick={() => mostrar(false)}>{pos > 0 ? 'Continuar devagar' : visto && !treino ? 'Ver de novo devagar' : 'Mostrar devagar'}</button>}
           <div className="row">
             <button className="btn" onClick={() => resetar()} disabled={playing}>Do começo</button>
             <button className="btn" onClick={() => mostrar(true)} disabled={playing}>Só o próximo giro</button>
@@ -326,21 +337,26 @@ function PassoDemo({ passo, fim }: { passo: Passo; fim: CubeState }) {
   const [legenda, setLegenda] = useState<string | null>(null);
   const [giro, setGiro] = useState<string | null>(null);
   const [tocando, setTocando] = useState(false);
+  const parar = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  /** parou no meio: volta a mostrar como fica no fim */
+  const interromper = () => { scene.current?.hint(null); setGiro(null); setLegenda(null); mostrarFim(); setTocando(false); };
 
   const mostrarFim = () => { const s = scene.current; if (!s) return; s.setGrey(greyKeys(fim, passo.foco)); s.paint(facelets(fim)); s.look(passo.fimDeBaixo); };
   const tocar = async () => {
     const s = scene.current; if (!s || tocando) return;
-    setTocando(true);
+    setTocando(true); parar.current = false;
     const st = demoInicio(passo);
     s.resetView(); s.setGrey(greyKeys(st, passo.foco)); s.paint(facelets(st));
     setLegenda('Assim começa'); setGiro(null);
     await sleep(1200);
     for (const parte of passo.demo.partes) {
       if (!alive.current) return;
+      if (parar.current) return interromper();
       setLegenda(parte.legenda);
       for (const m of parte.m.split(' ')) {
         if (!alive.current) return;
+        if (parar.current) return interromper();
         setGiro(describe(m)); s.hint(m); await sleep(450); s.hint(null);
         applyMove(st, m);
         await s.turn(m, facelets(st), m.endsWith('2') ? 900 : 700, greyKeys(st, passo.foco));
@@ -358,6 +374,7 @@ function PassoDemo({ passo, fim }: { passo: Passo; fim: CubeState }) {
       <Cube3D onReady={s => { scene.current = s; mostrarFim(); }} options={{ canTurn: () => false }} />
       {legenda && <span className="destaque">{legenda}</span>}
       {giro && <span className="demo-giro">{giro}</span>}
+      {tocando && <button className="btn demo-btn demo-parar" onClick={() => { parar.current = true; }}>■ Parar</button>}
       {!tocando && (
         <button className="btn btn-pop demo-btn" onClick={tocar}>▶ {legenda ? 'Ver de novo' : 'Ver o passo inteiro'}</button>
       )}

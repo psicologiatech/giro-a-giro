@@ -128,7 +128,7 @@ function NoMeuCubo({ sound, onVoltar, onSolve }: { sound: boolean; onVoltar: () 
 
   return (
     <div className="screen sozinha">
-      {!comecou && <button className="back-btn self-start" onClick={onVoltar}>‹ Montar sem ajuda</button>}
+      {!comecou && <button className="back-btn self-start" onClick={onVoltar}>‹ Montagem completa</button>}
       {!comecou ? (
         <>
           <Speech mood="cubo">Embaralhe o seu cubo do seu jeito, girando à vontade. Quando estiver pronto, toque em começar.</Speech>
@@ -215,7 +215,7 @@ function NaTela({ sound, onVoltar, onOpenPasso, onSolve }: { sound: boolean; onV
   return (
     <div className="screen sozinha">
       <div className="sozinha-topo">
-        <button className="back-btn" onClick={onVoltar}>‹ Montar sem ajuda</button>
+        <button className="back-btn" onClick={onVoltar}>‹ Montagem completa</button>
         <span className="chip">{formatar(fim ?? (inicio === null ? 0 : agora))}</span>
         <span className="chip">{giros} giros</span>
       </div>

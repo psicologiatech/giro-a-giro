@@ -19,17 +19,28 @@ export const SITUACOES: { id: string; passo: Passo; caso: Caso }[] =
 const dia = (d: Date) => d.toLocaleDateString('sv-SE');
 export const somaDias = (iso: string, n: number) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return dia(d); };
 
-/** registra a resposta: acertou sobe uma caixa; errou volta para a 1 */
+/** o nível de uma situação (1 a 5) é a caixa dela; situação nova começa no 1 */
+export const nivelDe = (rev: Revisao, id: string) => Math.min(5, Math.max(1, rev[id]?.caixa ?? 1));
+export const NIVEIS = [
+  { n: 1, nome: 'Reconhecer', texto: 'escolher entre 2 opções' },
+  { n: 2, nome: 'Escolher', texto: 'escolher entre 3 opções parecidas' },
+  { n: 3, nome: 'Lembrar', texto: 'lembrar sem opções e conferir' },
+  { n: 4, nome: 'Fazer', texto: 'fazer no cubo da tela, sem a seta' },
+  { n: 5, nome: 'Dominar', texto: 'fazer só pelo nome da situação' },
+];
+
+/** registra a resposta: acertou sobe um nível; errou desce um (sem voltar ao zero) */
 export function responder(rev: Revisao, id: string, acertou: boolean, agora = new Date()): Revisao {
   const atual = rev[id]?.caixa ?? 0;
-  const caixa = acertou ? Math.min(5, Math.max(1, atual + 1)) : 1;
+  const caixa = acertou ? Math.min(5, Math.max(1, atual + 1)) : Math.max(1, atual - 1);
   return { ...rev, [id]: { caixa, proxima: somaDias(dia(agora), INTERVALOS[caixa]), visto: agora.getTime() } };
 }
 
-/** escolhe as situações do aquecimento: vencidas primeiro, depois novas, depois as que estão mais perto de vencer */
-export function escolher(rev: Revisao, qtd = 5, agora = new Date(), rnd = Math.random): string[] {
+/** escolhe as situações do aquecimento: vencidas primeiro, depois novas, depois as que estão mais perto de vencer.
+ *  "passos" limita aos passos que a pessoa já fez (o treino cresce junto com a trilha) */
+export function escolher(rev: Revisao, qtd = 5, agora = new Date(), rnd = Math.random, passos?: number[]): string[] {
   const hoje = dia(agora);
-  const ids = SITUACOES.map(s => s.id);
+  const ids = SITUACOES.filter(s => !passos || passos.includes(s.passo.n)).map(s => s.id);
   const vencidas = ids.filter(id => rev[id] && rev[id].proxima <= hoje)
     .sort((a, b) => rev[a].caixa - rev[b].caixa || rev[a].proxima.localeCompare(rev[b].proxima));
   const novas = embaralhar(ids.filter(id => !rev[id]), rnd);
@@ -69,3 +80,9 @@ export function marcarParte(parte: number, agora = new Date()) {
   if (!ps.includes(parte)) gravar(TDKEY, { dia: dia(agora), partes: [...ps, parte].sort() });
   try { window.dispatchEvent(new Event('giroagiro:progresso')); } catch { /* */ }
 }
+
+/** um passo está dominado quando todas as situações dele chegaram ao nível 5 */
+export const passoDominado = (rev: Revisao, passo: number) =>
+  SITUACOES.filter(s => s.passo.n === passo).every(s => nivelDe(rev, s.id) === 5 && !!rev[s.id]);
+/** o treino abre a partir do passo 3 (o primeiro com fórmula) */
+export const passosDoTreino = (feitos: number[]) => feitos.filter(n => n >= 3 && n <= 8);

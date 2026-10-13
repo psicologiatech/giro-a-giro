@@ -15,14 +15,18 @@ import { sfx, buzz } from '../feedback';
 export type Parte = 'menu' | 'treino' | 'sozinha' | 'cronometro' | 'caderno' | 'travei' | 'livre';
 
 /** a área de prática: liberada depois do passo 8 */
-export function Praticar({ liberado, sound, onSolve, onPratica, onTrilha, onOpenPasso, onTreinarPasso, onScan, inicial }: {
-  inicial?: Parte; onTreinarPasso?: (n: number) => void;
+export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratica, onTrilha, onOpenPasso, onTreinarPasso, onScan, inicial }: {
+  inicial?: Parte; onTreinarPasso?: (n: number) => void; passosTreino?: number[];
   liberado: boolean; sound: boolean; onSolve: () => void; onPratica?: () => void;
   onTrilha: () => void; onOpenPasso: (n: number) => void; onScan: () => void;
 }) {
   const [parte, setParte] = useState<Parte>(inicial ?? 'menu');
-  const [modoSozinha, setModoSozinha] = useState<'real' | undefined>(undefined);
   const voltar = () => setParte('menu');
+
+  const treino = <TreinoDia sound={sound} passos={passosTreino} onVoltar={voltar} onPratica={() => onPratica?.()}
+    onTreinarPasso={n => (onTreinarPasso ?? onOpenPasso)(n)} />;
+  // o Treino do dia abre antes do resto: a partir do passo 3 da trilha
+  if (parte === 'treino' && passosTreino.length) return treino;
 
   if (!liberado) return (
     <div className="screen praticar">
@@ -31,28 +35,27 @@ export function Praticar({ liberado, sound, onSolve, onPratica, onTrilha, onOpen
         <h2>O que tem aqui</h2>
         <ul className="checklist">
           <li><b>Treino do dia</b>, para a mão e a memória aprenderem de vez.</li>
-          <li><b>Montar sem ajuda</b>, só com os nomes das fórmulas.</li>
+          <li><b>Montagem completa</b>, só com os nomes das fórmulas.</li>
           <li><b>Cronômetro</b> para medir seus tempos.</li>
           <li><b>Caderno de fórmulas</b>, com os nomes que os cubistas usam.</li>
           <li><b>Travei!</b> para voltar ao passo certo.</li>
           <li><b>Cubo livre</b> para mexer à vontade.</li>
         </ul>
       </section>
-      <button className="btn btn-pop btn-big" onClick={onTrilha}>Ir para a trilha</button>
+      {passosTreino.length > 0 && <button className="btn btn-pop btn-big" onClick={() => setParte('treino')}>Treino do dia (já aberto)</button>}
+      <button className={`btn btn-big ${passosTreino.length ? '' : 'btn-pop'}`} onClick={onTrilha}>Ir para a trilha</button>
     </div>
   );
 
-  if (parte === 'treino') return <TreinoDia sound={sound} onVoltar={voltar} onPratica={() => onPratica?.()}
-    onTreinarPasso={n => (onTreinarPasso ?? onOpenPasso)(n)} onMontar={() => { setModoSozinha('real'); setParte('sozinha'); }} />;
-  if (parte === 'sozinha') return <Sozinha sound={sound} onVoltar={() => { setModoSozinha(undefined); voltar(); }} onOpenPasso={onOpenPasso} onSolve={onSolve} modoInicial={modoSozinha} />;
+  if (parte === 'sozinha') return <Sozinha sound={sound} onVoltar={voltar} onOpenPasso={onOpenPasso} onSolve={onSolve} />;
   if (parte === 'cronometro') return <Cronometro sound={sound} onVoltar={voltar} onPratica={onPratica} />;
   if (parte === 'caderno') return <Caderno onVoltar={voltar} />;
   if (parte === 'travei') return <Travei onVoltar={voltar} onOpenPasso={onOpenPasso} onScan={onScan} />;
   if (parte === 'livre') return <Brincar sound={sound} onSolve={onSolve} onVoltar={voltar} />;
 
   const ITENS: { id: Parte; titulo: string; texto: string; cor: string }[] = [
-    { id: 'treino', titulo: `Treino do dia${partesHoje().includes(1) && partesHoje().includes(2) ? ' ✓' : ''}`, texto: 'Uns 5 minutos: escolher a fórmula certa e treinar o ponto fraco. Montagem completa é bônus.', cor: 'pop' },
-    { id: 'sozinha', titulo: 'Montar sem ajuda', texto: 'Do começo ao fim, só com os nomes das fórmulas. A ajuda fica escondida.', cor: 'yellow' },
+    { id: 'treino', titulo: `Treino do dia${partesHoje().includes(1) && partesHoje().includes(2) ? ' ✓' : ''}`, texto: 'Uns 5 minutos: as situações no seu nível e o ponto fraco.', cor: 'pop' },
+    { id: 'sozinha', titulo: 'Montagem completa', texto: 'Do começo ao fim, só com os nomes das fórmulas. A ajuda fica escondida.', cor: 'yellow' },
     { id: 'cronometro', titulo: 'Cronômetro', texto: 'Embaralhe o seu cubo, monte e veja quanto tempo levou.', cor: 'green' },
     { id: 'caderno', titulo: 'Caderno de fórmulas', texto: 'Todas as fórmulas, com o nome dos cubistas e o giro a giro no cubo.', cor: 'blue' },
     { id: 'travei', titulo: 'Travei!', texto: 'Não sabe o que fazer agora? Eu te levo ao passo certo.', cor: 'orange' },

@@ -69,7 +69,7 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon, onRecomecar }: {
         <p><b>As estrelas de cada passo</b></p>
         <p><span className="estrelas"><i className="on">★</i><i>★</i><i>★</i></span> Vi: assistiu às situações do passo</p>
         <p><span className="estrelas"><i className="on">★</i><i className="on">★</i><i>★</i></span> Fiz: completou o passo, com ajuda</p>
-        <p><span className="estrelas"><i className="on">★</i><i className="on">★</i><i className="on">★</i></span> Sei: fez sem ajuda (treino ou Montar sem ajuda)</p>
+        <p><span className="estrelas"><i className="on">★</i><i className="on">★</i><i className="on">★</i></span> Sei: fez sem ajuda (treino ou Montagem completa)</p>
       </section>
       <button className="btn btn-big" onClick={onPlay}>{atual > 8 ? 'Praticar' : 'Praticar (abre depois do passo 8)'}</button>
       {feitos.length > 0 && <button className="link-btn recomecar" onClick={() => setConfirmar(true)}>Recomeçar a trilha do zero</button>}

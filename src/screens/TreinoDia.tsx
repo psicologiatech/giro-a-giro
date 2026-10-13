@@ -3,7 +3,7 @@ import { Cube3D } from '../components/Cube3D';
 import { Speech } from '../components/Mascot';
 import { Confetti } from '../components/Confetti';
 import type { CubeScene } from '../cube/CubeScene';
-import { applyMove, clone, facelets, type CubeState } from '../cube/model';
+import { applyMove, clone, facelets, invertMove, type CubeState } from '../cube/model';
 import { describe } from '../cube/describe';
 import { greyKeys, movesOf, setupOf } from '../aulas/aulas';
 import { loadDominio, passoMaisFraco, estrelas } from '../aulas/dominio';
@@ -78,6 +78,8 @@ function Aquecimento({ sound, onFim, onSair }: { sound: boolean; onFim: () => vo
   const [acertos, setAcertos] = useState(0);
   const [fim, setFim] = useState(false);
   const [opcoes, setOpcoes] = useState<Opcao[]>(() => (ids[0] ? opcoesPara(ids[0]) : []));
+  const [fazendo, setFazendo] = useState(false);
+  const [fez, setFez] = useState(false);
   const sit = SITUACOES.find(s => s.id === ids[i]);
 
   const escolher_ = (k: number) => {
@@ -89,7 +91,7 @@ function Aquecimento({ sound, onFim, onSair }: { sound: boolean; onFim: () => vo
   };
   const proxima = () => {
     if (i + 1 >= ids.length) { setFim(true); return; }
-    setI(i + 1); setEscolha(null); setOpcoes(opcoesPara(ids[i + 1]));
+    setI(i + 1); setEscolha(null); setOpcoes(opcoesPara(ids[i + 1])); setFazendo(false); setFez(false);
   };
 
   if (fim) return (
@@ -113,7 +115,9 @@ function Aquecimento({ sound, onFim, onSair }: { sound: boolean; onFim: () => vo
         <h2 className="player-title">{sit.passo.titulo}</h2>
       </div>
       <p className="player-ver">{sit.passo.objetivo}</p>
-      <Situacao key={sit.id} passo={sit.passo} caso={sit.caso} animar={escolha !== null} />
+      <Situacao key={sit.id} passo={sit.passo} caso={sit.caso} animar={escolha !== null} praticar={fazendo}
+        onFeito={() => { setFez(true); if (sound) sfx.good(); buzz([20, 30]); }} />
+      {fez && <p className="vez-msg sua"><b>Isso! Você fez.</b> A mão também aprende assim.</p>}
       <h3 className="sec-title">{escolha === null ? 'O que fazer aqui?' : acertou ? 'Isso mesmo!' : 'Quase! A certa está em verde.'}</h3>
       <ul className="opcoes">
         {opcoes.map((o, k) => {
@@ -137,39 +141,86 @@ function Aquecimento({ sound, onFim, onSair }: { sound: boolean; onFim: () => vo
             <h3>{sit.caso.nome}</h3>
             <p>{sit.caso.ver}</p>
           </section>
-          <button className="btn btn-pop btn-big" onClick={proxima}>{i + 1 >= ids.length ? 'Ver resultado' : 'Próxima'}</button>
+          <div className="row">
+            <button className="btn" onClick={() => { setFez(false); setFazendo(false); setTimeout(() => setFazendo(true), 0); }}>{fazendo ? 'Fazer de novo' : 'Agora eu faço'}</button>
+            <button className="btn btn-pop" onClick={proxima}>{i + 1 >= ids.length ? 'Ver resultado' : 'Próxima'}</button>
+          </div>
         </>
       )}
     </div>
   );
 }
 
-/** o cubo da situação; com "animar", mostra a solução giro a giro */
-function Situacao({ passo, caso, animar }: { passo: Parameters<typeof setupOf>[0]; caso: Parameters<typeof setupOf>[1]; animar: boolean }) {
+/** o cubo da situação; com "animar", mostra a solução giro a giro; com "praticar", a pessoa faz arrastando as faces */
+function Situacao({ passo, caso, animar, praticar, onFeito }: {
+  passo: Parameters<typeof setupOf>[0]; caso: Parameters<typeof setupOf>[1]; animar: boolean; praticar?: boolean; onFeito?: () => void;
+}) {
   const scene = useRef<CubeScene | null>(null);
   const inicio = useRef<CubeState>(setupOf(passo, caso));
-  const vivo = useRef(true);
+  const estado = useRef<CubeState>(clone(inicio.current));
+  const vivo = useRef(true), ocupado = useRef(false);
   const [giro, setGiro] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  // o caminho em quartos de volta (um giro duplo vira dois)
+  const caminho = useRef<string[]>(movesOf(caso).flatMap(m => (m.endsWith('2') ? [m[0], m[0]] : [m])));
+  const pos = useRef(0), fora = useRef<string[]>([]);
+  const praticarRef = useRef(!!praticar); praticarRef.current = !!praticar;
+  const [inteiro, setInteiro] = useState<string | null>(null);   // próximo giro é do cubo inteiro
   useEffect(() => { vivo.current = true; return () => { vivo.current = false; }; }, []);
+  const pintar = (st: CubeState) => { scene.current?.setGrey(greyKeys(st, passo.foco)); scene.current?.paint(facelets(st)); };
+  const dica = () => {
+    const prox = fora.current.length ? invertMove(fora.current[fora.current.length - 1]) : caminho.current[pos.current] ?? null;
+    scene.current?.hint(prox);
+    setInteiro(prox && 'xyz'.includes(prox[0]) ? prox : null);
+  };
+
   useEffect(() => {
-    if (!animar) return;
+    if (!animar || praticar) return;
     (async () => {
       const st = clone(inicio.current);
       await sleep(400);
       for (const m of movesOf(caso)) {
-        if (!vivo.current || !scene.current) return;
+        if (!vivo.current || !scene.current || praticarRef.current) return;
         setGiro(describe(m)); scene.current.hint(m); await sleep(400); scene.current.hint(null);
         applyMove(st, m);
         await scene.current.turn(m, facelets(st), m.endsWith('2') ? 750 : 550, greyKeys(st, passo.foco));
       }
       if (vivo.current) setGiro(null);
     })();
-  }, [animar, caso, passo]);
+  }, [animar, praticar, caso, passo]);
+
+  // modo "agora eu faço": volta para a situação e mostra a seta do próximo giro
+  useEffect(() => {
+    if (!praticar) return;
+    estado.current = clone(inicio.current); pos.current = 0; fora.current = []; setMsg(null); setGiro(null);
+    pintar(estado.current); dica();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [praticar]);
+
+  const onMove = async (m: string) => {
+    if (!praticarRef.current || ocupado.current || pos.current >= caminho.current.length) return;
+    setInteiro(null);
+    ocupado.current = true; scene.current?.hint(null);
+    applyMove(estado.current, m);
+    await scene.current!.turn(m, facelets(estado.current), 'xyz'.includes(m[0]) ? 550 : 260, greyKeys(estado.current, passo.foco));
+    if (fora.current.length && m === invertMove(fora.current[fora.current.length - 1])) fora.current.pop();
+    else if (!fora.current.length && m === caminho.current[pos.current]) pos.current++;
+    else fora.current.push(m);
+    setMsg(fora.current.length ? 'Esse giro saiu do caminho. A seta mostra como voltar.' : null);
+    ocupado.current = false;
+    if (pos.current >= caminho.current.length && !fora.current.length) { setMsg(null); onFeito?.(); return; }
+    dica();
+  };
+
   return (
-    <div className="stage stage-sm">
-      <Cube3D onReady={s => { scene.current = s; s.setGrey(greyKeys(inicio.current, passo.foco)); s.paint(facelets(inicio.current)); }} options={{ canTurn: () => false }} />
-      {giro && <span className="demo-giro">{giro}</span>}
-      <span className="stage-hint">Arraste o fundo para virar a vista.</span>
-    </div>
+    <>
+      <div className="stage stage-sm">
+        <Cube3D onReady={s => { scene.current = s; pintar(inicio.current); }} options={{ canTurn: () => !!praticar && !ocupado.current, onMove }} />
+        {giro && <span className="demo-giro">{giro}</span>}
+        {praticar && inteiro && <button className="btn btn-pop demo-btn" onClick={() => onMove(inteiro)}>↻ Girar o cubo inteiro</button>}
+        <span className="stage-hint">{praticar ? 'Arraste a face para girar. A seta mostra o próximo giro.' : 'Arraste o fundo para virar a vista.'}</span>
+      </div>
+      {msg && <p className="warn-msg">{msg}</p>}
+    </>
   );
 }

@@ -142,6 +142,8 @@ O Giro a Giro é um **PWA**: instalado, ele ganha ícone, abre em tela cheia e f
 1. 🤖 **App Android na Google Play**: o mesmo PWA, empacotado (teste fechado com 12 pessoas por 14 dias)
 2. 🛒 **Cubos que o Pingo recomenda**: indicações de cubos, com links de afiliada identificados
 3. 🛡️ **App Check do Firebase**: proteção extra da nuvem, perto do lançamento
+4. 📐 **Tablet**: telas aproveitando o espaço maior (cubo e instruções lado a lado)
+5. 🦯 **Acessível para pessoas cegas**: compatível com leitor de tela, com o Pingo falando as instruções em voz e pensado para cubos táteis
 
 ---
 

@@ -4,7 +4,7 @@ import { Mascot, Speech } from '../components/Mascot';
 import { Confetti } from '../components/Confetti';
 import type { CubeScene } from '../cube/CubeScene';
 import { applyMove, clone, facelets, FACES, invertMove, type CubeState } from '../cube/model';
-import { describe } from '../cube/describe';
+import { describe, isWholeCube } from '../cube/describe';
 import { demoInicio, greyKeys, setupOf, type Caso, type Passo } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 import { loadPecas, savePecas } from '../aulas/progresso';
@@ -168,6 +168,21 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     busy.current = false;
     settle(true);
   };
+  /** o próximo movimento é girar o cubo inteiro? (isso não dá para fazer arrastando uma face) */
+  const giroInteiro = !done && !playing && pos >= 0 && pos < path.qs.length && isWholeCube(path.qs[pos].m) ? path.qs[pos] : null;
+  const girarInteiro = async () => {
+    if (!giroInteiro || busy.current) return;
+    busy.current = true; scene.current?.hint(null);
+    // faz o lance inteiro (um z2 são dois quartos)
+    let p = pos;
+    while (p >= 0 && p < path.qs.length && path.qs[p].lance === giroInteiro.lance) {
+      last.current = path.qs[p].m;
+      await turn(path.qs[p].m, 650);
+      p = onde(key(state.current), p);
+    }
+    busy.current = false;
+    settle(true);
+  };
 
   /** o professor faz: anima a partir de onde está, um lance por vez, devagar */
   const mostrar = async (soUm: boolean, demo = false) => {
@@ -234,13 +249,15 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
         <button className="view-btn" onClick={() => scene.current?.resetView()}>Endireitar</button>
         {playing
           ? <button className="btn demo-btn demo-parar" onClick={() => { parar.current = true; }}>■ Parar</button>
+          : giroInteiro
+          ? <button className="btn btn-pop demo-btn" onClick={girarInteiro}>↻ Girar o cubo inteiro</button>
           : <span className="stage-hint">{treino ? 'Faça você: arraste a face para girar.' : 'Você também pode girar a face com o dedo.'}</span>}
       </div>
 
       {msg && <p className="warn-msg" role="status">{msg}</p>}
       {!treino && !done && !msg && (
         <p className={`vez-msg ${visto ? 'sua' : ''}`} role="status">{visto
-          ? <><b>Agora é a sua vez.</b> Arraste a face no cubo da tela, ou toque em Só o próximo giro.</>
+          ? giroInteiro ? <><b>Agora é a sua vez.</b> Primeiro gire o cubo inteiro: toque em ↻ Girar o cubo inteiro, em cima do cubo.</> : <><b>Agora é a sua vez.</b> Arraste a face no cubo da tela, ou toque em Só o próximo giro.</>
           : playing ? <><b>Olhe primeiro:</b> o professor faz, você só observa.</> : <>Preparando a situação…</>}</p>
       )}
 

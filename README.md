@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/pingo/oi.webp" alt="Pingo, o pinguim que ensina a montar o cubo" width="150" />
+<img src="docs/pingo-acenando.webp" alt="Pingo, o pinguim que ensina a montar o cubo" width="150" />
 
 # Giro a Giro
 

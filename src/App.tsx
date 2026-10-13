@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Trilha } from './screens/Trilha';
 import { Inicio } from './screens/Inicio';
-import { Praticar } from './screens/Praticar';
+import { Praticar, type Parte } from './screens/Praticar';
 import { MeuCubo } from './screens/MeuCubo';
 import { PassoView } from './screens/Aulas';
 import { Intro } from './screens/Intro';
@@ -30,6 +30,8 @@ export default function App() {
   const [win, setWin] = useState(false);
   const [passo, setPasso] = useState<number | null>(null);
   const [lerAgora, setLerAgora] = useState(0);
+  const [treinoAgora, setTreinoAgora] = useState(false);
+  const [praticarEm, setPraticarEm] = useState<{ parte?: Parte; k: number }>({ k: 0 });
   const conta = useConta();
   // estrelas e dias de treino vivem fora do React: a tela se atualiza quando mudam
   const [, setVer] = useState(0);
@@ -42,7 +44,7 @@ export default function App() {
   const [feitos, setFeitos] = useState<number[]>(loadFeitos);
   useEffect(() => saveFeitos(feitos), [feitos]);
   useEffect(() => { document.querySelector('.content')?.scrollTo(0, 0); }, [tab, passo]);
-  const go = (t: Tab) => { setTab(t); setPasso(null); };
+  const go = (t: Tab) => { setTab(t); setPasso(null); setTreinoAgora(false); };
   /** terminou o passo n: marca e leva para o seguinte (ou volta à trilha, se ainda não existe) */
   const terminar = (n: number) => {
     setP(q => earn(q, 0));
@@ -82,14 +84,15 @@ export default function App() {
         {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)}
           onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
           onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
+          onTreinoDia={() => { setPraticarEm(x => ({ parte: 'treino', k: x.k + 1 })); go('praticar'); }}
           onIntro={() => { setTab('trilha'); setPasso(0); }} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           conta={<CartaoConta conta={conta} onAbrir={() => setVerConta(true)} />} />}
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
         {tab === 'trilha' && passo === null && <Trilha onRecomecar={recomecar} feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
-        {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
+        {tab === 'trilha' && aula && <PassoView key={`${aula.n}-${treinoAgora}`} treinoAgora={treinoAgora} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
           onFinish={() => terminar(aula.n)} onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} />}
         {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => setToast('Cubo lido!')} onSolved={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); }} />}
-        {tab === 'praticar' && <Praticar liberado={feitos.includes(8)} sound={p.sound}
+        {tab === 'praticar' && <Praticar key={praticarEm.k} inicial={praticarEm.parte} onTreinarPasso={n => { setTab('trilha'); setPasso(n); setTreinoAgora(true); }} liberado={feitos.includes(8)} sound={p.sound}
           onSolve={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); setWin(true); }} onPratica={praticou}
           onTrilha={() => go('trilha')} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           onScan={() => { setLerAgora(k => k + 1); setTab('meucubo'); setPasso(null); }} />}
@@ -97,7 +100,7 @@ export default function App() {
 
       <nav className="tabbar" aria-label="Seções">
         {TABS.map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => go(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
+          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => { if (t.id === 'praticar') setPraticarEm(x => ({ parte: undefined, k: x.k + 1 })); go(t.id); }} aria-current={tab === t.id ? 'page' : undefined}>
             <t.icon /><span>{t.nome}</span>
           </button>
         ))}

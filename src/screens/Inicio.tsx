@@ -2,12 +2,13 @@ import { Speech, type Mood } from '../components/Mascot';
 import { TODOS } from '../aulas/aulas';
 import { formatar, loadTempos } from './Praticar';
 import type { Progress } from '../progress';
+import { partesHoje } from '../aulas/revisao';
 import { diasSemTreino, estrelas, loadDominio, loadTreino, naSemana, passoMaisFraco, setMeta, totalEstrelas } from '../aulas/dominio';
 import { IconCamera, IconCube, IconPath } from '../components/Icons';
 
 /** a tela inicial: onde você está, seus números e atalhos */
-export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, conta }: {
-  onOpenPasso: (n: number) => void;
+export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, onTreinoDia, conta }: {
+  onOpenPasso: (n: number) => void; onTreinoDia: () => void;
   conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number;
   onContinuar: () => void; onTrilha: () => void; onScan: () => void; onPraticar: () => void; onIntro: () => void;
 }) {
@@ -34,16 +35,16 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
     <div className="screen inicio">
       <Speech mood={mood}>{fala}</Speech>
 
-      <button className="card continuar-card" onClick={montou ? (tudoSei ? onPraticar : () => onOpenPasso(fraco)) : onContinuar}>
-        <span className="passo-kicker">{montou ? (tudoSei ? 'Você domina os 8 passos' : 'Sugestão de treino') : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
-        <b>{montou ? (tudoSei ? 'Treinar no cronômetro' : `Passo ${fraco} · ${fracoT?.titulo}`) : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
+      <button className="card continuar-card" onClick={montou ? onTreinoDia : onContinuar}>
+        <span className="passo-kicker">{montou ? 'Treino do dia' : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
+        <b>{montou ? (partesHoje().length === 3 ? 'Treino de hoje completo ✓' : partesHoje().length ? `${partesHoje().length} de 3 partes feitas` : 'Começar o treino de hoje') : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
         <span className="trilha-mini" aria-label={`${passosFeitos} de 8 passos feitos`}>
           {TODOS.filter(t => t.n >= 1).map(t => (
             <i key={t.n} className={feitos.includes(t.n) ? 'ok' : t.n === atual ? 'agora' : ''}
               style={{ ['--c' as string]: `var(--${t.cor})` }} />
           ))}
         </span>
-        <span className="continuar-sub">{montou && !tudoSei ? `É o passo com menos estrelas (${estrelas(dom, fraco)} de 3). Treine sem ajuda para chegar a 3.` : `${passosFeitos} de 8 passos feitos`}</span>
+        <span className="continuar-sub">{montou ? (tudoSei ? 'Você domina os 8 passos. Agora é ganhar velocidade.' : `Lembrar as fórmulas, treinar o passo ${fraco} (${fracoT?.titulo}, ${estrelas(dom, fraco)} de 3 ★) e montar uma vez.`) : `${passosFeitos} de 8 passos feitos`}</span>
         <span className="continuar-go" aria-hidden="true">›</span>
       </button>
 

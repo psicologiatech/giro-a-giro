@@ -11,6 +11,7 @@ export const CHAVES = {
   dominio: 'giroagiro.dominio.v1',
   treino: 'giroagiro.treino.v1',
   zerada: 'giroagiro.zerada.v1',
+  revisao: 'giroagiro.revisao.v1',
 } as const;
 
 export interface Dados {
@@ -23,12 +24,13 @@ export interface Dados {
   treino?: { meta: number; dias: string[] };
   /** quando a trilha foi recomeçada (ms); o lado mais recente manda nos passos, peças e estrelas */
   zerada?: number;
+  revisao?: Record<string, { caixa: number; proxima: string; visto: number }>;
 }
 
 const ler = <T,>(k: string): T | undefined => { try { const v = localStorage.getItem(k); return v === null ? undefined : (k === CHAVES.letras ? v : JSON.parse(v)) as T; } catch { return undefined; } };
 export function lerLocal(): Dados {
   return { app: ler(CHAVES.app), passos: ler(CHAVES.passos), tempos: ler(CHAVES.tempos), pecas: ler(CHAVES.pecas), letras: ler(CHAVES.letras),
-    dominio: ler(CHAVES.dominio), treino: ler(CHAVES.treino), zerada: ler(CHAVES.zerada) };
+    dominio: ler(CHAVES.dominio), treino: ler(CHAVES.treino), zerada: ler(CHAVES.zerada), revisao: ler(CHAVES.revisao) };
 }
 export function gravarLocal(d: Dados) {
   try {
@@ -40,6 +42,7 @@ export function gravarLocal(d: Dados) {
     if (d.dominio) localStorage.setItem(CHAVES.dominio, JSON.stringify(d.dominio));
     if (d.treino) localStorage.setItem(CHAVES.treino, JSON.stringify(d.treino));
     if (d.zerada) localStorage.setItem(CHAVES.zerada, String(d.zerada));
+    if (d.revisao) localStorage.setItem(CHAVES.revisao, JSON.stringify(d.revisao));
   } catch { /* sem armazenamento */ }
 }
 
@@ -73,7 +76,10 @@ export function mesclar(a: Dados, b: Dados): Dados {
     dias: [...new Set([...(a.treino?.dias ?? []), ...(b.treino?.dias ?? [])])].sort().slice(-120),
   } : undefined;
   const zerada = Math.max(za, zb) || undefined;
-  return { app, passos, tempos, pecas, letras: a.letras ?? b.letras, dominio, treino, zerada };
+  // revisão: para cada situação, vale a resposta mais recente
+  const revisao: NonNullable<Dados['revisao']> = { ...(b.revisao ?? {}) };
+  for (const [k, v] of Object.entries(a.revisao ?? {})) if (!revisao[k] || v.visto >= revisao[k].visto) revisao[k] = v;
+  return { app, passos, tempos, pecas, letras: a.letras ?? b.letras, dominio, treino, zerada, revisao };
 }
 
 /** texto do conteúdo com as chaves sempre na mesma ordem (a nuvem devolve os campos em outra ordem) */

@@ -26,10 +26,11 @@ const formulasDo = (n: number) => FORMULAS.filter(f => f.passo === n && f.nome !
 const GIROS_CUBO = ['x', "x'", 'y', "y'", 'z', "z'"];
 
 /** montar do começo ao fim sem a aula: o app mostra só o passo e o nome da fórmula */
-export function Sozinha({ sound, onVoltar, onOpenPasso, onSolve }: {
+export function Sozinha({ sound, onVoltar, onOpenPasso, onSolve, modoInicial }: {
+  modoInicial?: 'real' | 'tela';
   sound: boolean; onVoltar: () => void; onOpenPasso: (n: number) => void; onSolve: () => void;
 }) {
-  const [modo, setModo] = useState<'tela' | 'real' | null>(null);
+  const [modo, setModo] = useState<'tela' | 'real' | null>(modoInicial ?? null);
   if (modo === 'tela') return <NaTela sound={sound} onVoltar={() => setModo(null)} onOpenPasso={onOpenPasso} onSolve={onSolve} />;
   if (modo === 'real') return <NoMeuCubo sound={sound} onVoltar={() => setModo(null)} onSolve={onSolve} />;
   return (

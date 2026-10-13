@@ -13,11 +13,11 @@ import { subir, VI, FIZ, SEI } from '../aulas/dominio';
 import { IconCamera } from '../components/Icons';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
-export function PassoView({ passo, feito, sound, onPratica, onFinish, onScan }: {
-  passo: Passo; feito: boolean; sound: boolean; onPratica: () => void; onFinish: () => void; onScan?: () => void;
+export function PassoView({ passo, feito, sound, onPratica, onFinish, onScan, treinoAgora }: {
+  treinoAgora?: boolean; passo: Passo; feito: boolean; sound: boolean; onPratica: () => void; onFinish: () => void; onScan?: () => void;
 }) {
-  const [caso, setCaso] = useState<Caso | null>(null);
-  const [treino, setTreino] = useState(false);
+  const [caso, setCaso] = useState<Caso | null>(() => treinoAgora ? passo.casos[Math.floor(Math.random() * passo.casos.length)] : null);
+  const [treino, setTreino] = useState(!!treinoAgora);
   const fim = useMemo(passo.fim, [passo]);
   const total = passo.total ?? 4;
   const ultimo = passo.n === 8;

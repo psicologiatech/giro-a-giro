@@ -447,3 +447,19 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .meta-semana button { border: 2px solid var(--edge); background: var(--surface); border-radius: 999px; padding: 2px 12px; font-weight: 700; color: var(--ink); }
 .meta-semana button.on { background: var(--pop); border-color: var(--pop-lip); color: #fff; }
 .relogio.pausado { background: #FFF4E0; border-color: #FFD89A; box-shadow: 0 5px 0 #FFD89A; }
+
+/* treino do dia */
+.partes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.parte { width: 100%; display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; text-align: left; background: var(--surface);
+  border: 2px solid var(--edge); border-radius: 20px; padding: 12px 14px; box-shadow: 0 4px 0 var(--edge); color: var(--ink); }
+.parte:active { transform: translateY(4px); box-shadow: none; }
+.parte b { display: block; font-family: var(--display); font-size: 18px; line-height: 1.15; }
+.parte small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.parte-n { width: 40px; height: 40px; border-radius: 12px; background: var(--pop); color: #fff; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 20px; box-shadow: 0 3px 0 var(--pop-lip); padding-top: 2px; }
+.parte.ok { background: #F2FBF6; border-color: #BFEBD2; box-shadow: 0 4px 0 #BFEBD2; }
+.parte.ok .parte-n { background: var(--green); box-shadow: 0 3px 0 var(--green-lip); }
+.resposta { display: grid; gap: 4px; }
+.resposta p, .resposta h3 { margin: 0; }
+.resposta h3 { font-family: var(--display); font-size: 22px; }
+.pergunta-lembrou { margin: 0; text-align: center; font-family: var(--display); font-weight: 700; font-size: 18px; }

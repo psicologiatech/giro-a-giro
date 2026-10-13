@@ -7,7 +7,7 @@ const SIMPLE: Record<string, string> = {
   F: 'Frente no sentido do relógio', "F'": 'Frente contra o relógio',
   B: 'Trás: topo vai para a esquerda', "B'": 'Trás: topo vai para a direita',
   y: 'Gire o cubo inteiro para a esquerda', "y'": 'Gire o cubo inteiro para a direita', y2: 'Gire o cubo inteiro meia volta',
-  z2: 'Vire o cubo de cabeça para baixo', x: 'Tombe o cubo para trás', "x'": 'Tombe o cubo para a frente',
+  z2: 'Vire o cubo de cabeça para baixo', z: 'Gire o cubo inteiro no sentido do relógio', "z'": 'Gire o cubo inteiro contra o relógio', x: 'Tombe o cubo para trás', "x'": 'Tombe o cubo para a frente',
 };
 const HALF: Record<string, string> = { R: 'Direita', L: 'Esquerda', U: 'Topo', D: 'Base', F: 'Frente', B: 'Trás' };
 

@@ -14,8 +14,8 @@ describe('aulas', () => {
     });
   }
 
-  it('o amarelo fica em cima em todas as situações', () => {
-    for (const passo of PASSOS) for (const caso of passo.casos) expect(facelets(setupOf(passo, caso)).U[4]).toBe('D');
+  it('o amarelo fica em cima (menos no terremoto do passo 7)', () => {
+    for (const passo of PASSOS.filter(p => p.n !== 7)) for (const caso of passo.casos) expect(facelets(setupOf(passo, caso)).U[4]).toBe('D');
   });
 
   it('passo 1: cada situação é como o professor descreve', () => {
@@ -149,6 +149,31 @@ describe('passo 6: uma fórmula de cada vez', () => {
     for (const real of p6.casos) for (const escolhida of p6.casos) {
       const s = setupOf(p6, real); if (sobe(s) !== sobe(setupOf(p6, escolhida))) continue;
       expect([1, 4], `${real.id} seguindo ${escolhida.id}`).toContain(sobe(applyAlg(clone(s), movesOf(escolhida))));
+    }
+  });
+});
+
+describe('passo 7: terremoto no prédio', () => {
+  const p7 = PASSOS.find(p => p.n === 7)!;
+  const A = "R U' R D2 R' U R D2 R2";
+  const cor = (s: CubeState, pos: number[], n: number[]) => at(s, pos).stickers.find(t => t.n.every((v, i) => v + 0 === n[i]))!.color;
+  const LADOS: Record<string, [number[], number[], number[]]> = { base: [[-1, -1, 1], [1, -1, 1], [0, -1, 0]], topo: [[-1, 1, 1], [1, 1, 1], [0, 1, 0]], dir: [[1, 1, 1], [1, -1, 1], [1, 0, 0]], esq: [[-1, 1, 1], [-1, -1, 1], [-1, 0, 0]] };
+  const iguais = (s: CubeState) => Object.keys(LADOS).filter(k => { const [a, b, n] = LADOS[k]; return cor(s, a, n) === cor(s, b, n); });
+  it('as situações começam com o amarelo de frente, no passo 7', () => {
+    for (const c of p7.casos) { const s = setupOf(p7, c); expect(facelets(s).F[4], c.id).toBe('D'); expect(emQuePasso(s), c.id).toBe(7); }
+  });
+  it('o lado igual está onde a situação diz, e a fórmula sempre é feita com ele embaixo', () => {
+    const onde: Record<string, string[]> = { base: ['base'], dir: ['dir'], topo: ['topo'], esq: ['esq'], nenhum: [] };
+    for (const c of p7.casos) {
+      let s = setupOf(p7, c);
+      expect(iguais(s), c.id).toEqual(onde[c.id]);
+      const ms = movesOf(c);
+      for (let i = 0; i < ms.length; i++) {
+        if (ms.slice(i, i + 9).join(' ') === A && c.id !== 'nenhum') expect(iguais(s), c.id).toContain('base');
+        s = applyAlg(s, ms[i]);
+      }
+      if (c.id === 'nenhum') expect(iguais(s)).toHaveLength(1);
+      else expect(emQuePasso(s), c.id).toBeGreaterThanOrEqual(8);
     }
   });
 });

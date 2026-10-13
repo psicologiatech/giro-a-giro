@@ -3,7 +3,7 @@
  * - feitos: passos que ela marcou como prontos no cubo de verdade (guardado no aparelho)
  * - emQuePasso: olha um cubo (lido pela câmera) e diz em que passo ele está
  */
-import type { CubeState, Face, Piece, Vec } from '../cube/model';
+import { applyMove, clone, faceOfNormal, type CubeState, type Face, type Piece, type Vec } from '../cube/model';
 
 const KEY = 'giroagiro.passos.v1';
 export function loadFeitos(): number[] { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
@@ -32,8 +32,19 @@ export function emQuePasso(s: CubeState): number {
   const amarelos = meios.filter(p => tem(p, Y)), qAmarelas = quinas.filter(p => tem(p, Y));
   if (!amarelos.every(p => olha(p, Y, Y))) return 5;
   if (!qAmarelas.every(p => olha(p, Y, Y))) return 6;
-  if (!qAmarelas.every(certa)) return 7;
-  if (!amarelos.every(certa)) return 8;
+  // nos passos 7 e 8 vale girar a camada amarela para alinhar (o professor alinha no fim)
+  const camada = faceOfNormal(centro[Y]);
+  const girado = (k: number) => { const t = clone(s); for (let i = 0; i < k; i++) applyMove(t, camada); return t; };
+  const certaEm = (t: CubeState) => (p: Piece) => {
+    const c = {} as Record<Face, Vec>; for (const q of t) if (q.stickers.length === 1) c[q.stickers[0].color] = q.stickers[0].n;
+    return p.stickers.every(x => eq(x.n, c[x.color]));
+  };
+  const voltas = [0, 1, 2, 3].map(girado);
+  const ids = (f: (p: Piece) => boolean) => new Set(s.filter(f).map(p => p.id));
+  const qIds = ids(p => p.stickers.length === 3 && tem(p, Y)), aIds = ids(p => p.stickers.length === 2 && tem(p, Y));
+  const ok = (t: CubeState, set: Set<string>) => t.filter(p => set.has(p.id)).every(certaEm(t));
+  if (!voltas.some(t => ok(t, qIds))) return 7;
+  if (!voltas.some(t => ok(t, qIds) && ok(t, aIds))) return 8;
   return 9;
 }
 

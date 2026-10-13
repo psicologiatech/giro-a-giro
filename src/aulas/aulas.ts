@@ -6,6 +6,7 @@
  * O cubo da situação é montado ao contrário: parte do cubo como fica no fim do passo
  * ("meta") e desfaz a fórmula. Assim a fórmula sempre resolve a situação mostrada.
  */
+import { emQuePasso } from './progresso';
 import { applyAlg, clone, faceOfNormal, faceletIndex, invertAlg, solved, type CubeState, type Piece } from '../cube/model';
 
 export interface Lance { m: string; fala: string }
@@ -68,6 +69,8 @@ const baseIgual = (s: CubeState, meta: CubeState, foco: (p: Piece) => boolean) =
 
 /** amarelo em cima, branco embaixo, verde de frente */
 export const amareloEmCima = () => applyAlg(solved(), 'z2');
+/** passo 7 termina com o amarelo de frente (o terremoto) e os meios amarelos ainda trocados */
+const quinasMeta = () => applyAlg(amareloEmCima(), "F2 U L R' F2 L' R U F2 x'");
 /** os 4 meios brancos em volta do amarelo, com o branco para cima */
 const brancosNoTopo = () => applyAlg(amareloEmCima(), 'F2 R2 B2 L2');
 
@@ -513,11 +516,107 @@ export const PASSOS: Passo[] = [
       },
     ],
   },
+  {
+    n: 7, titulo: 'Arrumar as quinas', cor: 'red',
+    objetivo: 'Colocar as 4 quinas amarelas no lugar certo entre elas: em cada lado, as duas quinas com a mesma cor. Os meios ainda podem ficar trocados.',
+    segurar: 'Terremoto no prédio! Tombe o cubo: o amarelo fica de frente para você, como a fachada do prédio.',
+    dica: 'Olhe os lados da face amarela. Procure um lado em que as duas quinas mostram a mesma cor. Esse lado vai para baixo, apoiado na mesa.',
+    peca: 'quinas', total: 1,
+    pergunta: 'Com o amarelo de frente, qual lado tem as duas quinas com a mesma cor?',
+    repetir: 'Faça igual no seu cubo. Pronto: em cada lado, as duas quinas com a mesma cor!',
+    demo: {
+      partes: [
+        { legenda: 'Terremoto no prédio: tomba o cubo, amarelo de frente', m: "x'" },
+        { legenda: 'Nenhum lado igual: faz a fórmula', m: "R U' R D2 R' U R D2 R2" },
+        { legenda: 'Apareceu um lado igual: gira o cubo até ele ficar embaixo', m: "z'" },
+        { legenda: 'Faz a fórmula de novo', m: "R U' R D2 R' U R D2 R2" },
+      ],
+    },
+    meta: quinasMeta, fim: quinasMeta, fimDeBaixo: false,
+    foco: p => !(isEdge(p) && p.stickers.some(t => t.color === 'D')),
+    pronto: s => emQuePasso(s) >= 8,
+    casos: [
+      {
+        id: 'base', nome: 'Lado igual já embaixo', ver: 'Com o amarelo de frente, o lado de baixo tem as duas quinas com a mesma cor.',
+        lances: [
+          { m: "R", fala: 'A direita vai pra frente: sobe o trio amarelo pro telhado.' },
+          { m: "U'", fala: 'Joga o trio lá pra trás: gira o topo.' },
+          { m: "R", fala: 'Quebra o trio: direita de novo.' },
+          { m: "D2", fala: 'Gira a base duas vezes: forma um L invertido.' },
+          { m: "R'", fala: 'Esconde o trio branco lá pra baixo: volta a direita.' },
+          { m: "U", fala: 'O trio amarelo volta pra direita: gira o topo.' },
+          { m: "R", fala: 'Esconde o amarelo lá nas costas: direita.' },
+          { m: "D2", fala: 'Gira a base duas vezes: quebra o L.' },
+          { m: "R2", fala: 'Gira a direita duas vezes: joga as brancas lá pra trás. Quinas no lugar!' },
+        ],
+      },
+      {
+        id: 'dir', nome: 'Lado igual à direita', ver: 'Com o amarelo de frente, as duas quinas da direita mostram a mesma cor do lado.',
+        lances: [
+          { m: "z", fala: 'Gira o cubo inteiro, sempre com o amarelo de frente, até o lado com as duas quinas iguais ficar embaixo.' },
+          { m: "R", fala: 'A direita vai pra frente: sobe o trio amarelo pro telhado.' },
+          { m: "U'", fala: 'Joga o trio lá pra trás: gira o topo.' },
+          { m: "R", fala: 'Quebra o trio: direita de novo.' },
+          { m: "D2", fala: 'Gira a base duas vezes: forma um L invertido.' },
+          { m: "R'", fala: 'Esconde o trio branco lá pra baixo: volta a direita.' },
+          { m: "U", fala: 'O trio amarelo volta pra direita: gira o topo.' },
+          { m: "R", fala: 'Esconde o amarelo lá nas costas: direita.' },
+          { m: "D2", fala: 'Gira a base duas vezes: quebra o L.' },
+          { m: "R2", fala: 'Gira a direita duas vezes: joga as brancas lá pra trás. Quinas no lugar!' },
+        ],
+      },
+      {
+        id: 'topo', nome: 'Lado igual em cima', ver: 'Com o amarelo de frente, as duas quinas de cima mostram a mesma cor.',
+        lances: [
+          { m: "z2", fala: 'Gira o cubo inteiro, sempre com o amarelo de frente, até o lado com as duas quinas iguais ficar embaixo.' },
+          { m: "R", fala: 'A direita vai pra frente: sobe o trio amarelo pro telhado.' },
+          { m: "U'", fala: 'Joga o trio lá pra trás: gira o topo.' },
+          { m: "R", fala: 'Quebra o trio: direita de novo.' },
+          { m: "D2", fala: 'Gira a base duas vezes: forma um L invertido.' },
+          { m: "R'", fala: 'Esconde o trio branco lá pra baixo: volta a direita.' },
+          { m: "U", fala: 'O trio amarelo volta pra direita: gira o topo.' },
+          { m: "R", fala: 'Esconde o amarelo lá nas costas: direita.' },
+          { m: "D2", fala: 'Gira a base duas vezes: quebra o L.' },
+          { m: "R2", fala: 'Gira a direita duas vezes: joga as brancas lá pra trás. Quinas no lugar!' },
+        ],
+      },
+      {
+        id: 'esq', nome: 'Lado igual à esquerda', ver: 'Com o amarelo de frente, as duas quinas da esquerda mostram a mesma cor do lado.',
+        lances: [
+          { m: "z'", fala: 'Gira o cubo inteiro, sempre com o amarelo de frente, até o lado com as duas quinas iguais ficar embaixo.' },
+          { m: "R", fala: 'A direita vai pra frente: sobe o trio amarelo pro telhado.' },
+          { m: "U'", fala: 'Joga o trio lá pra trás: gira o topo.' },
+          { m: "R", fala: 'Quebra o trio: direita de novo.' },
+          { m: "D2", fala: 'Gira a base duas vezes: forma um L invertido.' },
+          { m: "R'", fala: 'Esconde o trio branco lá pra baixo: volta a direita.' },
+          { m: "U", fala: 'O trio amarelo volta pra direita: gira o topo.' },
+          { m: "R", fala: 'Esconde o amarelo lá nas costas: direita.' },
+          { m: "D2", fala: 'Gira a base duas vezes: quebra o L.' },
+          { m: "R2", fala: 'Gira a direita duas vezes: joga as brancas lá pra trás. Quinas no lugar!' },
+        ],
+      },
+      {
+        id: 'nenhum', nome: 'Nenhum lado igual', ver: 'Nenhum lado tem as duas quinas com a mesma cor. Faça a fórmula em qualquer posição: vai aparecer um lado igual.',
+        completa: "R U' R D2 R' U R D2 R2 z' R U' R D2 R' U R D2 R2",
+        depois: 'Faça igual no seu cubo. Agora apareceu um lado com as duas quinas iguais: escolha a situação dele.',
+        lances: [
+          { m: "R", fala: 'A direita vai pra frente: sobe o trio amarelo pro telhado.' },
+          { m: "U'", fala: 'Joga o trio lá pra trás: gira o topo.' },
+          { m: "R", fala: 'Quebra o trio: direita de novo.' },
+          { m: "D2", fala: 'Gira a base duas vezes: forma um L invertido.' },
+          { m: "R'", fala: 'Esconde o trio branco lá pra baixo: volta a direita.' },
+          { m: "U", fala: 'O trio amarelo volta pra direita: gira o topo.' },
+          { m: "R", fala: 'Esconde o amarelo lá nas costas: direita.' },
+          { m: "D2", fala: 'Gira a base duas vezes: quebra o L.' },
+          { m: "R2", fala: 'Gira a direita duas vezes: joga as brancas lá pra trás. Olhe os lados: apareceu um lado com as duas quinas iguais!' },
+        ],
+      },
+    ],
+  },
 ];
 
 /** os passos que ainda vão chegar, só para a trilha */
 export const PROXIMOS: { n: number; titulo: string; cor: Passo['cor'] }[] = [
-  { n: 7, titulo: 'Arrumar as quinas', cor: 'red' },
   { n: 8, titulo: 'Arrumar os meios', cor: 'blue' },
 ];
 

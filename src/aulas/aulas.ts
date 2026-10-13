@@ -49,6 +49,12 @@ const whiteEdge = (p: Piece) => isWhite(p) && isEdge(p);
 const samePlace = (a: Piece, b: Piece) =>
   a.pos.every((v, i) => v === b.pos[i]) && a.stickers.every(t => b.stickers.some(u => u.color === t.color && u.n.every((v, i) => v === t.n[i])));
 /** as peças do foco que, na meta, já estão embaixo precisam estar iguais à meta */
+/** meio da 2ª camada: sem branco e sem amarelo */
+const meioDoMeio = (p: Piece) => isEdge(p) && !p.stickers.some(t => t.color === 'U' || t.color === 'D');
+/** as peças do foco que, na meta, estão nos andares de baixo precisam estar iguais à meta */
+const andaresIguais = (s: CubeState, meta: CubeState, foco: (p: Piece) => boolean) =>
+  meta.filter(p => foco(p) && p.pos[1] <= 0).every(m => samePlace(s.find(p => p.id === m.id)!, m));
+
 const baseIgual = (s: CubeState, meta: CubeState, foco: (p: Piece) => boolean) =>
   meta.filter(p => foco(p) && p.pos[1] === -1).every(m => samePlace(s.find(p => p.id === m.id)!, m));
 
@@ -205,11 +211,79 @@ export const PASSOS: Passo[] = [
       },
     ],
   },
+  {
+    n: 4, titulo: 'Segunda camada', cor: 'orange',
+    objetivo: 'Colocar os 4 meios do andar do meio. No fim, os dois andares de baixo ficam prontos.',
+    segurar: 'Cruz branca embaixo, amarelo em cima. A cor da peça de frente, alinhada com o centro.',
+    dica: 'Procure no topo um meio sem amarelo. Gire o topo até a cor da frente dele bater com o centro: forma um T. A cor de cima diz para que lado ele vai.',
+    peca: 'meio', repetir: 'Faça igual no seu cubo. Depois procure outro meio sem amarelo no topo e alinhe com a cor dele.',
+    demo: {
+      partes: [
+        { legenda: '1º meio: entra para a direita', m: "U R U' R' U' F' U F" },
+        { legenda: '2º meio: entra para a esquerda', m: "U' L' U L U F U' F'" },
+        { legenda: 'Vira o cubo: os lugares vazios vêm para a frente', m: 'y2' },
+        { legenda: '3º meio: para a direita', m: "U R U' R' U' F' U F" },
+        { legenda: '4º meio: para a esquerda', m: "U' L' U L U F U' F'" },
+      ],
+    },
+    meta: amareloEmCima, fim: amareloEmCima, fimDeBaixo: false,
+    foco: p => isWhite(p) || meioDoMeio(p),
+    pronto: (s, meta) => andaresIguais(s, meta, p => isWhite(p) || meioDoMeio(p)),
+    casos: [
+      {
+        id: 'direita', nome: 'Vai entrar para a direita', ver: 'A cor da frente da peça bate com o centro, e a cor de cima é a do centro da direita.',
+        lances: [
+          { m: "U", fala: 'Jogo pro lado oposto: gira o topo para a esquerda.' },
+          { m: "R", fala: 'Subo o lugar onde ela vai entrar: a direita sobe.' },
+          { m: "U'", fala: 'Volto pra frente: gira o topo.' },
+          { m: "R'", fala: 'Volto o lugar onde ela vai entrar.' },
+          { m: "U'", fala: 'Formou o parzinho! Jogo o parzinho lá pra trás.' },
+          { m: "F'", fala: 'Giro a fachada do prédio, subindo o espaço vazio.' },
+          { m: "U", fala: 'Volto o parzinho pra frente.' },
+          { m: "F", fala: 'E volto o trio pra base.' },
+        ],
+      },
+      {
+        id: 'esquerda', nome: 'Vai entrar para a esquerda', ver: 'A cor da frente da peça bate com o centro, e a cor de cima é a do centro da esquerda.',
+        lances: [
+          { m: "U'", fala: 'Jogo pro lado oposto: gira o topo para a direita.' },
+          { m: "L'", fala: 'Subo o lugar onde ela vai entrar: a esquerda sobe.' },
+          { m: "U", fala: 'Volto pra frente: gira o topo.' },
+          { m: "L", fala: 'Volto o lugar onde ela vai entrar.' },
+          { m: "U", fala: 'Formou o parzinho! Jogo o parzinho lá pra trás.' },
+          { m: "F", fala: 'Giro a fachada do prédio, subindo o espaço vazio.' },
+          { m: "U'", fala: 'Volto o parzinho pra frente.' },
+          { m: "F'", fala: 'E volto o trio pra base.' },
+        ],
+      },
+      {
+        id: 'invertida', nome: 'Peça presa no meio', ver: 'A peça já está no andar do meio, mas invertida (ou no lugar errado). Não tem nenhum meio sem amarelo no topo.',
+        lances: [
+          { m: "U", fala: 'Para tirar a peça, faça a fórmula da direita. Jogo pro lado oposto.' },
+          { m: "R", fala: 'Subo o lugar onde ela vai entrar: a direita sobe.' },
+          { m: "U'", fala: 'Volto pra frente: gira o topo.' },
+          { m: "R'", fala: 'Volto o lugar onde ela vai entrar.' },
+          { m: "U'", fala: 'Formou o parzinho! Jogo o parzinho lá pra trás.' },
+          { m: "F'", fala: 'Giro a fachada do prédio, subindo o espaço vazio.' },
+          { m: "U", fala: 'Volto o parzinho pra frente.' },
+          { m: "F", fala: 'E volto o trio pra base. A peça saiu e foi para o topo!' },
+          { m: 'U2', fala: 'Gira o topo até a cor da frente bater com o centro: formou o T.' },
+          { m: "U", fala: 'Jogo pro lado oposto: gira o topo para a esquerda.' },
+          { m: "R", fala: 'Subo o lugar onde ela vai entrar: a direita sobe.' },
+          { m: "U'", fala: 'Volto pra frente: gira o topo.' },
+          { m: "R'", fala: 'Volto o lugar onde ela vai entrar.' },
+          { m: "U'", fala: 'Formou o parzinho! Jogo o parzinho lá pra trás.' },
+          { m: "F'", fala: 'Giro a fachada do prédio, subindo o espaço vazio.' },
+          { m: "U", fala: 'Volto o parzinho pra frente.' },
+          { m: "F", fala: 'E volto o trio pra base.' },
+        ],
+      },
+    ],
+  },
 ];
 
 /** os passos que ainda vão chegar, só para a trilha */
 export const PROXIMOS: { n: number; titulo: string; cor: Passo['cor'] }[] = [
-  { n: 4, titulo: 'Segunda camada', cor: 'orange' },
   { n: 5, titulo: 'Cruz amarela', cor: 'yellow' },
   { n: 6, titulo: 'Face amarela', cor: 'green' },
   { n: 7, titulo: 'Arrumar as quinas', cor: 'red' },

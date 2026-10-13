@@ -52,11 +52,17 @@ describe('demonstração de cada passo', () => {
     const c: Record<string, number[]> = {}; for (const q of s) if (q.stickers.length === 1) c[q.stickers[0].color] = q.stickers[0].n;
     return p.stickers.every(t => t.n.every((v, i) => v === c[t.color][i]));
   }).length;
+  const meiosNoLugar = (s: CubeState) => {
+    const c: Record<string, number[]> = {}; for (const q of s) if (q.stickers.length === 1) c[q.stickers[0].color] = q.stickers[0].n;
+    return s.filter(p => p.stickers.length === 2 && !p.stickers.some(t => t.color === 'U' || t.color === 'D'))
+      .filter(p => p.stickers.every(t => t.n.every((v, i) => v === c[t.color][i]))).length;
+  };
   for (const passo of PASSOS) it(`passo ${passo.n}: começa no passo e cada parte avança uma peça`, () => {
     let s = demoInicio(passo);
     expect(emQuePasso(s)).toBe(passo.n);
     const conta = (st: CubeState) => passo.n === 1
       ? st.filter(p => p.stickers.length === 2 && white(p) && white(p)!.n[1] === 1).length
+      : passo.n === 4 ? meiosNoLugar(st)
       : brancosNoLugar(st, passo.n === 2 ? 2 : 3);
     let antes = conta(s);
     for (const parte of passo.demo.partes) {
@@ -66,5 +72,25 @@ describe('demonstração de cada passo', () => {
       antes = agora;
     }
     expect(emQuePasso(s)).toBeGreaterThan(passo.n);
+  });
+});
+
+describe('passo 4: as situações são como o professor descreve', () => {
+  const p4 = PASSOS.find(p => p.n === 4)!;
+  const [dir, esq, inv] = p4.casos.map(c => setupOf(p4, c));
+  const semAmarelo = (p: Piece) => p.stickers.length === 2 && !p.stickers.some(t => t.color === 'U' || t.color === 'D');
+  it('direita e esquerda: forma o T na frente; a cor de cima diz o lado', () => {
+    for (const [s, lado] of [[dir, 'R'], [esq, 'L']] as const) {
+      const e = at(s, [0, 1, 1]), f = facelets(s);
+      expect(e.stickers.find(t => t.n[2] === 1)?.color).toBe(f.F[4]);
+      expect(e.stickers.find(t => t.n[1] === 1)?.color).toBe(f[lado][4]);
+    }
+  });
+  it('presa: nenhum meio sem amarelo no topo, e um meio fora do lugar no andar do meio', () => {
+    expect(inv.filter(p => semAmarelo(p) && p.pos[1] === 1)).toHaveLength(0);
+    const c: Record<string, number[]> = {}; for (const q of inv) if (q.stickers.length === 1) c[q.stickers[0].color] = q.stickers[0].n;
+    const fora = inv.filter(p => semAmarelo(p) && !p.stickers.every(t => t.n.every((v, i) => v === c[t.color][i])));
+    expect(fora).toHaveLength(1);
+    expect(fora[0].pos[1]).toBe(0);
   });
 });

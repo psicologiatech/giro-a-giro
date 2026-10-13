@@ -145,7 +145,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   const settle = (fromUser: boolean) => {
     const p = onde(key(state.current));
     setPos(p);
-    if (passo.pronto(state.current, meta)) {
+    if (passo.pronto(state.current, meta) || p === path.states.length - 1) {
       setDone(true); setMsg(null);
       if (sound) sfx.win(); buzz([30, 50, 70]); onDone();
     } else if (fromUser) {
@@ -265,10 +265,17 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
             <Mascot mood="festa" size={96} />
             <div>
               <h3>Isso! Agora no seu cubo</h3>
-              <p>{passo.repetir}</p>
+              <p>{caso.depois ?? passo.repetir}</p>
             </div>
-            {total > 1 && <Pecas feitas={pecaN - 1} agora={pecaN} total={total} />}
-            <button className="btn btn-pop btn-big" onClick={onPiece}>{total === 1 ? 'Fiz no meu cubo!' : pecaN >= total ? `Fiz! As ${total} estão prontas` : `Fiz no meu cubo: ${passo.peca} ${pecaN} de ${total}`}</button>
+            {caso.depois ? (
+              <button className="btn btn-pop btn-big" onClick={onBack}>Fiz no meu cubo: escolher a próxima situação</button>
+            ) : (
+              <>
+                {total > 1 && <Pecas feitas={pecaN - 1} agora={pecaN} total={total} />}
+                <button className="btn btn-pop btn-big" onClick={onPiece}>{total === 1 ? 'Ficou pronto no meu cubo!' : pecaN >= total ? `Fiz! As ${total} estão prontas` : `Fiz no meu cubo: ${passo.peca} ${pecaN} de ${total}`}</button>
+                {total === 1 && <button className="btn" onClick={onBack}>No meu cubo ainda não ficou: escolher a situação de novo</button>}
+              </>
+            )}
             <button className="link-btn fim-passo" onClick={() => resetar()}>Quero ver de novo</button>
           </section>
         )

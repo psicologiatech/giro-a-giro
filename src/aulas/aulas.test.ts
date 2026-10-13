@@ -10,7 +10,7 @@ describe('aulas', () => {
     it(`passo ${passo.n} · ${caso.nome}: a fórmula resolve a situação`, () => {
       const s = setupOf(passo, caso), meta = passo.meta();
       expect(passo.pronto(s, meta)).toBe(false);
-      expect(passo.pronto(applyAlg(clone(s), movesOf(caso)), meta)).toBe(true);
+      expect(passo.pronto(applyAlg(clone(s), caso.completa ? caso.completa.split(' ') : movesOf(caso)), meta)).toBe(true);
     });
   }
 
@@ -119,7 +119,7 @@ describe('passo 6: o caminho do peixinho', () => {
   const olha = (s: CubeState) => { const t = at(s, [-1, 1, 1]).stickers.find(t => t.color === 'D')!.n.map(v => v + 0); return t[1] === 1 ? 'cima' : t[0] === -1 ? 'esquerda' : t[2] === 1 ? 'frente' : 'outro'; };
   it('antes de cada fórmula, o cubo está na posição que o professor ensina', () => {
     for (const c of p6.casos) {
-      let s = setupOf(p6, c); const ms = movesOf(c);
+      let s = setupOf(p6, c); const ms = c.completa ? c.completa.split(' ') : movesOf(c);
       const inicio = sobe(s);
       for (let i = 0; i < ms.length; i++) {
         if (ms.slice(i, i + 7).join(' ') === SUNE) {
@@ -130,6 +130,25 @@ describe('passo 6: o caminho do peixinho', () => {
       }
       expect(sobe(s)).toBe(4);
       expect([1, 1, 0, 0, 2, 2, 2][p6.casos.indexOf(c)]).toBe(inicio);
+    }
+  });
+});
+
+describe('passo 6: uma fórmula de cada vez', () => {
+  const p6 = PASSOS.find(p => p.n === 6)!;
+  const sobe = (s: CubeState) => s.filter(p => p.stickers.length === 3 && p.stickers.some(t => t.color === 'D' && t.n[1] === 1)).length;
+  it('cada situação mostra uma fórmula só, e termina no peixinho ou no topo amarelo', () => {
+    for (const c of p6.casos) {
+      expect(c.lances.length, c.id).toBeLessThanOrEqual(8);
+      const fim = applyAlg(setupOf(p6, c), movesOf(c));
+      expect([1, 4], c.id).toContain(sobe(fim));
+      expect(!!c.depois, c.id).toBe(sobe(fim) === 1);
+    }
+  });
+  it('escolher uma situação parecida (mesmo número de quinas) também leva ao peixinho ou ao amarelo', () => {
+    for (const real of p6.casos) for (const escolhida of p6.casos) {
+      const s = setupOf(p6, real); if (sobe(s) !== sobe(setupOf(p6, escolhida))) continue;
+      expect([1, 4], `${real.id} seguindo ${escolhida.id}`).toContain(sobe(applyAlg(clone(s), movesOf(escolhida))));
     }
   });
 });

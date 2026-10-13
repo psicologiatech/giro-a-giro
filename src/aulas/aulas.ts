@@ -15,6 +15,10 @@ export interface Caso {
   /** como reconhecer no seu cubo */
   ver: string;
   lances: Lance[];
+  /** a solução inteira, quando 'lances' mostra só a primeira parte (depois a pessoa olha o cubo e escolhe de novo) */
+  completa?: string;
+  /** o que fazer depois, quando a situação não termina o passo */
+  depois?: string;
 }
 export interface Passo {
   n: number;
@@ -425,6 +429,8 @@ export const PASSOS: Passo[] = [
       },
       {
         id: 'peixe2', nome: 'Peixinho que se repete', ver: 'Peixinho na mesma posição, mas a quina da direita mostra o amarelo para a direita. Faz a fórmula e aparece outro peixinho: é só repetir.',
+        completa: "R U R' U R U2 R' U2 R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -433,18 +439,12 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U2", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
       {
         id: 'zeroPares', nome: 'Nenhuma quina: amarelos aos pares', ver: 'Nenhuma quina com amarelo em cima. Os amarelos das quinas olham para os lados: dois para a esquerda e dois para a direita.',
+        completa: "R U R' U R U2 R' R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -453,17 +453,12 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "R", fala: 'O peixinho já está na posição: faz de novo. Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
       {
         id: 'zero', nome: 'Nenhuma quina: amarelos espalhados', ver: 'Nenhuma quina com amarelo em cima, e os amarelos olham para lados diferentes. Gire o topo até a quina da frente-esquerda mostrar o amarelo para a esquerda.',
+        completa: "R U R' U R U2 R' U' R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -472,18 +467,12 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U'", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
       {
         id: 'farois', nome: 'Duas quinas: faróis', ver: 'Duas quinas amarelas em cima, lá atrás. As da frente mostram o amarelo para você, como faróis de carro.',
+        completa: "R U R' U R U2 R' U' R U R' U R U2 R' U2 R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -492,26 +481,12 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U'", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U2", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
       {
         id: 'T', nome: 'Duas quinas: T', ver: 'Duas quinas amarelas em cima, lado a lado. Gire o topo até a quina da frente-esquerda mostrar o amarelo para você (a de trás mostra para trás).',
+        completa: "R U R' U R U2 R' U R U R' U R U2 R' U2 R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -520,26 +495,12 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U2", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
       {
         id: 'diagonal', nome: 'Duas quinas na diagonal', ver: 'Duas quinas amarelas em cima, uma em cada canto oposto. Gire o topo até a quina da frente-esquerda mostrar o amarelo para você.',
+        completa: "R U R' U R U2 R' R U R' U R U2 R' U2 R U R' U R U2 R'",
+        depois: 'Faça igual no seu cubo. Virou peixinho: agora escolha a situação Peixinho (gire o topo até a cabeça ficar na frente, à esquerda).',
         lances: [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U", fala: 'Gira o topo.' },
@@ -548,21 +509,6 @@ export const PASSOS: Passo[] = [
           { m: "R", fala: 'Sobe a direita.' },
           { m: "U2", fala: 'Gira o topo duas vezes.' },
           { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "R", fala: 'O peixinho já está na posição: faz de novo. Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Virou peixinho!' },
-          { m: "U2", fala: 'Gira o topo até a cabeça do peixe ficar na frente, à esquerda.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U", fala: 'Gira o topo.' },
-          { m: "R'", fala: 'Volta a direita.' },
-          { m: "U", fala: 'Gira o topo de novo.' },
-          { m: "R", fala: 'Sobe a direita.' },
-          { m: "U2", fala: 'Gira o topo duas vezes.' },
-          { m: "R'", fala: 'Volta a direita. Face amarela pronta!' },
         ],
       },
     ],
@@ -577,7 +523,7 @@ export const PROXIMOS: { n: number; titulo: string; cor: Passo['cor'] }[] = [
 
 export const movesOf = (c: Caso) => c.lances.map(l => l.m);
 /** o cubo da situação: a meta com a fórmula desfeita */
-export const setupOf = (p: Passo, c: Caso) => applyAlg(p.meta(), invertAlg(movesOf(c)));
+export const setupOf = (p: Passo, c: Caso) => applyAlg(p.meta(), invertAlg(c.completa ? c.completa.split(' ') : movesOf(c)));
 
 /** adesivos cinza: tudo o que não é do foco (os centros ficam sempre coloridos) */
 export function greyKeys(s: CubeState, foco: (p: Piece) => boolean): string[] {

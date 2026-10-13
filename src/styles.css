@@ -307,3 +307,4 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .passo-demo .stage-hint { bottom: 8px; }
 .vez-msg { margin: 0; border-radius: 16px; padding: 10px 14px; font-size: 15px; background: var(--surface); border: 2px solid var(--edge); }
 .vez-msg.sua { background: var(--pop-soft); border-color: #FFC2DC; }
+.feito > .btn { grid-column: 1 / -1; }

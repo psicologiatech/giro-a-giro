@@ -83,27 +83,33 @@ function Caminho({ atual }: { atual: number }) {
 /* ---------- no meu cubo ---------- */
 
 function NoMeuCubo({ sound, onVoltar, onSolve }: { sound: boolean; onVoltar: () => void; onSolve: () => void }) {
-  const [embaralhar] = useState(() => randomScramble(20).join(' '));
-  const [inicio, setInicio] = useState<number | null>(null);
+  const [sugestao, setSugestao] = useState<string | null>(null);
+  const [inicio, setInicio] = useState<number | null>(null);   // rodando desde
+  const [guardado, setGuardado] = useState(0);                 // tempo antes da pausa
+  const [pausado, setPausado] = useState(false);
+  const [comecou, setComecou] = useState(false);
   const [agora, setAgora] = useState(0);
   const [n, setN] = useState(1);
   const [parciais, setParciais] = useState<number[]>([]);
   const [fim, setFim] = useState<number | null>(null);
   useEffect(() => {
     if (inicio === null || fim !== null) return;
-    let raf = 0; const tick = () => { setAgora(performance.now() - inicio); raf = requestAnimationFrame(tick); };
+    let raf = 0; const tick = () => { setAgora(guardado + performance.now() - inicio); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
-  }, [inicio, fim]);
+  }, [inicio, guardado, fim]);
+  const decorrido = () => inicio !== null ? guardado + performance.now() - inicio : guardado;
+  const pausar = () => { const t = decorrido(); setGuardado(t); setAgora(t); setInicio(null); setPausado(true); buzz(10); };
+  const continuar = () => { setPausado(false); setInicio(performance.now()); buzz(10); };
 
   const comDica = useRef(new Set<number>());
   const feito = () => {
-    if (inicio === null) return;
+    if (!comecou || pausado) return;
     estrelasAoPassar(n, n + 1, comDica.current);
-    const t = performance.now() - inicio;
+    const t = decorrido();
     setParciais(p => [...p, t]);
     if (n < 8) { setN(n + 1); if (sound) sfx.click(); buzz(15); return; }
-    const ms = Math.round(t); setFim(ms);
-    saveTempos([{ ms, quando: Date.now(), embaralhar }, ...loadTempos()]);
+    const ms = Math.round(t); setFim(ms); setInicio(null);
+    saveTempos([{ ms, quando: Date.now(), embaralhar: sugestao ?? '' }, ...loadTempos()]);
     if (sound) sfx.win(); buzz([30, 50, 70]); onSolve();
   };
 
@@ -121,22 +127,32 @@ function NoMeuCubo({ sound, onVoltar, onSolve }: { sound: boolean; onVoltar: () 
 
   return (
     <div className="screen sozinha">
-      {inicio === null && <button className="back-btn self-start" onClick={onVoltar}>‹ Montar sem ajuda</button>}
-      {inicio === null ? (
-        <section className="card embaralhar">
-          <p className="passo-kicker">Embaralhe o seu cubo assim (verde de frente, branco em cima)</p>
-          <p className="alg-grande">{embaralhar}</p>
-        </section>
+      {!comecou && <button className="back-btn self-start" onClick={onVoltar}>‹ Montar sem ajuda</button>}
+      {!comecou ? (
+        <>
+          <Speech mood="cubo">Embaralhe o seu cubo do seu jeito, girando à vontade. Quando estiver pronto, toque em começar.</Speech>
+          {sugestao ? (
+            <section className="card embaralhar">
+              <p className="passo-kicker">Embaralhamento sugerido (verde de frente, branco em cima)</p>
+              <p className="alg-grande">{sugestao}</p>
+              <button className="link-btn" onClick={() => setSugestao(null)}>Não preciso</button>
+            </section>
+          ) : <button className="link-btn self-start" onClick={() => setSugestao(randomScramble(20).join(' '))}>Quero um embaralhamento sugerido</button>}
+        </>
       ) : <Caminho atual={n} />}
-      <div className={`relogio relogio-sm ${inicio !== null ? 'rodando' : ''}`}>
-        <span className="relogio-tempo">{formatar(inicio === null ? 0 : agora)}</span>
+      <div className={`relogio relogio-sm ${inicio !== null ? 'rodando' : ''} ${pausado ? 'pausado' : ''}`}>
+        <span className="relogio-tempo">{formatar(comecou ? agora : 0)}</span>
+        {pausado && <span className="relogio-dica">Pausado</span>}
       </div>
-      {inicio === null
-        ? <button className="btn btn-pop btn-big" onClick={() => { setInicio(performance.now()); if (sound) sfx.click(); }}>Começar</button>
-        : <>
-            <PassoDaVez n={n} onDica={k => comDica.current.add(k)} />
-            <button className="btn btn-pop btn-big" onClick={feito}>{n < 8 ? `Passo ${n} feito ✓` : 'Cubo montado! ✓'}</button>
-          </>}
+      {!comecou
+        ? <button className="btn btn-pop btn-big" onClick={() => { setComecou(true); setInicio(performance.now()); if (sound) sfx.click(); }}>Já embaralhei: começar</button>
+        : pausado
+          ? <button className="btn btn-pop btn-big" onClick={continuar}>▶ Continuar</button>
+          : <>
+              <PassoDaVez n={n} onDica={k => comDica.current.add(k)} />
+              <button className="btn btn-pop btn-big" onClick={feito}>{n < 8 ? `Passo ${n} feito ✓` : 'Cubo montado! ✓'}</button>
+              <button className="btn" onClick={pausar}>⏸ Pausar</button>
+            </>}
     </div>
   );
 }

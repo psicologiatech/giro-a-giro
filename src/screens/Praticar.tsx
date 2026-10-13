@@ -90,28 +90,35 @@ export function mediaDe5(t: Tempo[]): number | null {
 }
 
 function Cronometro({ sound, onVoltar, onPratica }: { sound: boolean; onVoltar: () => void; onPratica?: () => void }) {
-  const [embaralhar, setEmbaralhar] = useState(() => randomScramble(20).join(' '));
+  const [sugestao, setSugestao] = useState<string | null>(null);   // embaralhamento sugerido (opcional)
   const [tempos, setTempos] = useState<Tempo[]>(loadTempos);
-  const [inicio, setInicio] = useState<number | null>(null);
+  const [inicio, setInicio] = useState<number | null>(null);        // rodando desde
+  const [guardado, setGuardado] = useState(0);                      // tempo acumulado antes da pausa
+  const [pausado, setPausado] = useState(false);
   const [agora, setAgora] = useState(0);
   const [ultimo, setUltimo] = useState<number | null>(null);
   useEffect(() => saveTempos(tempos), [tempos]);
   useEffect(() => {
     if (inicio === null) return;
-    let raf = 0; const tick = () => { setAgora(performance.now() - inicio); raf = requestAnimationFrame(tick); };
+    let raf = 0; const tick = () => { setAgora(guardado + performance.now() - inicio); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
-  }, [inicio]);
+  }, [inicio, guardado]);
 
-  const tocar = () => {
-    if (inicio === null) { setUltimo(null); setAgora(0); setInicio(performance.now()); if (sound) sfx.click(); buzz(15); return; }
-    const ms = Math.round(performance.now() - inicio);
-    setInicio(null); setUltimo(ms);
+  const emAndamento = inicio !== null || pausado;
+  const comecar = () => { setUltimo(null); setAgora(0); setGuardado(0); setPausado(false); setInicio(performance.now()); if (sound) sfx.click(); buzz(15); };
+  const pausar = () => { if (inicio === null) return; const t = guardado + performance.now() - inicio; setGuardado(t); setAgora(t); setInicio(null); setPausado(true); buzz(10); };
+  const continuar = () => { setPausado(false); setInicio(performance.now()); buzz(10); };
+  const descartar = () => { setInicio(null); setPausado(false); setGuardado(0); setAgora(0); };
+  const terminar = () => {
+    const ms = Math.round(inicio !== null ? guardado + performance.now() - inicio : guardado);
+    setInicio(null); setPausado(false); setGuardado(0); setUltimo(ms);
     const melhorAntes = tempos.length ? Math.min(...tempos.map(t => t.ms)) : Infinity;
-    setTempos(t => [{ ms, quando: Date.now(), embaralhar }, ...t]);
+    setTempos(t => [{ ms, quando: Date.now(), embaralhar: sugestao ?? '' }, ...t]);
     onPratica?.();
-    setEmbaralhar(randomScramble(20).join(' '));
+    setSugestao(null);
     if (sound) (ms < melhorAntes ? sfx.win : sfx.good)(); buzz(ms < melhorAntes ? [30, 50, 70] : 20);
   };
+  const tocar = () => { if (pausado) continuar(); else if (inicio === null) comecar(); else terminar(); };
   const tocarRef = useRef(tocar); tocarRef.current = tocar;
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.code === 'Space') { e.preventDefault(); tocarRef.current(); } };
@@ -120,25 +127,37 @@ function Cronometro({ sound, onVoltar, onPratica }: { sound: boolean; onVoltar: 
 
   const melhor = tempos.length ? Math.min(...tempos.map(t => t.ms)) : null;
   const media = mediaDe5(tempos);
-  const rodando = inicio !== null;
   return (
     <div className="screen cronometro">
-      {!rodando && <Voltar onVoltar={onVoltar} />}
-      {!rodando && (ultimo !== null && ultimo === melhor
+      {!emAndamento && <Voltar onVoltar={onVoltar} />}
+      {!emAndamento && (ultimo !== null && ultimo === melhor
         ? <Speech mood="melhor">Novo recorde! {formatar(ultimo)} é o seu melhor tempo.</Speech>
-        : <Speech mood="cronometro">Embaralhe o seu cubo, toque para começar e toque de novo quando terminar.</Speech>)}
-      {!rodando && (
+        : <Speech mood="cronometro">Embaralhe o seu cubo do seu jeito, girando à vontade. Quando estiver com ele na mão, toque para começar.</Speech>)}
+      {!emAndamento && (sugestao ? (
         <section className="card embaralhar">
-          <p className="passo-kicker">Embaralhe o seu cubo assim (verde de frente, branco em cima)</p>
-          <p className="alg-grande">{embaralhar}</p>
-          <button className="link-btn" onClick={() => setEmbaralhar(randomScramble(20).join(' '))}>Outro embaralhamento</button>
+          <p className="passo-kicker">Embaralhamento sugerido (verde de frente, branco em cima)</p>
+          <p className="alg-grande">{sugestao}</p>
+          <div className="row">
+            <button className="link-btn" onClick={() => setSugestao(randomScramble(20).join(' '))}>Outro</button>
+            <button className="link-btn" onClick={() => setSugestao(null)}>Não preciso</button>
+          </div>
         </section>
-      )}
-      <button className={`relogio ${rodando ? 'rodando' : ''}`} onClick={tocar} aria-label={rodando ? 'Parar o cronômetro' : 'Começar o cronômetro'}>
-        <span className="relogio-tempo">{formatar(rodando ? agora : ultimo ?? 0)}</span>
-        <span className="relogio-dica">{rodando ? 'Toque para parar' : ultimo !== null ? (ultimo === melhor ? 'Seu melhor tempo!' : 'Toque para começar de novo') : 'Toque para começar'}</span>
+      ) : (
+        <button className="link-btn self-start" onClick={() => setSugestao(randomScramble(20).join(' '))}>Quero um embaralhamento sugerido</button>
+      ))}
+      <button className={`relogio ${inicio !== null ? 'rodando' : ''} ${pausado ? 'pausado' : ''}`} onClick={tocar}
+        aria-label={pausado ? 'Continuar o cronômetro' : inicio !== null ? 'Parar: terminei' : 'Começar o cronômetro'}>
+        <span className="relogio-tempo">{formatar(emAndamento ? agora : ultimo ?? 0)}</span>
+        <span className="relogio-dica">{pausado ? 'Pausado. Toque para continuar' : inicio !== null ? 'Toque quando terminar' : ultimo !== null ? (ultimo === melhor ? 'Seu melhor tempo!' : 'Toque para começar de novo') : 'Toque para começar'}</span>
       </button>
-      {!rodando && (
+      {inicio !== null && <button className="btn btn-big" onClick={pausar}>⏸ Pausar</button>}
+      {pausado && (
+        <div className="row">
+          <button className="btn" onClick={descartar}>Descartar este tempo</button>
+          <button className="btn btn-pop" onClick={terminar}>Terminei: salvar</button>
+        </div>
+      )}
+      {!emAndamento && (
         <>
           <div className="stats">
             <div><small>Melhor</small><b>{melhor !== null ? formatar(melhor) : '–'}</b></div>
@@ -159,7 +178,7 @@ function Cronometro({ sound, onVoltar, onPratica }: { sound: boolean; onVoltar: 
               </ol>
             </section>
           )}
-          <p className="note">No computador, a barra de espaço começa e para.</p>
+          <p className="note">No computador, a barra de espaço começa, para e continua.</p>
         </>
       )}
     </div>

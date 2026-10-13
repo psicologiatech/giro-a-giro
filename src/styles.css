@@ -446,3 +446,4 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .meta-semana { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
 .meta-semana button { border: 2px solid var(--edge); background: var(--surface); border-radius: 999px; padding: 2px 12px; font-weight: 700; color: var(--ink); }
 .meta-semana button.on { background: var(--pop); border-color: var(--pop-lip); color: #fff; }
+.relogio.pausado { background: #FFF4E0; border-color: #FFD89A; box-shadow: 0 5px 0 #FFD89A; }

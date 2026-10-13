@@ -463,3 +463,17 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .resposta p, .resposta h3 { margin: 0; }
 .resposta h3 { font-family: var(--display); font-size: 22px; }
 .pergunta-lembrou { margin: 0; text-align: center; font-family: var(--display); font-weight: 700; font-size: 18px; }
+.opcoes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.opcao { width: 100%; display: grid; grid-template-columns: 34px 1fr; gap: 10px; text-align: left; background: var(--surface); color: var(--ink);
+  border: 2px solid var(--edge); border-radius: 18px; padding: 12px; box-shadow: 0 4px 0 var(--edge); }
+.opcao:not(:disabled):active { transform: translateY(4px); box-shadow: none; }
+.opcao:disabled { cursor: default; }
+.opcao ol { margin: 0 0 6px; padding-left: 18px; font-size: 14.5px; line-height: 1.35; }
+.opcao-n { width: 34px; height: 34px; border-radius: 10px; background: var(--pop-soft); color: var(--pop-lip); display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 18px; padding-top: 2px; }
+.opcao.certa { background: #F2FBF6; border-color: var(--green); box-shadow: 0 4px 0 #BFEBD2; }
+.opcao.certa .opcao-n { background: var(--green); color: #fff; }
+.opcao.errada { background: #FFF1F0; border-color: var(--red); box-shadow: 0 4px 0 #F7C3BF; }
+.opcao.errada .opcao-n { background: var(--red); color: #fff; }
+.opcao.apagada { opacity: .5; }
+.treino-dia .stage { position: sticky; top: 0; z-index: 2; height: min(34dvh, 300px); }

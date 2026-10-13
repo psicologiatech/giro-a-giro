@@ -26,7 +26,7 @@ export function TreinoDia({ sound, onVoltar, onTreinarPasso, onMontar, onPratica
   if (aquecendo) return <Aquecimento sound={sound} onFim={() => { marcarParte(1); onPratica(); atualizar(); setAquecendo(false); }} onSair={() => setAquecendo(false)} />;
 
   const PARTES = [
-    { n: 1, titulo: 'Aquecimento: qual é a situação?', texto: '5 situações misturadas. Lembre a fórmula antes de ver a resposta.', ir: () => setAquecendo(true) },
+    { n: 1, titulo: 'Aquecimento: qual é a situação?', texto: '5 situações misturadas: escolha o que fazer em cada uma.', ir: () => setAquecendo(true) },
     { n: 2, titulo: `Ponto fraco: passo ${fraco}`, texto: `${fracoT.titulo}, com ${estrelas(loadDominio(), fraco)} de 3 estrelas. Treine sem pedir dica.`, ir: () => { marcarParte(2); onTreinarPasso(fraco); } },
     { n: 3, titulo: 'Uma montagem completa', texto: 'No seu cubo, do começo ao fim, com cronômetro e sem ajuda.', ir: () => { marcarParte(3); onMontar(); } },
   ];
@@ -52,55 +52,91 @@ export function TreinoDia({ sound, onVoltar, onTreinarPasso, onMontar, onPratica
   );
 }
 
-/** lembrar antes de ver: o cubo mostra a situação; a pessoa pensa, vê a resposta e diz se lembrou */
+interface Opcao { id: string; falas: string[]; letras: string; certa: boolean }
+/** 3 opções: a certa e duas de outras situações (do mesmo passo, se der), todas diferentes entre si */
+function opcoesPara(id: string): Opcao[] {
+  const sit = SITUACOES.find(s => s.id === id)!;
+  const letras = (c: typeof sit.caso) => movesOf(c).join(' ');
+  const certa = letras(sit.caso);
+  const embaralha = <T,>(xs: T[]) => xs.map(x => [Math.random(), x] as const).sort((p, q) => p[0] - q[0]).map(([, x]) => x);
+  const mesmo = embaralha(SITUACOES.filter(s => s.passo.n === sit.passo.n && s.id !== id));
+  const outros = embaralha(SITUACOES.filter(s => s.passo.n !== sit.passo.n));
+  const vistas = new Set([certa]); const erradas: typeof SITUACOES = [];
+  for (const s of [...mesmo, ...outros]) { const l = letras(s.caso); if (!vistas.has(l)) { vistas.add(l); erradas.push(s); } if (erradas.length === 2) break; }
+  const op = (s: typeof sit, ok: boolean): Opcao => ({ id: s.id, falas: s.caso.lances.map(x => x.fala), letras: letras(s.caso), certa: ok });
+  return embaralha([op(sit, true), ...erradas.map(s => op(s, false))]);
+}
+/** resume as falas: as 3 primeiras e quantos giros faltam */
+const resumo = (falas: string[]) => falas.length <= 4 ? falas : [...falas.slice(0, 3), `… e mais ${falas.length - 3} giros`];
+
+/** aquecimento: o passo e a situação no cubo; a pessoa escolhe entre 3 opções o que fazer */
 function Aquecimento({ sound, onFim, onSair }: { sound: boolean; onFim: () => void; onSair: () => void }) {
   const [ids] = useState(() => escolher(loadRevisao()));
   const [i, setI] = useState(0);
-  const [ver, setVer] = useState(false);
+  const [escolha, setEscolha] = useState<number | null>(null);
   const [acertos, setAcertos] = useState(0);
   const [fim, setFim] = useState(false);
+  const [opcoes, setOpcoes] = useState<Opcao[]>(() => (ids[0] ? opcoesPara(ids[0]) : []));
   const sit = SITUACOES.find(s => s.id === ids[i]);
 
-  const responde = (ok: boolean) => {
+  const escolher_ = (k: number) => {
+    if (escolha !== null) return;
+    const ok = opcoes[k].certa;
+    setEscolha(k);
     saveRevisao(responder(loadRevisao(), ids[i], ok));
-    if (ok) { setAcertos(a => a + 1); if (sound) sfx.good(); buzz(15); } else { if (sound) sfx.click(); }
+    if (ok) { setAcertos(a => a + 1); if (sound) sfx.good(); buzz(15); } else { if (sound) sfx.oops(); buzz([20, 40, 20]); }
+  };
+  const proxima = () => {
     if (i + 1 >= ids.length) { setFim(true); return; }
-    setI(i + 1); setVer(false);
+    setI(i + 1); setEscolha(null); setOpcoes(opcoesPara(ids[i + 1]));
   };
 
   if (fim) return (
     <div className="screen treino-dia">
       <Speech mood={acertos >= 4 ? 'melhor' : 'estudando'}>
-        {acertos} de {ids.length} de memória! {acertos < ids.length ? 'As que você não lembrou voltam amanhã.' : 'As de hoje só voltam daqui a alguns dias.'}
+        Você acertou {acertos} de {ids.length}! {acertos < ids.length ? 'As que errou voltam amanhã para mais uma chance.' : 'Estas só voltam daqui a alguns dias.'}
       </Speech>
       <button className="btn btn-pop btn-big" onClick={onFim}>Continuar o treino</button>
     </div>
   );
   if (!sit) return null;
+  const acertou = escolha !== null && opcoes[escolha].certa;
   return (
     <div className="screen treino-dia">
       <div className="sozinha-topo">
         <button className="back-btn" onClick={onSair}>‹ Treino do dia</button>
         <span className="chip">{i + 1} de {ids.length}</span>
       </div>
-      <h2 className="player-title">Qual é a situação?</h2>
-      <p className="player-ver">{sit.passo.n === 7 ? 'Amarelo de frente.' : 'Amarelo em cima.'} Que passo é, que situação é e qual fórmula você usa? Pense antes de ver a resposta.</p>
-      <Situacao key={sit.id} passo={sit.passo} caso={sit.caso} animar={ver} />
-      {!ver ? (
-        <button className="btn btn-pop btn-big" onClick={() => setVer(true)}>Mostrar a resposta</button>
-      ) : (
+      <div>
+        <p className="passo-kicker">Passo {sit.passo.n} · {sit.passo.cubista}</p>
+        <h2 className="player-title">{sit.passo.titulo}</h2>
+      </div>
+      <p className="player-ver">{sit.passo.objetivo}</p>
+      <Situacao key={sit.id} passo={sit.passo} caso={sit.caso} animar={escolha !== null} />
+      <h3 className="sec-title">{escolha === null ? 'O que fazer aqui?' : acertou ? 'Isso mesmo!' : 'Quase! A certa está em verde.'}</h3>
+      <ul className="opcoes">
+        {opcoes.map((o, k) => {
+          const estado = escolha === null ? '' : o.certa ? 'certa' : k === escolha ? 'errada' : 'apagada';
+          return (
+            <li key={o.id}>
+              <button className={`opcao ${estado}`} onClick={() => escolher_(k)} disabled={escolha !== null}>
+                <span className="opcao-n">{String.fromCharCode(65 + k)}</span>
+                <span>
+                  <ol>{resumo(o.falas).map((f, j) => <li key={j}>{f}</li>)}</ol>
+                  <code className="formula">{o.letras}</code>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {escolha !== null && (
         <>
           <section className="card resposta">
-            <p className="passo-kicker">Passo {sit.passo.n} · {sit.passo.cubista}</p>
             <h3>{sit.caso.nome}</h3>
             <p>{sit.caso.ver}</p>
-            <code className="formula">{movesOf(sit.caso).join(' ')}</code>
           </section>
-          <p className="pergunta-lembrou">Você lembrou?</p>
-          <div className="row">
-            <button className="btn" onClick={() => responde(false)}>Não lembrei</button>
-            <button className="btn btn-pop" onClick={() => responde(true)}>Lembrei!</button>
-          </div>
+          <button className="btn btn-pop btn-big" onClick={proxima}>{i + 1 >= ids.length ? 'Ver resultado' : 'Próxima'}</button>
         </>
       )}
     </div>

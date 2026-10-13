@@ -41,6 +41,16 @@ async function sincronizar(uid: string): Promise<boolean> {
   if (mudou) gravarLocal(junto);
   return mudou;
 }
+/** recarrega a tela para mostrar o progresso trazido da nuvem, no máximo uma vez seguida */
+const RECARREGOU = 'giroagiro.nuvem.recarregou';
+function recarregarUmaVez() {
+  try {
+    const ultima = Number(sessionStorage.getItem(RECARREGOU) || 0);
+    if (Date.now() - ultima < 60000) return;
+    sessionStorage.setItem(RECARREGOU, String(Date.now()));
+  } catch { return; }
+  window.location.reload();
+}
 async function enviar(uid: string) {
   const { db, F } = await firebase();
   await F.setDoc(F.doc(db, 'usuarios', uid), { dados: mesclar(lerLocal(), {}), atualizado: F.serverTimestamp() });
@@ -65,7 +75,7 @@ export function useConta() {
         if (!u) { setUsuario(null); setEstado('fora'); return; }
         setUsuario({ uid: u.uid, nome: u.displayName ?? '', email: u.email ?? '' });
         setEstado('dentro');
-        try { if (await sincronizar(u.uid)) window.location.reload(); } catch (e) { console.warn(e); }
+        try { if (await sincronizar(u.uid)) recarregarUmaVez(); } catch (e) { console.warn(e); }
       });
     }).catch(e => { console.warn(e); setEstado('erro'); setErro('Não consegui falar com a nuvem agora.'); });
     return () => parar();
@@ -87,7 +97,7 @@ export function useConta() {
       const u = r.user;
       setUsuario({ uid: u.uid, nome: u.displayName ?? '', email: u.email ?? '' });
       setEstado('dentro');
-      if (await sincronizar(u.uid)) window.location.reload();
+      if (await sincronizar(u.uid)) recarregarUmaVez();
     } catch (e) {
       const code = (e as { code?: string }).code ?? '';
       try { localStorage.removeItem(LOGADO); } catch { /* */ }

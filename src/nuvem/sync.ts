@@ -52,5 +52,11 @@ export function mesclar(a: Dados, b: Dados): Dados {
   return { app, passos, tempos, pecas, letras: a.letras ?? b.letras };
 }
 
+/** texto do conteúdo com as chaves sempre na mesma ordem (a nuvem devolve os campos em outra ordem) */
+const estavel = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(estavel).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v as object).sort().filter(k => (v as Record<string, unknown>)[k] !== undefined)
+      .map(k => `${JSON.stringify(k)}:${estavel((v as Record<string, unknown>)[k])}`).join(',')}}`
+  : JSON.stringify(v);
 /** os dois lados têm o mesmo conteúdo? (para saber se precisa recarregar a tela) */
-export const igual = (x: Dados, y: Dados) => JSON.stringify(x) === JSON.stringify(y);
+export const igual = (x: Dados, y: Dados) => estavel(x) === estavel(y);

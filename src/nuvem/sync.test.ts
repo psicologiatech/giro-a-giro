@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mesclar } from './sync';
+import { igual, mesclar } from './sync';
 
 describe('juntar o progresso do aparelho com o da nuvem', () => {
   it('nada se perde: passos se somam, tempos se juntam, pontos ficam com o maior', () => {
@@ -16,5 +16,21 @@ describe('juntar o progresso do aparelho com o da nuvem', () => {
   it('aparelho vazio recebe tudo da nuvem', () => {
     const m = mesclar({}, { passos: [0, 1], pecas: { 3: 2 }, letras: '0' });
     expect(m.passos).toEqual([0, 1]); expect(m.pecas).toEqual({ 3: 2 }); expect(m.letras).toBe('0');
+  });
+});
+
+describe('comparar sem depender da ordem dos campos', () => {
+  it('a nuvem devolve as chaves em outra ordem: continua igual (não recarrega)', () => {
+    const local = { app: { xp: 365, streak: 2, lastDay: '2026-10-13', solves: 1, sound: true }, passos: [0, 1, 2], letras: '1' };
+    const daNuvem = { letras: '1', passos: [0, 1, 2], app: { solves: 1, sound: true, streak: 2, xp: 365, lastDay: '2026-10-13' } };
+    expect(igual(mesclar(local, {}), mesclar(local, daNuvem))).toBe(true);
+  });
+  it('depois de juntar e gravar, a próxima sincronização não vê mudança', () => {
+    const local = { app: { xp: 10, streak: 1, lastDay: '2026-10-12', solves: 0, sound: true }, passos: [0] };
+    const nuvem = { app: { solves: 2, xp: 50, lastDay: '2026-10-13', streak: 3 }, passos: [0, 1, 2], tempos: [{ quando: 5, ms: 1000, embaralhar: 'R' }] };
+    const junto = mesclar(local, nuvem);
+    const doAparelho = JSON.parse(JSON.stringify(junto));
+    const daNuvem = { tempos: junto.tempos, passos: junto.passos, pecas: junto.pecas, app: { ...junto.app } };
+    expect(igual(mesclar(doAparelho, {}), mesclar(doAparelho, daNuvem))).toBe(true);
   });
 });

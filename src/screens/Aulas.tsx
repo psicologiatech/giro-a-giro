@@ -9,10 +9,11 @@ import { demoInicio, greyKeys, setupOf, type Caso, type Passo } from '../aulas/a
 import { sfx, buzz } from '../feedback';
 import { loadPecas, savePecas } from '../aulas/progresso';
 import { useLetras } from '../aulas/letras';
+import { IconCamera } from '../components/Icons';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
-export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
-  passo: Passo; feito: boolean; sound: boolean; onEarn: (xp: number) => void; onFinish: () => void;
+export function PassoView({ passo, feito, sound, onEarn, onFinish, onScan }: {
+  passo: Passo; feito: boolean; sound: boolean; onEarn: (xp: number) => void; onFinish: () => void; onScan?: () => void;
 }) {
   const [caso, setCaso] = useState<Caso | null>(null);
   const [treino, setTreino] = useState(false);
@@ -81,6 +82,12 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
           </li>
         ))}
       </ul>}
+      {onScan && (
+        <button className="atalho-camera" onClick={onScan}>
+          <span className="atalho-ico" style={{ ['--c' as string]: 'var(--blue)', ['--lip' as string]: 'var(--blue-lip)' }}><IconCamera /></span>
+          <span><b>Não sei em que passo estou</b><small>Ler meu cubo com a câmera e ir para o passo certo</small></span>
+        </button>
+      )}
       <button className="btn btn-big" onClick={() => { setTreino(true); setCaso(passo.casos[Math.floor(Math.random() * passo.casos.length)]); }}>Treinar este passo</button>
     </div>
   );

@@ -391,3 +391,28 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .atalho small { color: var(--muted); font-size: 12.5px; line-height: 1.25; }
 .atalho-ico { width: 40px; height: 40px; border-radius: 12px; background: var(--c); box-shadow: 0 3px 0 var(--lip); color: #fff; display: grid; place-items: center; }
 .atalho-q { font-family: var(--display); font-weight: 800; font-size: 22px; padding-top: 3px; }
+
+/* montar sozinha */
+.sozinha .praticar-item { margin: 0; }
+.sozinha-topo { display: flex; align-items: center; gap: 8px; }
+.sozinha-topo .back-btn { margin-right: auto; }
+.da-vez { border-left: 8px solid var(--c); display: grid; gap: 4px; }
+.da-vez .passo-kicker { margin: 0; }
+.da-vez h3 { margin: 0; font-family: var(--display); font-size: 22px; }
+.da-vez p { margin: 0; }
+.da-vez .link-btn { justify-self: start; padding-left: 0; }
+.usar { font-size: 15.5px; }
+.dica-aberta { display: grid; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 2px dashed var(--edge); font-size: 14.5px; }
+.dica-aberta small { color: var(--muted); }
+.relogio-sm { min-height: 110px; }
+.relogio-sm.rodando { min-height: 110px; }
+.relogio-sm .relogio-tempo { font-size: 52px; }
+.parciais h3 { margin: 0 0 6px; font-family: var(--display); }
+.parciais ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.parciais li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--edge); padding: 3px 0; }
+.parciais b { font-family: var(--display); font-variant-numeric: tabular-nums; }
+.atalho-camera { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; text-align: left; background: #EEF5FF;
+  border: 2px dashed #B9CFF3; border-radius: 20px; padding: 12px 14px; color: var(--ink); }
+.atalho-camera .atalho-ico { width: 40px; height: 40px; }
+.atalho-camera b { display: block; font-family: var(--display); font-size: 17px; }
+.atalho-camera small { color: var(--muted); font-size: 13px; }

@@ -31,15 +31,16 @@ Aprender a montar o cubo como numa boa aula: um passo de cada vez, vendo as situ
   - uma peça (ou uma fórmula) de cada vez, conferindo no seu cubo de verdade; treino sem ajuda
   - todas as situações são testadas no cubo simulado
 - **Meu cubo**: a câmera lê as 6 faces e diz em que passo o seu cubo está, levando direto para ele. Sem câmera, dá para pintar tocando.
-- **Praticar** (abre depois do passo 8): cronômetro com embaralhamento, melhor tempo e média de 5; caderno de fórmulas com os nomes dos cubistas e a animação de cada uma; "Travei!" para voltar ao passo certo; cubo livre com giros do cubo inteiro (x, y, z)
+- **Início**: painel com o passo da vez, dias seguidos, pontos, melhor tempo e atalhos
+- **Praticar** (abre depois do passo 8): montar sem ajuda (no cubo da tela, com o passo reconhecido sozinho, ou no seu cubo, com tempo por passo); cronômetro com embaralhamento, melhor tempo e média de 5; caderno de fórmulas com os nomes dos cubistas e a animação de cada uma; "Travei!" para voltar ao passo certo; cubo livre com giros do cubo inteiro (x, y, z)
 - Pontos, sequência de dias e progresso guardados no aparelho
 - App instalável (PWA) e publicação automática no GitHub Pages
 
 ## O que vem a seguir, por prioridade
 
-1. **Montar sozinha, só com os nomes das fórmulas**
-2. **Atalho para a câmera dentro de cada passo**
-3. **App de loja** (Android e iOS) com Capacitor
+1. **Login opcional com Google** e progresso salvo na nuvem (Firebase, plano gratuito), com política de privacidade
+2. **App Android na Google Play** (teste fechado com 12 pessoas por 14 dias)
+3. **Cubos que o Pingo recomenda** (links de afiliada identificados)
 
 ## Para desenvolver
 

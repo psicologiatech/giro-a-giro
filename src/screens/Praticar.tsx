@@ -7,9 +7,10 @@ import { describe } from '../cube/describe';
 import { amareloEmCima, TODOS } from '../aulas/aulas';
 import { FORMULAS, type Formula } from '../aulas/formulas';
 import { Brincar } from './Brincar';
+import { Sozinha } from './Sozinha';
 import { sfx, buzz } from '../feedback';
 
-type Parte = 'menu' | 'cronometro' | 'caderno' | 'travei' | 'livre';
+type Parte = 'menu' | 'sozinha' | 'cronometro' | 'caderno' | 'travei' | 'livre';
 
 /** a área de prática: liberada depois do passo 8 */
 export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onScan }: {
@@ -25,6 +26,7 @@ export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onSc
       <section className="card trancado">
         <h2>O que tem aqui</h2>
         <ul className="checklist">
+          <li><b>Montar sem ajuda</b>, só com os nomes das fórmulas.</li>
           <li><b>Cronômetro</b> para medir seus tempos.</li>
           <li><b>Caderno de fórmulas</b>, com os nomes que os cubistas usam.</li>
           <li><b>Travei!</b> para voltar ao passo certo.</li>
@@ -35,12 +37,14 @@ export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onSc
     </div>
   );
 
+  if (parte === 'sozinha') return <Sozinha sound={sound} onVoltar={voltar} onOpenPasso={onOpenPasso} onSolve={onSolve} />;
   if (parte === 'cronometro') return <Cronometro sound={sound} onVoltar={voltar} />;
   if (parte === 'caderno') return <Caderno onVoltar={voltar} />;
   if (parte === 'travei') return <Travei onVoltar={voltar} onOpenPasso={onOpenPasso} onScan={onScan} />;
   if (parte === 'livre') return <Brincar sound={sound} onSolve={onSolve} onVoltar={voltar} />;
 
   const ITENS: { id: Parte; titulo: string; texto: string; cor: string }[] = [
+    { id: 'sozinha', titulo: 'Montar sem ajuda', texto: 'Do começo ao fim, só com os nomes das fórmulas. A ajuda fica escondida.', cor: 'yellow' },
     { id: 'cronometro', titulo: 'Cronômetro', texto: 'Embaralhe o seu cubo, monte e veja quanto tempo levou.', cor: 'green' },
     { id: 'caderno', titulo: 'Caderno de fórmulas', texto: 'Todas as fórmulas, com o nome dos cubistas e o giro a giro no cubo.', cor: 'blue' },
     { id: 'travei', titulo: 'Travei!', texto: 'Não sabe o que fazer agora? Eu te levo ao passo certo.', cor: 'orange' },
@@ -70,10 +74,10 @@ function Voltar({ onVoltar }: { onVoltar: () => void }) {
 
 /* ---------- cronômetro ---------- */
 
-interface Tempo { ms: number; quando: number; embaralhar: string }
+export interface Tempo { ms: number; quando: number; embaralhar: string }
 const TKEY = 'giroagiro.tempos.v1';
 export const loadTempos = (): Tempo[] => { try { return JSON.parse(localStorage.getItem(TKEY) || '[]'); } catch { return []; } };
-const saveTempos = (t: Tempo[]) => { try { localStorage.setItem(TKEY, JSON.stringify(t.slice(0, 200))); } catch { /* sem armazenamento */ } };
+export const saveTempos = (t: Tempo[]) => { try { localStorage.setItem(TKEY, JSON.stringify(t.slice(0, 200))); } catch { /* sem armazenamento */ } };
 export function formatar(ms: number) {
   const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000), c = Math.floor((ms % 1000) / 10);
   return `${m ? `${m}:${String(s).padStart(2, '0')}` : s},${String(c).padStart(2, '0')}`;

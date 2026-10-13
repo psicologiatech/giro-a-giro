@@ -86,6 +86,7 @@ export default function App() {
           onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
           onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
           onTreinoDia={() => { setPraticarEm(x => ({ parte: 'treino', k: x.k + 1 })); go('praticar'); }}
+          onCubos={() => { setPraticarEm(x => ({ parte: 'cubos', k: x.k + 1 })); go('praticar'); }}
           onIntro={() => { setTab('trilha'); setPasso(0); }} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           conta={<CartaoConta conta={conta} onAbrir={() => setVerConta(true)} />} />}
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}

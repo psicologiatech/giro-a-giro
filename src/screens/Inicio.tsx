@@ -7,8 +7,8 @@ import { diasSemTreino, estrelas, loadDominio, loadTreino, naSemana, passoMaisFr
 import { IconCamera, IconCube, IconPath } from '../components/Icons';
 
 /** a tela inicial: onde você está, seus números e atalhos */
-export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, onTreinoDia, conta }: {
-  onOpenPasso: (n: number) => void; onTreinoDia: () => void;
+export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, onTreinoDia, onCubos, conta }: {
+  onOpenPasso: (n: number) => void; onTreinoDia: () => void; onCubos: () => void;
   conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number;
   onContinuar: () => void; onTrilha: () => void; onScan: () => void; onPraticar: () => void; onIntro: () => void;
 }) {
@@ -86,6 +86,12 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
           <span className="atalho-ico atalho-q" aria-hidden="true">?</span><b>Conheça o cubo</b><small>Peças, faces e giros</small>
         </button>
       </div>
+
+      <button className="card inicio-cubos" onClick={onCubos}>
+        <img src={`${import.meta.env.BASE_URL}pingo/presente.webp`} alt="" />
+        <span><b>Cubos que o Pingo recomenda</b><small>Ainda não tem um cubo bom? Veja os que eu indico.</small></span>
+        <span className="caso-go" aria-hidden="true">›</span>
+      </button>
     </div>
   );
 }

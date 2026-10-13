@@ -120,6 +120,9 @@ O plano é uma **escada**: começa só no passo 1, e o passo seguinte entra quan
 - **Travei!**: descobre em que passo você está e leva até ele
 - **Cubo livre**: para brincar, com os giros do cubo inteiro (x, y, z)
 
+### 🛒 Cubos que o Pingo recomenda
+Três cubos indicados, do mais em conta ao mais caprichado, com uma explicação do que faz um cubo ser bom para começar. Os links são de afiliada do Mercado Livre e isso aparece escrito na tela, antes dos cubos.
+
 ### ☁️ Conta opcional
 Dá para usar sem conta, com tudo guardado no aparelho. Quem quiser entra com o Google e o progresso passa a ser sincronizado entre celular e computador (Firebase, plano gratuito). Cada pessoa só acessa o próprio progresso, e dá para apagar a conta pelo app. Veja a [política de privacidade](https://psicologiatech.github.io/giro-a-giro/privacidade.html).
 
@@ -140,10 +143,9 @@ O Giro a Giro é um **PWA**: instalado, ele ganha ícone, abre em tela cheia e f
 ## 🚀 O que vem a seguir, por prioridade
 
 1. 🤖 **App Android na Google Play**: o mesmo PWA, empacotado (teste fechado com 12 pessoas por 14 dias)
-2. 🛒 **Cubos que o Pingo recomenda**: indicações de cubos, com links de afiliada identificados
-3. 🛡️ **App Check do Firebase**: proteção extra da nuvem, perto do lançamento
-4. 📐 **Tablet**: telas aproveitando o espaço maior (cubo e instruções lado a lado)
-5. 🦯 **Acessível para pessoas cegas**: compatível com leitor de tela, com o Pingo falando as instruções em voz e pensado para cubos táteis
+2. 🛡️ **App Check do Firebase**: proteção extra da nuvem, perto do lançamento
+3. 📐 **Tablet**: telas aproveitando o espaço maior (cubo e instruções lado a lado)
+4. 🦯 **Acessível para pessoas cegas**: compatível com leitor de tela, com o Pingo falando as instruções em voz e pensado para cubos táteis
 
 ---
 

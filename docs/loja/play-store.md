@@ -57,7 +57,7 @@ Tudo pronto para copiar e colar no Play Console.
 
 - **Faixa etária do público-alvo:** 13 a 15, 16 a 17 e 18 ou mais. Se marcar menores de 13, o app entra nas regras do programa "Famílias", que são bem mais rígidas (login com Google e links de afiliada viram problema). O app continua adequado para todas as idades na classificação.
 - **Classificação de conteúdo (questionário IARC):** sem violência, sem linguagem imprópria, sem compras, sem conteúdo gerado por outras pessoas, sem compartilhamento de localização. Deve sair "Livre".
-- **Contém anúncios?** Hoje, **Não**. Quando entrar a seção "Cubos que o Pingo recomenda" com links de afiliada, rever esta resposta.
+- **Contém anúncios?** **Sim.** O app não usa rede de anúncios, mas a seção "Cubos que o Pingo recomenda" divulga produtos de outras lojas com links de afiliada, e a Google conta promoção de produtos como anúncio. Marcar "Sim" evita problema na revisão.
 - **Acesso ao app:** todo o app funciona sem login (não precisa dar credenciais de teste).
 
 ## Segurança dos dados

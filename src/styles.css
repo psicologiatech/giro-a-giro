@@ -499,3 +499,21 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .plano-barra i { width: 16px; height: 10px; border-radius: 4px; background: var(--edge); }
 .plano-passo.fechado { opacity: .55; box-shadow: none; }
 .falas-apoio ol, .resposta-falas { margin: 0; padding-left: 20px; font-size: 14.5px; display: grid; gap: 2px; }
+
+/* ---------- cubos que o Pingo recomenda ---------- */
+.cubos-aviso { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); background: var(--surface); border: 2px dashed var(--edge); border-radius: 16px; padding: 10px 14px; }
+.cubos-aviso b { color: var(--ink); }
+.cubos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.cubo-card { border-top: 6px solid var(--c); }
+.cubo-topo { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; margin-bottom: 8px; }
+.cubo-desenho { width: 84px; height: auto; display: block; }
+.cubo-para { display: block; font-family: var(--display); font-weight: 800; font-size: 13px; letter-spacing: .03em; text-transform: uppercase; color: var(--lip); }
+.cubo-card h2 { font-size: 21px; margin: 2px 0 4px; }
+.cubo-preco { font-weight: 600; font-size: 15px; }
+.cubo-nota { display: block; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.cubo-btn { --face: var(--c); --lip: var(--cl); display: block; text-align: center; font-size: 19px; text-decoration: none; color: #fff; }
+.cubos-rodape { font-size: 12.5px; color: var(--muted); margin: 8px 0 0 !important; }
+.inicio-cubos { width: 100%; display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; align-items: center; text-align: left; }
+.inicio-cubos img { width: 52px; height: auto; }
+.inicio-cubos b { display: block; font-family: var(--display); font-size: 19px; line-height: 1.15; }
+.inicio-cubos small { display: block; color: var(--muted); font-size: 13.5px; line-height: 1.35; }

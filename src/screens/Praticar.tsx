@@ -9,10 +9,11 @@ import { FORMULAS, type Formula } from '../aulas/formulas';
 import { Brincar } from './Brincar';
 import { Sozinha } from './Sozinha';
 import { TreinoDia } from './TreinoDia';
+import { Cubos } from './Cubos';
 import { partesHoje } from '../aulas/revisao';
 import { sfx, buzz } from '../feedback';
 
-export type Parte = 'menu' | 'treino' | 'sozinha' | 'cronometro' | 'caderno' | 'travei' | 'livre';
+export type Parte = 'menu' | 'treino' | 'sozinha' | 'cronometro' | 'caderno' | 'travei' | 'livre' | 'cubos';
 
 /** a área de prática: liberada depois do passo 8 */
 export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratica, onTrilha, onOpenPasso, onTreinarPasso, onScan, inicial }: {
@@ -27,6 +28,9 @@ export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratic
     onTreinarPasso={n => (onTreinarPasso ?? onOpenPasso)(n)} />;
   // o Treino do dia abre antes do resto: a partir do passo 3 da trilha
   if (parte === 'treino' && passosTreino.length) return treino;
+  // os cubos recomendados abrem para todo mundo (quem ainda não tem cubo é quem mais precisa)
+  // vindo do Início, o botão "‹ Início" do topo já leva de volta
+  if (parte === 'cubos') return inicial === 'cubos' ? <Cubos /> : <Cubos onVoltar={voltar} voltarTexto="‹ Praticar" />;
 
   if (!liberado) return (
     <div className="screen praticar">
@@ -44,6 +48,7 @@ export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratic
       </section>
       {passosTreino.length > 0 && <button className="btn btn-pop btn-big" onClick={() => setParte('treino')}>Treino do dia (já aberto)</button>}
       <button className={`btn btn-big ${passosTreino.length ? '' : 'btn-pop'}`} onClick={onTrilha}>Ir para a trilha</button>
+      <button className="btn btn-big" onClick={() => setParte('cubos')}>Cubos que o Pingo recomenda</button>
     </div>
   );
 
@@ -60,6 +65,7 @@ export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratic
     { id: 'caderno', titulo: 'Caderno de fórmulas', texto: 'Todas as fórmulas, com o nome dos cubistas e o giro a giro no cubo.', cor: 'blue' },
     { id: 'travei', titulo: 'Travei!', texto: 'Não sabe o que fazer agora? Eu te levo ao passo certo.', cor: 'orange' },
     { id: 'livre', titulo: 'Cubo livre', texto: 'Um cubo na tela para mexer à vontade.', cor: 'red' },
+    { id: 'cubos', titulo: 'Cubos que o Pingo recomenda', texto: 'Quer um cubo melhor? Do mais em conta ao mais caprichado.', cor: 'green' },
   ];
   return (
     <div className="screen praticar">

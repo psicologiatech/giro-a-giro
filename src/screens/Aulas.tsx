@@ -9,11 +9,12 @@ import { demoInicio, greyKeys, setupOf, type Caso, type Passo } from '../aulas/a
 import { sfx, buzz } from '../feedback';
 import { loadPecas, savePecas } from '../aulas/progresso';
 import { useLetras } from '../aulas/letras';
+import { subir, VI, FIZ, SEI } from '../aulas/dominio';
 import { IconCamera } from '../components/Icons';
 
 /** a tela de um passo: objetivo, como segurar, as situações e o treino */
-export function PassoView({ passo, feito, sound, onEarn, onFinish, onScan }: {
-  passo: Passo; feito: boolean; sound: boolean; onEarn: (xp: number) => void; onFinish: () => void; onScan?: () => void;
+export function PassoView({ passo, feito, sound, onPratica, onFinish, onScan }: {
+  passo: Passo; feito: boolean; sound: boolean; onPratica: () => void; onFinish: () => void; onScan?: () => void;
 }) {
   const [caso, setCaso] = useState<Caso | null>(null);
   const [treino, setTreino] = useState(false);
@@ -30,7 +31,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish, onScan }: {
     <Player key={`${caso.id}-${treino}`} passo={passo} caso={caso} treino={treino} sound={sound}
       onBack={() => { setCaso(null); setTreino(false); }}
       onSee={() => setTreino(false)}
-      onDone={() => onEarn(treino ? 15 : 5)}
+      onDone={semAjuda => { subir(passo.n, treino ? (semAjuda ? SEI : FIZ) : VI); onPratica(); }}
       onTrain={() => setTreino(true)}
       onFinish={onFinish}
       total={total}
@@ -100,7 +101,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 /** mostra uma situação e a fórmula, giro a giro; no treino, a pessoa faz sozinha */
 function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, onTrain, onFinish, total, pecaN, onPiece }: {
   passo: Passo; caso: Caso; treino: boolean; sound: boolean;
-  onBack: () => void; onSee: () => void; onDone: () => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; total: number; pecaN: number; onPiece: () => void;
+  onBack: () => void; onSee: () => void; onDone: (semAjuda: boolean) => void; onAnother: () => void; onTrain: () => void; onFinish: () => void; total: number; pecaN: number; onPiece: () => void;
 }) {
   const start = useMemo(() => setupOf(passo, caso), [passo, caso]);
   const meta = useMemo(passo.meta, [passo]);
@@ -131,7 +132,10 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
   const [done, setDone] = useState(false);
   const [letras, setLetras] = useLetras();
   const parar = useRef(false);
-  const [dica, setDica] = useState(!treino);
+  const [dica, setDicaRaw] = useState(!treino);
+  /** no treino: a pessoa pediu ajuda (dica, saiu do caminho, ver o Pingo)? */
+  const usouAjuda = useRef(false);
+  const setDica = (v: boolean) => { if (v && treino) usouAjuda.current = true; setDicaRaw(v); };
   const [msg, setMsg] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
@@ -159,7 +163,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     setPos(p);
     if (passo.pronto(state.current, meta) || p === path.states.length - 1) {
       setDone(true); setMsg(null);
-      if (sound) sfx.win(); buzz([30, 50, 70]); onDone();
+      if (sound) sfx.win(); buzz([30, 50, 70]); onDone(!usouAjuda.current);
     } else if (fromUser) {
       if (p < 0) { setMsg('Esse giro saiu do caminho. A seta mostra como voltar.'); setDica(true); if (sound) sfx.oops(); buzz([20, 40, 20]); }
       else { setMsg(null); if (sound) sfx.click(); buzz(10); }
@@ -214,7 +218,7 @@ function Player({ passo, caso, treino, sound, onBack, onSee, onDone, onAnother, 
     const parou = parar.current; parar.current = false;
     if (demo) {
       if (!parou) { await sleep(1100); if (!alive.current) return; }
-      setPlaying(false); await resetar(); setVisto(true);
+      setPlaying(false); await resetar(); setVisto(true); subir(passo.n, VI);
       return;
     }
     setPlaying(false); busy.current = false; last.current = null;

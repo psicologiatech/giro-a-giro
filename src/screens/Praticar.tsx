@@ -13,8 +13,8 @@ import { sfx, buzz } from '../feedback';
 type Parte = 'menu' | 'sozinha' | 'cronometro' | 'caderno' | 'travei' | 'livre';
 
 /** a área de prática: liberada depois do passo 8 */
-export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onScan }: {
-  liberado: boolean; sound: boolean; onSolve: () => void;
+export function Praticar({ liberado, sound, onSolve, onPratica, onTrilha, onOpenPasso, onScan }: {
+  liberado: boolean; sound: boolean; onSolve: () => void; onPratica?: () => void;
   onTrilha: () => void; onOpenPasso: (n: number) => void; onScan: () => void;
 }) {
   const [parte, setParte] = useState<Parte>('menu');
@@ -38,7 +38,7 @@ export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onSc
   );
 
   if (parte === 'sozinha') return <Sozinha sound={sound} onVoltar={voltar} onOpenPasso={onOpenPasso} onSolve={onSolve} />;
-  if (parte === 'cronometro') return <Cronometro sound={sound} onVoltar={voltar} />;
+  if (parte === 'cronometro') return <Cronometro sound={sound} onVoltar={voltar} onPratica={onPratica} />;
   if (parte === 'caderno') return <Caderno onVoltar={voltar} />;
   if (parte === 'travei') return <Travei onVoltar={voltar} onOpenPasso={onOpenPasso} onScan={onScan} />;
   if (parte === 'livre') return <Brincar sound={sound} onSolve={onSolve} onVoltar={voltar} />;
@@ -89,7 +89,7 @@ export function mediaDe5(t: Tempo[]): number | null {
   return ult.reduce((a, b) => a + b, 0) / 3;
 }
 
-function Cronometro({ sound, onVoltar }: { sound: boolean; onVoltar: () => void }) {
+function Cronometro({ sound, onVoltar, onPratica }: { sound: boolean; onVoltar: () => void; onPratica?: () => void }) {
   const [embaralhar, setEmbaralhar] = useState(() => randomScramble(20).join(' '));
   const [tempos, setTempos] = useState<Tempo[]>(loadTempos);
   const [inicio, setInicio] = useState<number | null>(null);
@@ -108,6 +108,7 @@ function Cronometro({ sound, onVoltar }: { sound: boolean; onVoltar: () => void 
     setInicio(null); setUltimo(ms);
     const melhorAntes = tempos.length ? Math.min(...tempos.map(t => t.ms)) : Infinity;
     setTempos(t => [{ ms, quando: Date.now(), embaralhar }, ...t]);
+    onPratica?.();
     setEmbaralhar(randomScramble(20).join(' '));
     if (sound) (ms < melhorAntes ? sfx.win : sfx.good)(); buzz(ms < melhorAntes ? [30, 50, 70] : 20);
   };

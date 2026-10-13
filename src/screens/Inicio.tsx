@@ -1,18 +1,13 @@
 import { Speech, type Mood } from '../components/Mascot';
 import { TODOS } from '../aulas/aulas';
 import { formatar, loadTempos } from './Praticar';
-import { level, type Progress } from '../progress';
+import type { Progress } from '../progress';
+import { diasSemTreino, estrelas, loadDominio, loadTreino, naSemana, passoMaisFraco, setMeta, totalEstrelas } from '../aulas/dominio';
 import { IconCamera, IconCube, IconPath } from '../components/Icons';
 
-/** quantos dias desde o último treino (0 se nunca treinou) */
-const diasSemTreinar = (ultimo: string) => {
-  if (!ultimo) return 0;
-  const d = (Date.now() - new Date(ultimo + 'T12:00:00').getTime()) / 86400000;
-  return Math.max(0, Math.round(d));
-};
-
 /** a tela inicial: onde você está, seus números e atalhos */
-export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, conta }: {
+export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, conta }: {
+  onOpenPasso: (n: number) => void;
   conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number;
   onContinuar: () => void; onTrilha: () => void; onScan: () => void; onPraticar: () => void; onIntro: () => void;
 }) {
@@ -24,35 +19,45 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
   const melhor = tempos.length ? Math.min(...tempos.map(t => t.ms)) : null;
   const passosFeitos = feitos.filter(n => n >= 1).length;
   const liberado = feitos.includes(8);
+  const dom = loadDominio(), treino = loadTreino(), semana = naSemana(treino.dias), parado = diasSemTreino(treino.dias);
+  const fraco = passoMaisFraco(dom), fracoT = TODOS.find(t => t.n === fraco);
+  const tudoSei = totalEstrelas(dom) === 24;
 
   let mood: Mood = 'oi', fala = `${oi}! Que bom te ver por aqui.`;
   if (atual === 0) fala = `${oi}! Eu sou o Pingo. Vamos aprender a montar o cubo mágico juntos?`;
-  else if (diasSemTreinar(p.lastDay) >= 3) { mood = 'dormindo'; fala = `${oi}! Faz ${diasSemTreinar(p.lastDay)} dias que a gente não treina. Bora acordar o cubo?`; }
+  else if (parado !== null && parado >= 3) { mood = 'dormindo'; fala = `${oi}! Faz ${parado} dias que a gente não treina. Bora acordar o cubo?`; }
+  else if (semana >= treino.meta) { mood = 'sequencia'; fala = `${oi}! Meta da semana batida: ${semana} ${semana === 1 ? 'dia' : 'dias'} de treino. É assim que a mão aprende!`; }
   else if (montou) { mood = 'trofeu'; fala = `${oi}! Você já sabe montar o cubo. Bora treinar?`; }
-  else if (p.streak > 1) { mood = 'sequencia'; fala = `${oi}! ${p.streak} dias seguidos. Continue assim!`; }
+  else if (semana > 0) { mood = 'sequencia'; fala = `${oi}! ${semana} de ${treino.meta} dias de treino nesta semana.`; }
 
   return (
     <div className="screen inicio">
       <Speech mood={mood}>{fala}</Speech>
 
-      <button className="card continuar-card" onClick={montou ? onPraticar : onContinuar}>
-        <span className="passo-kicker">{montou ? 'Trilha completa' : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
-        <b>{montou ? 'Ir para a prática' : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
+      <button className="card continuar-card" onClick={montou ? (tudoSei ? onPraticar : () => onOpenPasso(fraco)) : onContinuar}>
+        <span className="passo-kicker">{montou ? (tudoSei ? 'Você domina os 8 passos' : 'Sugestão de treino') : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
+        <b>{montou ? (tudoSei ? 'Treinar no cronômetro' : `Passo ${fraco} · ${fracoT?.titulo}`) : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
         <span className="trilha-mini" aria-label={`${passosFeitos} de 8 passos feitos`}>
           {TODOS.filter(t => t.n >= 1).map(t => (
             <i key={t.n} className={feitos.includes(t.n) ? 'ok' : t.n === atual ? 'agora' : ''}
               style={{ ['--c' as string]: `var(--${t.cor})` }} />
           ))}
         </span>
-        <span className="continuar-sub">{passosFeitos} de 8 passos feitos</span>
+        <span className="continuar-sub">{montou && !tudoSei ? `É o passo com menos estrelas (${estrelas(dom, fraco)} de 3). Treine sem ajuda para chegar a 3.` : `${passosFeitos} de 8 passos feitos`}</span>
         <span className="continuar-go" aria-hidden="true">›</span>
       </button>
 
       <div className="stats stats-4">
-        <div><small>Dias seguidos</small><b>{p.streak}</b></div>
-        <div><small>Pontos · nível {level(p.xp)}</small><b>{p.xp}</b></div>
+        <div><small>Treino nesta semana</small><b>{semana} de {treino.meta} dias</b></div>
+        <div><small>Domínio</small><b>{totalEstrelas(dom)} de 24 ★</b></div>
         <div><small>Melhor tempo</small><b>{melhor !== null ? formatar(melhor) : '–'}</b></div>
         <div><small>Cubos montados</small><b>{p.solves}</b></div>
+      </div>
+
+      <div className="meta-semana" role="group" aria-label="Meta de treino por semana">
+        <span>Minha meta: treinar</span>
+        {[2, 3, 5].map(m => <button key={m} className={treino.meta === m ? 'on' : ''} onClick={() => setMeta(m)} aria-pressed={treino.meta === m}>{m}</button>)}
+        <span>dias por semana</span>
       </div>
 
       {conta}

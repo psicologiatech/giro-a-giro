@@ -10,6 +10,12 @@ import { FORMULAS } from '../aulas/formulas';
 import { emQuePasso } from '../aulas/progresso';
 import { formatar, loadTempos, saveTempos } from './Praticar';
 import { sfx, buzz } from '../feedback';
+import { subir, FIZ, SEI } from '../aulas/dominio';
+
+/** passou do passo de para o passo ate: estrela de Sei se não abriu a dica, de Fiz se abriu */
+function estrelasAoPassar(de: number, ate: number, comDica: Set<number>) {
+  for (let k = Math.max(1, de); k < Math.min(ate, 9); k++) subir(k, comDica.has(k) ? FIZ : SEI);
+}
 
 /** o que usar em cada passo, só pelos nomes */
 const USAR: Record<number, string> = {
@@ -45,7 +51,7 @@ export function Sozinha({ sound, onVoltar, onOpenPasso, onSolve }: {
 }
 
 /** o cartão do passo da vez: nome, fórmula pelo nome e a dica escondida */
-function PassoDaVez({ n, onAula }: { n: number; onAula?: () => void }) {
+function PassoDaVez({ n, onAula, onDica }: { n: number; onAula?: () => void; onDica?: (n: number) => void }) {
   const [dica, setDica] = useState(false);
   useEffect(() => setDica(false), [n]);
   const t = TODOS.find(x => x.n === n)!, passo = PASSOS.find(x => x.n === n)!;
@@ -61,7 +67,7 @@ function PassoDaVez({ n, onAula }: { n: number; onAula?: () => void }) {
           {fs.map(f => <p key={f.nome}><b>{f.nome}:</b> <code className="formula">{f.alg}</code><br /><small>{f.quando}</small></p>)}
           {onAula && <button className="link-btn" onClick={onAula}>Ver a aula deste passo</button>}
         </div>
-      ) : <button className="link-btn" onClick={() => setDica(true)}>Mostrar a dica</button>}
+      ) : <button className="link-btn" onClick={() => { setDica(true); onDica?.(n); }}>Mostrar a dica</button>}
     </section>
   );
 }
@@ -89,8 +95,10 @@ function NoMeuCubo({ sound, onVoltar, onSolve }: { sound: boolean; onVoltar: () 
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
   }, [inicio, fim]);
 
+  const comDica = useRef(new Set<number>());
   const feito = () => {
     if (inicio === null) return;
+    estrelasAoPassar(n, n + 1, comDica.current);
     const t = performance.now() - inicio;
     setParciais(p => [...p, t]);
     if (n < 8) { setN(n + 1); if (sound) sfx.click(); buzz(15); return; }
@@ -126,7 +134,7 @@ function NoMeuCubo({ sound, onVoltar, onSolve }: { sound: boolean; onVoltar: () 
       {inicio === null
         ? <button className="btn btn-pop btn-big" onClick={() => { setInicio(performance.now()); if (sound) sfx.click(); }}>Começar</button>
         : <>
-            <PassoDaVez n={n} />
+            <PassoDaVez n={n} onDica={k => comDica.current.add(k)} />
             <button className="btn btn-pop btn-big" onClick={feito}>{n < 8 ? `Passo ${n} feito ✓` : 'Cubo montado! ✓'}</button>
           </>}
     </div>
@@ -140,6 +148,7 @@ function NaTela({ sound, onVoltar, onOpenPasso, onSolve }: { sound: boolean; onV
   const scene = useRef<CubeScene | null>(null);
   const state = useRef<CubeState>(novo());
   const hist = useRef<string[]>([]);
+  const comDica = useRef(new Set<number>());
   const busy = useRef(false);
   const [n, setN] = useState(() => emQuePasso(state.current));
   const [giros, setGiros] = useState(0);
@@ -163,6 +172,7 @@ function NaTela({ sound, onVoltar, onOpenPasso, onSolve }: { sound: boolean; onV
     await scene.current!.turn(m, facelets(state.current), 'xyz'.includes(m[0]) ? 450 : 220);
     busy.current = false;
     const agoraN = emQuePasso(state.current);
+    if (agoraN > n) estrelasAoPassar(n, agoraN, comDica.current);
     if (agoraN > n && agoraN <= 9) { if (sound) sfx.good(); buzz(25); }
     setN(agoraN);
     if (agoraN === 9 && inicio !== null) { setFim(performance.now() - inicio); if (sound) sfx.win(); buzz([30, 50, 70]); onSolve(); }
@@ -207,7 +217,7 @@ function NaTela({ sound, onVoltar, onOpenPasso, onSolve }: { sound: boolean; onV
         </section>
       ) : (
         <>
-          <PassoDaVez n={n} onAula={() => onOpenPasso(n)} />
+          <PassoDaVez n={n} onDica={k => comDica.current.add(k)} onAula={() => { comDica.current.add(n); onOpenPasso(n); }} />
           <div className="girar-cubo" role="group" aria-label="Girar o cubo inteiro">
             <span>Girar o cubo inteiro</span>
             {GIROS_CUBO.map(m => <button key={m} className="key key-giro" onClick={() => girar(m)} title={describe(m)} aria-label={`${m}: ${describe(m)}`}><b>{m}</b></button>)}

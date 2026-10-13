@@ -12,7 +12,8 @@ import { CartaoConta, JanelaConta } from './components/Conta';
 import { useConta } from './nuvem/conta';
 import { Confetti } from './components/Confetti';
 import { IconCamera, IconCube, IconFlame, IconHome, IconPath, IconSound, IconStar } from './components/Icons';
-import { earn, level, loadProgress, saveProgress, type Progress } from './progress';
+import { earn, loadProgress, saveProgress, type Progress } from './progress';
+import { FIZ, loadDominio, loadTreino, marcarTreino, naSemana, subir, totalEstrelas, zerarTrilha } from './aulas/dominio';
 
 type Tab = 'inicio' | 'trilha' | 'meucubo' | 'praticar';
 const TABS: { id: Tab; nome: string; icon: () => React.ReactElement }[] = [
@@ -30,6 +31,13 @@ export default function App() {
   const [passo, setPasso] = useState<number | null>(null);
   const [lerAgora, setLerAgora] = useState(0);
   const conta = useConta();
+  // estrelas e dias de treino vivem fora do React: a tela se atualiza quando mudam
+  const [, setVer] = useState(0);
+  useEffect(() => { const h = () => setVer(v => v + 1); window.addEventListener('giroagiro:progresso', h); return () => window.removeEventListener('giroagiro:progresso', h); }, []);
+  /** a pessoa praticou de verdade hoje (conta para a meta da semana) */
+  const praticou = () => { if (marcarTreino()) { setToast('Meta da semana batida! 🔥'); } };
+  const treino = loadTreino(), semana = naSemana(treino.dias), estrelasTotal = totalEstrelas(loadDominio());
+  const recomecar = () => { zerarTrilha(); setFeitos([]); setPasso(null); setTab('trilha'); setToast('Trilha recomeçada. Bora de novo!'); };
   const [verConta, setVerConta] = useState(false);
   const [feitos, setFeitos] = useState<number[]>(loadFeitos);
   useEffect(() => saveFeitos(feitos), [feitos]);
@@ -37,8 +45,9 @@ export default function App() {
   const go = (t: Tab) => { setTab(t); setPasso(null); };
   /** terminou o passo n: marca e leva para o seguinte (ou volta à trilha, se ainda não existe) */
   const terminar = (n: number) => {
-    if (!feitos.includes(n)) { setP(q => earn(q, 30)); }
-    if (n === 8) { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }
+    setP(q => earn(q, 0));
+    if (n >= 1) { subir(n, FIZ); praticou(); }
+    if (n === 8) { setP(q => ({ ...q, solves: q.solves + 1 })); setWin(true); }
     setFeitos(f => marcarAte(f, n));
     const prox = TODOS.find(e => e.n === n + 1);
     if (prox?.pronto) { setPasso(n + 1); setToast(n === 0 ? 'Agora, o passo 1!' : `Passo ${n} feito! Agora, passo ${n + 1}.`); }
@@ -62,8 +71,8 @@ export default function App() {
             Início
           </button>
         )}
-        <span className="chip" title="Dias seguidos"><IconFlame />{p.streak}</span>
-        <span className="chip" title={`Pontos · nível ${level(p.xp)}`}><IconStar />{p.xp}</span>
+        <span className="chip" title={`Dias de treino nesta semana (meta: ${treino.meta})`} aria-label={`${semana} de ${treino.meta} dias de treino nesta semana`}><IconFlame />{semana}/{treino.meta}</span>
+        <span className="chip" title="Estrelas de domínio (3 por passo)" aria-label={`${estrelasTotal} de 24 estrelas de domínio`}><IconStar />{estrelasTotal}/24</span>
         <button className="icon-btn" onClick={() => setP({ ...p, sound: !p.sound })} aria-label={p.sound ? 'Desligar sons' : 'Ligar sons'}>
           <IconSound on={p.sound} />
         </button>
@@ -73,15 +82,15 @@ export default function App() {
         {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)}
           onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
           onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
-          onIntro={() => { setTab('trilha'); setPasso(0); }}
+          onIntro={() => { setTab('trilha'); setPasso(0); }} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           conta={<CartaoConta conta={conta} onAbrir={() => setVerConta(true)} />} />}
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
-        {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
-        {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}
+        {tab === 'trilha' && passo === null && <Trilha onRecomecar={recomecar} feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
+        {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
           onFinish={() => terminar(aula.n)} onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} />}
-        {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => { setP(q => earn(q, 20)); setToast('Cubo lido! +20 pontos.'); }} onSolved={() => setP(q => ({ ...earn(q, 200), solves: q.solves + 1 }))} />}
+        {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => setToast('Cubo lido!')} onSolved={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); }} />}
         {tab === 'praticar' && <Praticar liberado={feitos.includes(8)} sound={p.sound}
-          onSolve={() => { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }}
+          onSolve={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); setWin(true); }} onPratica={praticou}
           onTrilha={() => go('trilha')} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
           onScan={() => { setLerAgora(k => k + 1); setTab('meucubo'); setPasso(null); }} />}
       </main>
@@ -102,7 +111,7 @@ export default function App() {
           <div className="sheet">
             <Mascot mood="festa" size={150} />
             <h2>Você montou o cubo!</h2>
-            <p>+50 pontos. Já são {p.solves} {p.solves === 1 ? 'cubo montado' : 'cubos montados'}.</p>
+            <p>Já são {p.solves} {p.solves === 1 ? 'cubo montado' : 'cubos montados'}. Cada montagem deixa a mão mais esperta.</p>
             <button className="btn btn-pop btn-big" onClick={() => setWin(false)}>Continuar</button>
           </div>
         </div>

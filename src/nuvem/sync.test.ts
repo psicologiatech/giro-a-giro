@@ -34,3 +34,19 @@ describe('comparar sem depender da ordem dos campos', () => {
     expect(igual(mesclar(doAparelho, {}), mesclar(doAparelho, daNuvem))).toBe(true);
   });
 });
+
+describe('estrelas, treino e recomeço na nuvem', () => {
+  it('estrelas ficam com o maior; dias de treino se juntam', () => {
+    const m = mesclar({ dominio: { 3: 2 }, treino: { meta: 5, dias: ['2026-10-12'] } }, { dominio: { 3: 1, 4: 3 }, treino: { meta: 3, dias: ['2026-10-10', '2026-10-12'] } });
+    expect(m.dominio).toEqual({ 3: 2, 4: 3 });
+    expect(m.treino).toEqual({ meta: 5, dias: ['2026-10-10', '2026-10-12'] });
+  });
+  it('recomeçou neste aparelho: a nuvem não traz de volta os passos apagados', () => {
+    const m = mesclar({ passos: [], zerada: 2000, tempos: [{ ms: 1, quando: 9, embaralhar: '' }] }, { passos: [0, 1, 2, 3], dominio: { 1: 3 }, zerada: 1000, tempos: [{ ms: 2, quando: 8, embaralhar: '' }] });
+    expect(m.passos).toEqual([]); expect(m.dominio).toEqual({}); expect(m.tempos).toHaveLength(2); expect(m.zerada).toBe(2000);
+  });
+  it('recomeçou em outro aparelho: este aparelho também recomeça', () => {
+    const m = mesclar({ passos: [0, 1, 2, 3, 4], dominio: { 2: 3 } }, { passos: [0], zerada: 5000 });
+    expect(m.passos).toEqual([0]); expect(m.dominio).toEqual({});
+  });
+});

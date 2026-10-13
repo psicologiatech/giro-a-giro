@@ -1,11 +1,16 @@
 import { Speech } from '../components/Mascot';
 import { IconLock } from '../components/Icons';
+import { useState } from 'react';
 import { TODOS } from '../aulas/aulas';
+import { estrelas, loadDominio } from '../aulas/dominio';
+import { Mascot } from '../components/Mascot';
 
-export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
-  feitos: number[]; atual: number; onOpen: (n: number) => void; onPlay: () => void; onSoon: () => void;
+export function Trilha({ feitos, atual, onOpen, onPlay, onSoon, onRecomecar }: {
+  onRecomecar: () => void; feitos: number[]; atual: number; onOpen: (n: number) => void; onPlay: () => void; onSoon: () => void;
 }) {
   const vez = TODOS.find(e => e.n === atual);
+  const dom = loadDominio();
+  const [confirmar, setConfirmar] = useState(false);
   return (
     <div className="screen trilha">
       {atual === 0 ? (
@@ -51,11 +56,34 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon }: {
                 {feito ? <span className="check" aria-hidden="true">✓</span> : !e.pronto && <span className="lock"><IconLock /></span>}
               </button>
               <span className="node-label">{e.titulo}</span>
+              {e.n >= 1 && (
+                <span className="estrelas" aria-label={`${estrelas(dom, e.n)} de 3 estrelas`}>
+                  {[1, 2, 3].map(k => <i key={k} className={k <= estrelas(dom, e.n) ? 'on' : ''}>★</i>)}
+                </span>
+              )}
             </li>
           );
         })}
       </ol>
+      <section className="card legenda-estrelas">
+        <p><b>As estrelas de cada passo</b></p>
+        <p><span className="estrelas"><i className="on">★</i><i>★</i><i>★</i></span> Vi: assistiu às situações do passo</p>
+        <p><span className="estrelas"><i className="on">★</i><i className="on">★</i><i>★</i></span> Fiz: completou o passo, com ajuda</p>
+        <p><span className="estrelas"><i className="on">★</i><i className="on">★</i><i className="on">★</i></span> Sei: fez sem ajuda (treino ou Montar sem ajuda)</p>
+      </section>
       <button className="btn btn-big" onClick={onPlay}>{atual > 8 ? 'Praticar' : 'Praticar (abre depois do passo 8)'}</button>
+      {feitos.length > 0 && <button className="link-btn recomecar" onClick={() => setConfirmar(true)}>Recomeçar a trilha do zero</button>}
+      {confirmar && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-label="Recomeçar a trilha" onClick={() => setConfirmar(false)}>
+          <div className="sheet" onClick={ev => ev.stopPropagation()}>
+            <Mascot mood="cubo" size={110} />
+            <h2>Recomeçar a trilha?</h2>
+            <p>Os passos feitos e as estrelas voltam para o zero. Seus tempos, dias de treino e cubos montados continuam.</p>
+            <button className="btn btn-pop btn-big" onClick={() => { setConfirmar(false); onRecomecar(); }}>Sim, recomeçar</button>
+            <button className="btn" onClick={() => setConfirmar(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

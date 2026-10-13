@@ -8,6 +8,9 @@ export const CHAVES = {
   tempos: 'giroagiro.tempos.v1',
   pecas: 'giroagiro.pecas.v1',
   letras: 'giroagiro.letras.v1',
+  dominio: 'giroagiro.dominio.v1',
+  treino: 'giroagiro.treino.v1',
+  zerada: 'giroagiro.zerada.v1',
 } as const;
 
 export interface Dados {
@@ -16,11 +19,16 @@ export interface Dados {
   tempos?: { ms: number; quando: number; embaralhar: string }[];
   pecas?: Record<string, number>;
   letras?: string;
+  dominio?: Record<string, number>;
+  treino?: { meta: number; dias: string[] };
+  /** quando a trilha foi recomeçada (ms); o lado mais recente manda nos passos, peças e estrelas */
+  zerada?: number;
 }
 
 const ler = <T,>(k: string): T | undefined => { try { const v = localStorage.getItem(k); return v === null ? undefined : (k === CHAVES.letras ? v : JSON.parse(v)) as T; } catch { return undefined; } };
 export function lerLocal(): Dados {
-  return { app: ler(CHAVES.app), passos: ler(CHAVES.passos), tempos: ler(CHAVES.tempos), pecas: ler(CHAVES.pecas), letras: ler(CHAVES.letras) };
+  return { app: ler(CHAVES.app), passos: ler(CHAVES.passos), tempos: ler(CHAVES.tempos), pecas: ler(CHAVES.pecas), letras: ler(CHAVES.letras),
+    dominio: ler(CHAVES.dominio), treino: ler(CHAVES.treino), zerada: ler(CHAVES.zerada) };
 }
 export function gravarLocal(d: Dados) {
   try {
@@ -29,6 +37,9 @@ export function gravarLocal(d: Dados) {
     if (d.tempos) localStorage.setItem(CHAVES.tempos, JSON.stringify(d.tempos));
     if (d.pecas) localStorage.setItem(CHAVES.pecas, JSON.stringify(d.pecas));
     if (d.letras !== undefined) localStorage.setItem(CHAVES.letras, d.letras);
+    if (d.dominio) localStorage.setItem(CHAVES.dominio, JSON.stringify(d.dominio));
+    if (d.treino) localStorage.setItem(CHAVES.treino, JSON.stringify(d.treino));
+    if (d.zerada) localStorage.setItem(CHAVES.zerada, String(d.zerada));
   } catch { /* sem armazenamento */ }
 }
 
@@ -43,13 +54,26 @@ export function mesclar(a: Dados, b: Dados): Dados {
     lastDay: maisRecente.lastDay ?? '',
     streak: maisRecente.streak ?? 0,
   };
-  const passos = [...new Set([...(a.passos ?? []), ...(b.passos ?? [])])].sort((x, y) => x - y);
+  // trilha: se um lado recomeçou depois do outro, vale só esse lado; senão, soma os dois
+  const za = a.zerada ?? 0, zb = b.zerada ?? 0;
+  const so = za > zb ? a : zb > za ? b : null;
+  const passos = so ? [...(so.passos ?? [])] : [...new Set([...(a.passos ?? []), ...(b.passos ?? [])])].sort((x, y) => x - y);
   const porQuando = new Map<number, NonNullable<Dados['tempos']>[number]>();
   for (const t of [...(b.tempos ?? []), ...(a.tempos ?? [])]) porQuando.set(t.quando, t);
   const tempos = [...porQuando.values()].sort((x, y) => y.quando - x.quando).slice(0, 200);
-  const pecas: Record<string, number> = { ...(b.pecas ?? {}) };
-  for (const [k, v] of Object.entries(a.pecas ?? {})) pecas[k] = Math.max(v, pecas[k] ?? 0);
-  return { app, passos, tempos, pecas, letras: a.letras ?? b.letras };
+  const maior = (x?: Record<string, number>, y?: Record<string, number>) => {
+    const r: Record<string, number> = { ...(y ?? {}) };
+    for (const [k, v] of Object.entries(x ?? {})) r[k] = Math.max(v, r[k] ?? 0);
+    return r;
+  };
+  const pecas = so ? { ...(so.pecas ?? {}) } : maior(a.pecas, b.pecas);
+  const dominio = so ? { ...(so.dominio ?? {}) } : maior(a.dominio, b.dominio);
+  const treino = (a.treino || b.treino) ? {
+    meta: a.treino?.meta ?? b.treino?.meta ?? 3,
+    dias: [...new Set([...(a.treino?.dias ?? []), ...(b.treino?.dias ?? [])])].sort().slice(-120),
+  } : undefined;
+  const zerada = Math.max(za, zb) || undefined;
+  return { app, passos, tempos, pecas, letras: a.letras ?? b.letras, dominio, treino, zerada };
 }
 
 /** texto do conteúdo com as chaves sempre na mesma ordem (a nuvem devolve os campos em outra ordem) */

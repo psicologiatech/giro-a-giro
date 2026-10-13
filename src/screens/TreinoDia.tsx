@@ -28,19 +28,20 @@ export function TreinoDia({ sound, onVoltar, onTreinarPasso, onMontar, onPratica
   const PARTES = [
     { n: 1, titulo: 'Aquecimento: qual é a situação?', texto: '5 situações misturadas: escolha o que fazer em cada uma.', ir: () => setAquecendo(true) },
     { n: 2, titulo: `Ponto fraco: passo ${fraco}`, texto: `${fracoT.titulo}, com ${estrelas(loadDominio(), fraco)} de 3 estrelas. Treine sem pedir dica.`, ir: () => { marcarParte(2); onTreinarPasso(fraco); } },
-    { n: 3, titulo: 'Uma montagem completa', texto: 'No seu cubo, do começo ao fim, com cronômetro e sem ajuda.', ir: () => { marcarParte(3); onMontar(); } },
+    { n: 3, titulo: 'Bônus (opcional): montagem completa', texto: 'Nos dias de mais tempo: o seu cubo do começo ao fim, com pausa e dica se precisar.', ir: () => { marcarParte(3); onMontar(); } },
   ];
-  const tudo = PARTES.every(p => feitas.includes(p.n));
+  // o treino do dia fica completo com as partes 1 e 2; a 3 é bônus
+  const tudo = feitas.includes(1) && feitas.includes(2);
   return (
     <div className="screen treino-dia">
       <button className="back-btn self-start" onClick={onVoltar}>‹ Praticar</button>
       {tudo
-        ? <><Confetti /><Speech mood="sequencia">Treino de hoje completo! Volte amanhã: as situações que você errou vão aparecer de novo.</Speech></>
-        : <Speech mood="estudando">Uns 10 minutos por dia, em vários dias, ensinam mais do que uma maratona. Bora?</Speech>}
+        ? <><Confetti /><Speech mood="sequencia">Treino de hoje completo! {feitas.includes(3) ? 'E ainda fez o bônus!' : 'Se sobrar tempo, tem o bônus.'} Amanhã as situações que você errou voltam.</Speech></>
+        : <Speech mood="estudando">Uns 5 minutos por dia, em vários dias, ensinam mais do que uma maratona. Bora?</Speech>}
       <ol className="partes">
         {PARTES.map(p => (
           <li key={p.n}>
-            <button className={`parte ${feitas.includes(p.n) ? 'ok' : ''}`} onClick={p.ir}>
+            <button className={`parte ${feitas.includes(p.n) ? 'ok' : ''} ${p.n === 3 ? 'bonus' : ''}`} onClick={p.ir}>
               <span className="parte-n">{feitas.includes(p.n) ? '✓' : p.n}</span>
               <span><b>{p.titulo}</b><small>{p.texto}</small></span>
               <span className="caso-go" aria-hidden="true">›</span>

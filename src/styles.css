@@ -477,3 +477,5 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .opcao.errada .opcao-n { background: var(--red); color: #fff; }
 .opcao.apagada { opacity: .5; }
 .treino-dia .stage { position: sticky; top: 0; z-index: 2; height: min(34dvh, 300px); }
+.parte.bonus:not(.ok) { border-style: dashed; box-shadow: none; background: transparent; }
+.parte.bonus:not(.ok) .parte-n { background: var(--bg); color: var(--muted); border: 2px dashed var(--edge); box-shadow: none; }

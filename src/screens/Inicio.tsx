@@ -37,14 +37,14 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
 
       <button className="card continuar-card" onClick={montou ? onTreinoDia : onContinuar}>
         <span className="passo-kicker">{montou ? 'Treino do dia' : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
-        <b>{montou ? (partesHoje().length === 3 ? 'Treino de hoje completo ✓' : partesHoje().length ? `${partesHoje().length} de 3 partes feitas` : 'Começar o treino de hoje') : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
+        <b>{montou ? (partesHoje().includes(1) && partesHoje().includes(2) ? 'Treino de hoje completo ✓' : partesHoje().length ? 'Continuar o treino de hoje' : 'Começar o treino de hoje') : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
         <span className="trilha-mini" aria-label={`${passosFeitos} de 8 passos feitos`}>
           {TODOS.filter(t => t.n >= 1).map(t => (
             <i key={t.n} className={feitos.includes(t.n) ? 'ok' : t.n === atual ? 'agora' : ''}
               style={{ ['--c' as string]: `var(--${t.cor})` }} />
           ))}
         </span>
-        <span className="continuar-sub">{montou ? (tudoSei ? 'Você domina os 8 passos. Agora é ganhar velocidade.' : `Lembrar as fórmulas, treinar o passo ${fraco} (${fracoT?.titulo}, ${estrelas(dom, fraco)} de 3 ★) e montar uma vez.`) : `${passosFeitos} de 8 passos feitos`}</span>
+        <span className="continuar-sub">{montou ? (tudoSei ? 'Você domina os 8 passos. Agora é ganhar velocidade.' : `Escolher a fórmula certa em 5 situações e treinar o passo ${fraco} (${fracoT?.titulo}, ${estrelas(dom, fraco)} de 3 ★).`) : `${passosFeitos} de 8 passos feitos`}</span>
         <span className="continuar-go" aria-hidden="true">›</span>
       </button>
 

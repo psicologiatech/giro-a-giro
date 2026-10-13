@@ -51,7 +51,7 @@ export function Praticar({ liberado, sound, onSolve, onPratica, onTrilha, onOpen
   if (parte === 'livre') return <Brincar sound={sound} onSolve={onSolve} onVoltar={voltar} />;
 
   const ITENS: { id: Parte; titulo: string; texto: string; cor: string }[] = [
-    { id: 'treino', titulo: `Treino do dia${partesHoje().length ? ` · ${partesHoje().length} de 3` : ''}`, texto: 'Uns 10 minutos: lembrar as fórmulas, treinar o ponto fraco e uma montagem completa.', cor: 'pop' },
+    { id: 'treino', titulo: `Treino do dia${partesHoje().includes(1) && partesHoje().includes(2) ? ' ✓' : ''}`, texto: 'Uns 5 minutos: escolher a fórmula certa e treinar o ponto fraco. Montagem completa é bônus.', cor: 'pop' },
     { id: 'sozinha', titulo: 'Montar sem ajuda', texto: 'Do começo ao fim, só com os nomes das fórmulas. A ajuda fica escondida.', cor: 'yellow' },
     { id: 'cronometro', titulo: 'Cronômetro', texto: 'Embaralhe o seu cubo, monte e veja quanto tempo levou.', cor: 'green' },
     { id: 'caderno', titulo: 'Caderno de fórmulas', texto: 'Todas as fórmulas, com o nome dos cubistas e o giro a giro no cubo.', cor: 'blue' },

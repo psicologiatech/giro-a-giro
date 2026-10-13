@@ -27,6 +27,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp}'],
+        globIgnores: ['**/index.esm-*.js'], // Firebase: só baixa quando a pessoa usa a conta
         runtimeCaching: [{
           urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
           handler: 'CacheFirst',

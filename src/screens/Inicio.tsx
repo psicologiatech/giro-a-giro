@@ -12,8 +12,8 @@ const diasSemTreinar = (ultimo: string) => {
 };
 
 /** a tela inicial: onde você está, seus números e atalhos */
-export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro }: {
-  p: Progress; feitos: number[]; atual: number;
+export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, conta }: {
+  conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number;
   onContinuar: () => void; onTrilha: () => void; onScan: () => void; onPraticar: () => void; onIntro: () => void;
 }) {
   const hora = new Date().getHours();
@@ -54,6 +54,8 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
         <div><small>Melhor tempo</small><b>{melhor !== null ? formatar(melhor) : '–'}</b></div>
         <div><small>Cubos montados</small><b>{p.solves}</b></div>
       </div>
+
+      {conta}
 
       <h3 className="sec-title">Atalhos</h3>
       <div className="atalhos">

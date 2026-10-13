@@ -416,3 +416,21 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .atalho-camera .atalho-ico { width: 40px; height: 40px; }
 .atalho-camera b { display: block; font-family: var(--display); font-size: 17px; }
 .atalho-camera small { color: var(--muted); font-size: 13px; }
+
+/* conta (login opcional) */
+.conta-card { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; }
+.conta-card h3 { margin: 0; font-family: var(--display); font-size: 19px; }
+.conta-card p { margin: 0; font-size: 14px; color: var(--muted); }
+.conta-card .btn, .conta-card .warn-msg, .conta-politica { grid-column: 1 / -1; }
+.conta-politica { justify-self: center; font-size: 13px; }
+.btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; }
+.conta-linha { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; text-align: left; background: #F2FBF6;
+  border: 2px solid #BFEBD2; border-radius: 18px; padding: 10px 14px; color: var(--ink); }
+.conta-linha b { display: block; font-family: var(--display); font-size: 16px; }
+.conta-linha small { color: var(--muted); font-size: 13px; }
+.conta-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 19px; padding-top: 2px; }
+.conta-avatar-g { width: 64px; height: 64px; font-size: 30px; }
+.conta-sheet .conta-ok { font-size: 14.5px; }
+.conta-apagar { width: 100%; display: grid; gap: 8px; }
+.btn-perigo { --face: #F2453D; --lip: #B72A23; color: #fff; }

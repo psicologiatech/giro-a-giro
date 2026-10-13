@@ -8,6 +8,8 @@ import { Intro } from './screens/Intro';
 import { PASSOS, TODOS } from './aulas/aulas';
 import { loadFeitos, marcarAte, passoAtual, saveFeitos } from './aulas/progresso';
 import { Mascot } from './components/Mascot';
+import { CartaoConta, JanelaConta } from './components/Conta';
+import { useConta } from './nuvem/conta';
 import { Confetti } from './components/Confetti';
 import { IconCamera, IconCube, IconFlame, IconHome, IconPath, IconSound, IconStar } from './components/Icons';
 import { earn, level, loadProgress, saveProgress, type Progress } from './progress';
@@ -27,6 +29,8 @@ export default function App() {
   const [win, setWin] = useState(false);
   const [passo, setPasso] = useState<number | null>(null);
   const [lerAgora, setLerAgora] = useState(0);
+  const conta = useConta();
+  const [verConta, setVerConta] = useState(false);
   const [feitos, setFeitos] = useState<number[]>(loadFeitos);
   useEffect(() => saveFeitos(feitos), [feitos]);
   useEffect(() => { document.querySelector('.content')?.scrollTo(0, 0); }, [tab, passo]);
@@ -44,6 +48,9 @@ export default function App() {
   const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };
   const aula = passo !== null ? PASSOS.find(x => x.n === passo) : undefined;
   useEffect(() => saveProgress(p), [p]);
+  // guarda na nuvem depois de cada mudança (se a pessoa entrou com o Google)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { conta.salvarDepois(); }, [p, feitos, tab, passo]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2400); return () => clearTimeout(t); }, [toast]);
 
   return (
@@ -66,7 +73,8 @@ export default function App() {
         {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)}
           onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
           onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
-          onIntro={() => { setTab('trilha'); setPasso(0); }} />}
+          onIntro={() => { setTab('trilha'); setPasso(0); }}
+          conta={<CartaoConta conta={conta} onAbrir={() => setVerConta(true)} />} />}
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
         {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
         {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}
@@ -86,6 +94,7 @@ export default function App() {
         ))}
       </nav>
 
+      {verConta && <JanelaConta conta={conta} onFechar={() => setVerConta(false)} />}
       {toast && <div className="toast" role="status">{toast}</div>}
       {win && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Cubo montado">

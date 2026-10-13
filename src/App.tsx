@@ -30,11 +30,12 @@ export default function App() {
   const go = (t: Tab) => { setTab(t); setPasso(null); };
   /** terminou o passo n: marca e leva para o seguinte (ou volta à trilha, se ainda não existe) */
   const terminar = (n: number) => {
-    if (!feitos.includes(n)) { setP(q => earn(q, 30)); setWin(false); }
+    if (!feitos.includes(n)) { setP(q => earn(q, 30)); }
+    if (n === 8) { setP(q => ({ ...earn(q, 50), solves: q.solves + 1 })); setWin(true); }
     setFeitos(f => marcarAte(f, n));
     const prox = TODOS.find(e => e.n === n + 1);
     if (prox?.pronto) { setPasso(n + 1); setToast(n === 0 ? 'Agora, o passo 1!' : `Passo ${n} feito! Agora, passo ${n + 1}.`); }
-    else { setPasso(null); setToast(n === 0 ? 'Pronto!' : n >= 8 ? 'Os 8 passos feitos!' : `Passo ${n} feito! O passo ${n + 1} chega em breve.`); }
+    else { setPasso(null); setToast(n === 0 ? 'Pronto!' : n >= 8 ? null : `Passo ${n} feito! O passo ${n + 1} chega em breve.`); }
   };
   /** o cubo lido pela câmera está no passo n */
   const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };

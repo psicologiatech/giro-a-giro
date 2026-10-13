@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAlg, clone, facelets, type CubeState, type Piece } from '../cube/model';
-import { PASSOS, movesOf, setupOf } from './aulas';
+import { PASSOS, amareloEmCima, movesOf, setupOf } from './aulas';
 
 const white = (p: Piece) => { const t = p.stickers.find(t => t.color === 'U'); return t && { n: t.n.map(v => v + 0) }; };
 const at = (s: CubeState, pos: number[]) => s.find(p => p.pos.every((v, i) => v === pos[i]))!;
@@ -175,5 +175,39 @@ describe('passo 7: terremoto no prédio', () => {
       if (c.id === 'nenhum') expect(iguais(s)).toHaveLength(1);
       else expect(emQuePasso(s), c.id).toBeGreaterThanOrEqual(8);
     }
+  });
+});
+
+describe('passo 8: arrumar os meios', () => {
+  const p8 = PASSOS.find(p => p.n === 8)!;
+  const DIR = "F2 U L R' F2 L' R U F2";
+  const prontos = (s: CubeState) => { const f = facelets(s); return (['F', 'R', 'B', 'L'] as const).filter(k => f[k].slice(0, 3).every(c => c === f[k][4])); };
+  const meioDaFrente = (s: CubeState) => { const c = facelets(s).F[4]; const p = s.find(q => q.stickers.length === 2 && q.pos[1] === 1 && q.stickers.some(t => t.color === c))!.pos; return p[0] === 1 ? 'direita' : p[0] === -1 ? 'esquerda' : 'outro'; };
+  it('cada situação é como o professor descreve', () => {
+    const s = Object.fromEntries(p8.casos.map(c => [c.id, setupOf(p8, c)]));
+    for (const c of p8.casos) expect(emQuePasso(s[c.id]), c.id).toBe(8);
+    expect(prontos(s.direita)).toEqual(['B']); expect(meioDaFrente(s.direita)).toBe('direita');
+    expect(prontos(s.esquerda)).toEqual(['B']); expect(meioDaFrente(s.esquerda)).toBe('esquerda');
+    expect(prontos(s.nenhum)).toEqual([]);
+    expect(prontos(s.virar)).toHaveLength(1); expect(prontos(s.virar)).not.toContain('B');
+  });
+  it('depois de cada situação: lado pronto atrás, ou cubo montado', () => {
+    for (const c of p8.casos) {
+      const fim = applyAlg(setupOf(p8, c), movesOf(c));
+      if (c.depois) expect(prontos(fim).length, c.id).toBeGreaterThan(0);
+      else expect(emQuePasso(fim), c.id).toBe(9);
+    }
+  });
+  it('sem nenhum lado pronto, uma fórmula sempre faz aparecer um', () => {
+    let seed = 9; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const T = ['', 'y', 'y2', "y'"]; let vistos = 0;
+    for (let i = 0; i < 400; i++) {
+      let s = amareloEmCima();
+      for (let j = 0; j < 3; j++) s = applyAlg(s, `${T[Math.floor(rnd() * 4)]} ${rnd() < .5 ? DIR : "F2 U' L R' F2 L' R U' F2"}`.trim());
+      if (prontos(s).length) continue;
+      vistos++;
+      expect(prontos(applyAlg(clone(s), DIR)).length).toBeGreaterThan(0);
+    }
+    expect(vistos).toBeGreaterThan(10);
   });
 });

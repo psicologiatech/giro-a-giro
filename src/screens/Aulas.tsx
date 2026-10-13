@@ -18,6 +18,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
   const [treino, setTreino] = useState(false);
   const fim = useMemo(passo.fim, [passo]);
   const total = passo.total ?? 4;
+  const ultimo = passo.n === 8;
   const [letras, setLetras] = useLetras();
   const [pecas, setPecas] = useState(() => loadPecas(passo.n));
   useEffect(() => savePecas(passo.n, pecas), [passo.n, pecas]);
@@ -52,10 +53,10 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
         <section className="card pecas-card completo">
           <Mascot mood="trofeu" size={84} />
           <div>
-            <h3>Passo {passo.n} pronto no seu cubo!</h3>
-            <p>{total > 1 ? `As ${total} peças estão no lugar.` : `${passo.peca[0].toUpperCase()}${passo.peca.slice(1)} pronta.`}</p>
+            <h3>{ultimo ? 'Cubo montado!' : `Passo ${passo.n} pronto no seu cubo!`}</h3>
+            <p>{ultimo ? 'Você fez os 8 passos do professor.' : total > 1 ? `As ${total} peças estão no lugar.` : 'Tudo certo neste passo.'}</p>
           </div>
-          <button className="btn btn-pop btn-big" onClick={onFinish}>Ir para o passo {passo.n + 1}</button>
+          <button className="btn btn-pop btn-big" onClick={onFinish}>{ultimo ? 'Comemorar!' : `Ir para o passo ${passo.n + 1}`}</button>
           <button className="link-btn" onClick={() => setPecas(0)}>Começar este passo de novo</button>
         </section>
       ) : (
@@ -63,7 +64,7 @@ export function PassoView({ passo, feito, sound, onEarn, onFinish }: {
           {total > 1 && <Pecas feitas={pecas} total={total} />}
           <p>{total > 1 && <b>{pecas === 0 ? `Vamos resolver um ${passo.peca} de cada vez. ` : `${pecas} de ${total} prontas! `}</b>}{passo.pergunta ?? `Como está o ${pecas === 0 ? 'primeiro' : 'próximo'} ${passo.peca} no seu cubo?`}</p>
           {total > 1 && <button className="link-btn" onClick={maisUma}>Esse {passo.peca} já está certo: pular para o próximo</button>}
-          <button className="link-btn" onClick={onFinish}>{feito ? `Ir para o passo ${passo.n + 1}` : `O passo inteiro já está pronto no meu cubo: ir para o passo ${passo.n + 1}`}</button>
+          <button className="link-btn" onClick={onFinish}>{ultimo ? 'Meu cubo já está montado!' : feito ? `Ir para o passo ${passo.n + 1}` : `O passo inteiro já está pronto no meu cubo: ir para o passo ${passo.n + 1}`}</button>
         </section>
       )}
       <Speech mood="aponta">{passo.dica}</Speech>

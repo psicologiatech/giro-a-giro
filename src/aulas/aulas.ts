@@ -613,11 +613,93 @@ export const PASSOS: Passo[] = [
       },
     ],
   },
+  {
+    n: 8, titulo: 'Arrumar os meios', cor: 'blue',
+    objetivo: 'Colocar os 4 meios amarelos no lugar. É o último passo: no fim, o cubo está montado!',
+    segurar: 'O amarelo volta para cima. O lado que já está todo pronto fica lá nas costas.',
+    dica: 'Primeiro gire o topo até as quinas baterem com os centros dos lados. Depois procure um lado todo pronto (as três peças de cima com a cor do centro) e deixe ele atrás.',
+    peca: 'meios', total: 1,
+    pergunta: 'Com o amarelo em cima: as quinas batem com os centros? Tem algum lado todo pronto?',
+    repetir: 'Faça igual no seu cubo. Gire o topo, se precisar, até tudo bater: cubo montado!',
+    demo: {
+      partes: [
+        { legenda: 'O amarelo volta para cima', m: 'x' },
+        { legenda: 'Gira o topo até as quinas baterem com os centros', m: 'U' },
+        { legenda: 'Nenhum lado pronto: faz a fórmula', m: "F2 U L R' F2 L' R U F2" },
+        { legenda: 'Apareceu um lado pronto: gira o cubo até ele ficar atrás', m: 'y' },
+        { legenda: 'O meio da cor da frente está à direita: fórmula com o topo para a esquerda', m: "F2 U L R' F2 L' R U F2" },
+      ],
+    },
+    meta: amareloEmCima, fim: amareloEmCima, fimDeBaixo: false,
+    foco: () => true,
+    pronto: s => emQuePasso(s) === 9,
+    casos: [
+      {
+        id: 'alinhar', nome: 'As quinas não batem com os centros', ver: 'As quinas estão certas entre si, mas não combinam com as cores dos centros dos lados.',
+        completa: "U F2 U L R' F2 L' R U F2",
+        depois: 'Faça igual no seu cubo. Agora veja se algum lado ficou todo pronto e escolha a situação.',
+        lances: [
+          { m: 'U', fala: 'Gira o topo até as quinas baterem com os centros dos lados.' },
+        ],
+      },
+      {
+        id: 'virar', nome: 'Lado pronto em outro lugar', ver: 'Tem um lado todo pronto, mas ele não está atrás.',
+        completa: "y F2 U L R' F2 L' R U F2",
+        depois: 'Faça igual no seu cubo. Agora veja onde está o meio com a cor do centro da frente e escolha a situação: à direita ou à esquerda.',
+        lances: [
+          { m: 'y', fala: 'Gira o cubo inteiro até o lado pronto ficar lá nas costas.' },
+        ],
+      },
+      {
+        id: 'direita', nome: 'Lado pronto atrás, meio à direita', ver: 'O lado pronto está atrás. O meio com a cor do centro da frente está no topo, à direita.',
+        lances: [
+          { m: "F2", fala: 'Gira a frente duas vezes: o trio amarelo vai pra baixo.' },
+          { m: "U", fala: 'Traz pra frente o meio com a cor da frente: gira o topo.' },
+          { m: "L", fala: 'Desce o trio de um lado: a esquerda desce.' },
+          { m: "R'", fala: 'E desce o trio do outro lado: a direita desce.' },
+          { m: "F2", fala: 'Gira a frente duas vezes: troca os trios de lugar.' },
+          { m: "L'", fala: 'Sobe o trio da esquerda.' },
+          { m: "R", fala: 'E sobe o trio da direita.' },
+          { m: "U", fala: 'Alinha a cor na frente: gira o topo.' },
+          { m: "F2", fala: 'Gira a frente duas vezes. Cubo montado!' },
+        ],
+      },
+      {
+        id: 'esquerda', nome: 'Lado pronto atrás, meio à esquerda', ver: 'O lado pronto está atrás. O meio com a cor do centro da frente está no topo, à esquerda.',
+        lances: [
+          { m: "F2", fala: 'Gira a frente duas vezes: o trio amarelo vai pra baixo.' },
+          { m: "U'", fala: 'Traz pra frente o meio com a cor da frente: gira o topo.' },
+          { m: "L", fala: 'Desce o trio de um lado: a esquerda desce.' },
+          { m: "R'", fala: 'E desce o trio do outro lado: a direita desce.' },
+          { m: "F2", fala: 'Gira a frente duas vezes: troca os trios de lugar.' },
+          { m: "L'", fala: 'Sobe o trio da esquerda.' },
+          { m: "R", fala: 'E sobe o trio da direita.' },
+          { m: "U'", fala: 'Alinha a cor na frente: gira o topo.' },
+          { m: "F2", fala: 'Gira a frente duas vezes. Cubo montado!' },
+        ],
+      },
+      {
+        id: 'nenhum', nome: 'Nenhum lado pronto', ver: 'As quinas batem com os centros, mas nenhum lado está todo pronto. Faça a fórmula com qualquer lado atrás: vai aparecer um lado pronto.',
+        completa: "F2 U L R' F2 L' R U F2 y F2 U L R' F2 L' R U F2",
+        depois: 'Faça igual no seu cubo. Apareceu um lado todo pronto: escolha a situação dele.',
+        lances: [
+          { m: "F2", fala: 'Gira a frente duas vezes: o trio amarelo vai pra baixo.' },
+          { m: "U", fala: 'Traz pra frente o meio com a cor da frente: gira o topo.' },
+          { m: "L", fala: 'Desce o trio de um lado: a esquerda desce.' },
+          { m: "R'", fala: 'E desce o trio do outro lado: a direita desce.' },
+          { m: "F2", fala: 'Gira a frente duas vezes: troca os trios de lugar.' },
+          { m: "L'", fala: 'Sobe o trio da esquerda.' },
+          { m: "R", fala: 'E sobe o trio da direita.' },
+          { m: "U", fala: 'Alinha a cor na frente: gira o topo.' },
+          { m: "F2", fala: 'Gira a frente duas vezes. Olhe os lados: apareceu um lado todo pronto!' },
+        ],
+      },
+    ],
+  },
 ];
 
 /** os passos que ainda vão chegar, só para a trilha */
 export const PROXIMOS: { n: number; titulo: string; cor: Passo['cor'] }[] = [
-  { n: 8, titulo: 'Arrumar os meios', cor: 'blue' },
 ];
 
 export const movesOf = (c: Caso) => c.lances.map(l => l.m);

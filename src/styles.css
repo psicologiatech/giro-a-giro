@@ -368,3 +368,26 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .travei-camera { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
 .travei-camera p { margin: 0; }
 .travei-camera .btn { grid-column: 1 / -1; }
+
+/* início (painel) */
+.tabbar { grid-template-columns: repeat(4, 1fr); }
+.continuar-card { position: relative; display: grid; gap: 6px; text-align: left; width: 100%; color: inherit; font: inherit;
+  background: linear-gradient(135deg, #FFFFFF 0%, var(--pop-soft) 100%); border-color: #FFC2DC; box-shadow: 0 5px 0 #FFC2DC; padding: 18px 44px 16px 18px; }
+.continuar-card:active { transform: translateY(4px); box-shadow: 0 1px 0 #FFC2DC; }
+.continuar-card .passo-kicker { margin: 0; text-transform: uppercase; letter-spacing: .04em; font-size: 12.5px; color: var(--pop-lip); }
+.continuar-card b { font-family: var(--display); font-weight: 800; font-size: 24px; line-height: 1.15; }
+.continuar-sub { font-size: 13.5px; color: var(--muted); }
+.continuar-go { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 34px; color: var(--pop); line-height: 1; }
+.trilha-mini { display: flex; gap: 5px; margin-top: 4px; }
+.trilha-mini i { flex: 1; height: 12px; border-radius: 99px; background: var(--edge); }
+.trilha-mini i.ok { background: var(--c); }
+.trilha-mini i.agora { background: var(--surface); outline: 2.5px solid var(--pop); outline-offset: -1px; }
+.stats-4 { grid-template-columns: repeat(2, 1fr); }
+.atalhos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.atalho { display: grid; gap: 2px; justify-items: start; text-align: left; background: var(--surface); border: 2px solid var(--edge);
+  border-radius: 20px; padding: 12px; box-shadow: 0 4px 0 var(--edge); }
+.atalho:active { transform: translateY(4px); box-shadow: none; }
+.atalho b { font-family: var(--display); font-size: 17px; line-height: 1.15; margin-top: 4px; }
+.atalho small { color: var(--muted); font-size: 12.5px; line-height: 1.25; }
+.atalho-ico { width: 40px; height: 40px; border-radius: 12px; background: var(--c); box-shadow: 0 3px 0 var(--lip); color: #fff; display: grid; place-items: center; }
+.atalho-q { font-family: var(--display); font-weight: 800; font-size: 22px; padding-top: 3px; }

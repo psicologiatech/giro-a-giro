@@ -1,5 +1,7 @@
 const P = { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
-export const IconPath = () => <svg {...P}><circle cx="6" cy="19" r="2.5" /><circle cx="18" cy="12" r="2.5" /><circle cx="7" cy="5" r="2.5" /><path d="M8.3 17.8 15.8 13M15.6 10.8 9.2 6.2" /></svg>;
+/** trilha: uma escada com bandeira no alto (cada degrau é um passo) */
+export const IconPath = () => <svg {...P}><path d="M3 21h5v-5h5v-5h5V7" /><path d="M18 7V2.5l4 1.7-4 1.7" /></svg>;
+export const IconHome = () => <svg {...P}><path d="M4 11.5 12 4l8 7.5" /><path d="M6 10v10h4.5v-5.5h3V20H18V10" /></svg>;
 export const IconCamera = () => <svg {...P}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>;
 export const IconCube = () => <svg {...P}><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z" /><path d="M4 7.5 12 12l8-4.5M12 12v9" /></svg>;
 export const IconFlame = () => <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 1 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z" fill="#FF8A12" stroke="var(--ink)" strokeWidth="1.8" strokeLinejoin="round" /></svg>;

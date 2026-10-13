@@ -78,7 +78,7 @@ export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { l
 
   if (mode === 'inicio') return (
     <div className="screen meucubo">
-      <Speech mood="pensando">Me mostra o seu cubo? Assim eu ensino a partir dele, do jeitinho que ele está.</Speech>
+      <Speech mood="camera">Me mostra o seu cubo? Assim eu ensino a partir dele, do jeitinho que ele está.</Speech>
       <section className="card">
         <h2>Antes de começar</h2>
         <ul className="checklist">

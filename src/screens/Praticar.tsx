@@ -21,7 +21,7 @@ export function Praticar({ liberado, sound, onSolve, onTrilha, onOpenPasso, onSc
 
   if (!liberado) return (
     <div className="screen praticar">
-      <Speech mood="pensando">A área de prática abre quando você terminar os 8 passos da trilha. Falta pouco!</Speech>
+      <Speech mood="cubo">A área de prática abre quando você terminar os 8 passos da trilha. Falta pouco!</Speech>
       <section className="card trancado">
         <h2>O que tem aqui</h2>
         <ul className="checklist">
@@ -72,7 +72,7 @@ function Voltar({ onVoltar }: { onVoltar: () => void }) {
 
 interface Tempo { ms: number; quando: number; embaralhar: string }
 const TKEY = 'giroagiro.tempos.v1';
-const loadTempos = (): Tempo[] => { try { return JSON.parse(localStorage.getItem(TKEY) || '[]'); } catch { return []; } };
+export const loadTempos = (): Tempo[] => { try { return JSON.parse(localStorage.getItem(TKEY) || '[]'); } catch { return []; } };
 const saveTempos = (t: Tempo[]) => { try { localStorage.setItem(TKEY, JSON.stringify(t.slice(0, 200))); } catch { /* sem armazenamento */ } };
 export function formatar(ms: number) {
   const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000), c = Math.floor((ms % 1000) / 10);
@@ -119,6 +119,9 @@ function Cronometro({ sound, onVoltar }: { sound: boolean; onVoltar: () => void 
   return (
     <div className="screen cronometro">
       {!rodando && <Voltar onVoltar={onVoltar} />}
+      {!rodando && (ultimo !== null && ultimo === melhor
+        ? <Speech mood="melhor">Novo recorde! {formatar(ultimo)} é o seu melhor tempo.</Speech>
+        : <Speech mood="cronometro">Embaralhe o seu cubo, toque para começar e toque de novo quando terminar.</Speech>)}
       {!rodando && (
         <section className="card embaralhar">
           <p className="passo-kicker">Embaralhe o seu cubo assim (verde de frente, branco em cima)</p>
@@ -170,6 +173,7 @@ function Caderno({ onVoltar }: { onVoltar: () => void }) {
   return (
     <div className="screen caderno">
       <Voltar onVoltar={onVoltar} />
+      <Speech mood="estudando">Todas as fórmulas num lugar só. Toque em uma para ver o giro a giro no cubo.</Speech>
       <h2 className="sec-title">Caderno de fórmulas</h2>
       {passos.map(n => (
         <section key={n} className="caderno-grupo">
@@ -250,7 +254,7 @@ function Travei({ onVoltar, onOpenPasso, onScan }: { onVoltar: () => void; onOpe
   return (
     <div className="screen travei">
       <Voltar onVoltar={onVoltar} />
-      <Speech mood="hmm">Calma, acontece com todo mundo! Você sabe em que passo o seu cubo está?</Speech>
+      <Speech mood="travei">Calma, acontece com todo mundo! Você sabe em que passo o seu cubo está?</Speech>
       <section className="card">
         <h3 className="sec-title">Sei: me leva para o passo</h3>
         <div className="travei-passos">
@@ -263,7 +267,7 @@ function Travei({ onVoltar, onOpenPasso, onScan }: { onVoltar: () => void; onOpe
         </div>
       </section>
       <section className="card travei-camera">
-        <Mascot mood="pensando" size={72} />
+        <Mascot mood="camera" size={72} />
         <div>
           <h3 className="sec-title">Não sei</h3>
           <p>Mostre o cubo para a câmera. Eu descubro o passo e te levo direto para ele.</p>

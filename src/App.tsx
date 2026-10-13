@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Trilha } from './screens/Trilha';
+import { Inicio } from './screens/Inicio';
 import { Praticar } from './screens/Praticar';
 import { MeuCubo } from './screens/MeuCubo';
 import { PassoView } from './screens/Aulas';
@@ -8,18 +9,19 @@ import { PASSOS, TODOS } from './aulas/aulas';
 import { loadFeitos, marcarAte, passoAtual, saveFeitos } from './aulas/progresso';
 import { Mascot } from './components/Mascot';
 import { Confetti } from './components/Confetti';
-import { IconCamera, IconCube, IconFlame, IconPath, IconSound, IconStar } from './components/Icons';
+import { IconCamera, IconCube, IconFlame, IconHome, IconPath, IconSound, IconStar } from './components/Icons';
 import { earn, level, loadProgress, saveProgress, type Progress } from './progress';
 
-type Tab = 'trilha' | 'meucubo' | 'praticar';
+type Tab = 'inicio' | 'trilha' | 'meucubo' | 'praticar';
 const TABS: { id: Tab; nome: string; icon: () => React.ReactElement }[] = [
+  { id: 'inicio', nome: 'Início', icon: IconHome },
   { id: 'trilha', nome: 'Trilha', icon: IconPath },
   { id: 'meucubo', nome: 'Meu cubo', icon: IconCamera },
   { id: 'praticar', nome: 'Praticar', icon: IconCube },
 ];
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('trilha');
+  const [tab, setTab] = useState<Tab>('inicio');
   const [p, setP] = useState<Progress>(loadProgress);
   const [toast, setToast] = useState<string | null>(null);
   const [win, setWin] = useState(false);
@@ -47,8 +49,8 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        {(tab !== 'trilha' || passo !== null) && (
-          <button className="back-btn" onClick={() => go('trilha')} aria-label="Voltar para a trilha">
+        {tab !== 'inicio' && (
+          <button className="back-btn" onClick={() => go('inicio')} aria-label="Voltar para o início">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
             Início
           </button>
@@ -61,6 +63,10 @@ export default function App() {
       </header>
 
       <main className="content">
+        {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)}
+          onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
+          onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
+          onIntro={() => { setTab('trilha'); setPasso(0); }} />}
         {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
         {tab === 'trilha' && passo === null && <Trilha feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
         {tab === 'trilha' && aula && <PassoView key={aula.n} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onEarn={xp => setP(q => earn(q, xp))}

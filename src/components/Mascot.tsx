@@ -7,12 +7,17 @@
  *  hmm      conferindo, algo não bateu
  *  festa    acertou, cubo montado
  *  trofeu   etapa concluída, conquista
+ *  cronometro, estudando, camera, cubo, melhor, sequencia, travei, dormindo, presente: telas específicas
  */
-export type Mood = 'oi' | 'aponta' | 'pensando' | 'hmm' | 'festa' | 'trofeu';
+export type Mood = 'oi' | 'aponta' | 'pensando' | 'hmm' | 'festa' | 'trofeu'
+  | 'cronometro' | 'estudando' | 'camera' | 'cubo' | 'melhor' | 'sequencia' | 'travei' | 'dormindo' | 'presente';
 
 const ALT: Record<Mood, string> = {
   oi: 'Pingo acenando', aponta: 'Pingo apontando', pensando: 'Pingo pensando com um cubo na mão',
   hmm: 'Pingo desconfiado, conferindo', festa: 'Pingo comemorando com o cubo', trofeu: 'Pingo com um troféu',
+  cronometro: 'Pingo segurando um cronômetro', estudando: 'Pingo de óculos lendo o caderno de fórmulas', camera: 'Pingo fotografando o cubo com o celular',
+  cubo: 'Pingo ao lado de um cubo mágico', melhor: 'Pingo com medalha no pódio', sequencia: 'Pingo pulando com uma chama',
+  travei: 'Pingo preocupado segurando o cubo bagunçado', dormindo: 'Pingo dormindo abraçado ao cubo', presente: 'Pingo segurando um presente',
 };
 
 export function Mascot({ mood = 'oi', size = 96 }: { mood?: Mood; size?: number }) {

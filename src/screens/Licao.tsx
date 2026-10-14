@@ -304,7 +304,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
       {acertou && (
         <section className="card licao-ok" aria-live="polite">
-          <p><span className="licao-check" aria-hidden="true">✓</span><Rico t={acertou} /></p>
+          <p><span className="licao-check" aria-hidden="true">✓</span><span><Rico t={acertou} /></span></p>
           <button className="btn btn-pop btn-big" onClick={avancar}>{i + 1 < licao.telas.length ? 'Continuar' : 'Concluir a lição'}</button>
         </section>
       )}

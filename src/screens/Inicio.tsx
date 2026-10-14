@@ -7,9 +7,9 @@ import { diasSemTreino, estrelas, loadDominio, loadTreino, naSemana, passoMaisFr
 import { IconCamera, IconCube, IconPath } from '../components/Icons';
 
 /** a tela inicial: onde você está, seus números e atalhos */
-export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, onTreinoDia, onCubos, conta }: {
+export function Inicio({ p, feitos, atual, licaoVez, onContinuar, onTrilha, onScan, onPraticar, onIntro, onOpenPasso, onTreinoDia, onCubos, conta }: {
   onOpenPasso: (n: number) => void; onTreinoDia: () => void; onCubos: () => void;
-  conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number;
+  conta?: React.ReactNode; p: Progress; feitos: number[]; atual: number; licaoVez?: string;
   onContinuar: () => void; onTrilha: () => void; onScan: () => void; onPraticar: () => void; onIntro: () => void;
 }) {
   const hora = new Date().getHours();
@@ -36,8 +36,8 @@ export function Inicio({ p, feitos, atual, onContinuar, onTrilha, onScan, onPrat
       <Speech mood={mood}>{fala}</Speech>
 
       <button className="card continuar-card" onClick={montou ? onTreinoDia : onContinuar}>
-        <span className="passo-kicker">{montou ? 'Treino do dia' : atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar de onde parou' : 'Começar'}</span>
-        <b>{montou ? (partesHoje().includes(1) && partesHoje().includes(2) ? 'Treino de hoje completo ✓' : partesHoje().length ? 'Continuar o treino de hoje' : 'Começar o treino de hoje') : atual === 0 ? 'Conheça o cubo' : `Passo ${atual} · ${vez?.titulo}`}</b>
+        <span className="passo-kicker">{montou ? 'Treino do dia' : feitos.length > 0 || (atual === 0 && licaoVez !== 'Oi, cubo!') ? 'Continuar de onde parou' : 'Começar'}</span>
+        <b>{montou ? (partesHoje().includes(1) && partesHoje().includes(2) ? 'Treino de hoje completo ✓' : partesHoje().length ? 'Continuar o treino de hoje' : 'Começar o treino de hoje') : atual <= 1 && licaoVez ? `${atual === 0 ? 'Conhecer o cubo' : `Passo ${atual}`} · ${licaoVez}` : `Passo ${atual} · ${vez?.titulo}`}</b>
         <span className="trilha-mini" aria-label={`${passosFeitos} de 8 passos feitos`}>
           {TODOS.filter(t => t.n >= 1).map(t => (
             <i key={t.n} className={feitos.includes(t.n) ? 'ok' : t.n === atual ? 'agora' : ''}

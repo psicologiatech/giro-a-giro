@@ -12,6 +12,7 @@ export function Cube3D({ onReady, options, className }: {
     const scene = new CubeScene(ref.current!, {
       onMove: m => optsRef.current?.onMove?.(m),
       canTurn: () => optsRef.current?.canTurn?.() ?? false,
+      onTap: (f, i) => optsRef.current?.onTap?.(f, i),
     });
     onReady(scene);
     return () => scene.dispose();

@@ -24,6 +24,8 @@ export interface SceneOptions {
   onMove?: (move: string) => void;
   /** se o dedo pode girar faces neste momento */
   canTurn?: () => boolean;
+  /** toque (sem arrastar) num adesivo: a face e a posição 0..8 onde ele está */
+  onTap?: (face: Face, index: number) => void;
 }
 
 export class CubeScene {
@@ -41,12 +43,15 @@ export class CubeScene {
   private yaw = 0.0; private pitch = 0; private tYaw = 0; private tPitch = 0;
   private right = new THREE.Vector3(1, 0, 0);
   private qy = new THREE.Quaternion(); private qp = new THREE.Quaternion();
-  private drag: { x: number; y: number; yaw: number; pitch: number; hit: THREE.Intersection | null; decided: boolean } | null = null;
+  private drag: { x: number; y: number; yaw: number; pitch: number; hit: THREE.Intersection | null; decided: boolean; toque: THREE.Intersection | null; moveu: boolean } | null = null;
   private raf = 0;
   private ro: ResizeObserver;
   private ray = new THREE.Raycaster();
   idleSpin = false;
   private grey = new Set<string>();
+  /** adesivos que piscam (olhe aqui) e os que ficam acesos (já achados) */
+  private pisca = new Set<string>();
+  private aceso = new Set<string>();
   private colors: Record<Face, Face[]> | null = null;
 
   constructor(private canvas: HTMLCanvasElement, private opts: SceneOptions = {}) {
@@ -103,6 +108,9 @@ export class CubeScene {
     }
   }
 
+  /** realça adesivos: os de 'piscar' pulsam, os de 'acesos' ficam claros e parados */
+  realce(piscar: string[] = [], acesos: string[] = []) { this.pisca = new Set(piscar); this.aceso = new Set(acesos); }
+
   /** adesivos a mostrar em cinza ("não importa agora"), como "F4", "U7" */
   setGrey(keys: string[]) { this.grey = new Set(keys); if (this.colors) this.paint(this.colors); }
 
@@ -135,7 +143,6 @@ export class CubeScene {
   /** seta rosa contornando a camada do próximo giro (ou some, com null) */
   hint(move: string | null) {
     if (this.arrow) { this.root.remove(this.arrow); this.arrow.traverse(o => (o as THREE.Mesh).geometry?.dispose()); this.arrow = null; }
-    for (const s of this.stickers) (s.material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
     if (!move) return;
     const d = moveDef(move), ax = AXES[d.axis];
     const sg = d.dir * (move.endsWith("'") ? -1 : 1);
@@ -188,6 +195,11 @@ export class CubeScene {
     this.qp.setFromAxisAngle(this.right, this.pitch);
     this.view.quaternion.copy(this.qp).multiply(this.qy);
     if (this.arrow) this.arrowMat.color.setHSL(0.92, 1, 0.55 + 0.08 * Math.sin(now / 200));
+    const onda = 0.22 + 0.2 * Math.sin(now / 170);
+    for (const st of this.stickers) {
+      const k = `${st.userData.face}${st.userData.index}`;
+      (st.material as THREE.MeshStandardMaterial).emissiveIntensity = this.pisca.has(k) ? onda : this.aceso.has(k) ? 0.3 : 0;
+    }
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -199,12 +211,16 @@ export class CubeScene {
       const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       this.ray.setFromCamera(ndc, this.camera);
       const hit = this.opts.canTurn?.() ? this.ray.intersectObjects(this.cubies, true)[0] ?? null : null;
-      this.drag = { x: e.clientX, y: e.clientY, yaw: this.tYaw, pitch: this.tPitch, hit, decided: false };
+      // o primeiro objeto atingido (corpo ou adesivo): só vale toque se for um adesivo, não um de trás pela fresta
+      const prim = this.opts.onTap ? this.ray.intersectObjects(this.cubies, true)[0] ?? null : null;
+      const toque = prim && (this.stickers as THREE.Object3D[]).includes(prim.object) ? prim : null;
+      this.drag = { x: e.clientX, y: e.clientY, yaw: this.tYaw, pitch: this.tPitch, hit, decided: false, toque, moveu: false };
       c.setPointerCapture(e.pointerId);
     });
     c.addEventListener('pointermove', e => {
       const d = this.drag; if (!d) return;
       const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (Math.hypot(dx, dy) > 9) d.moveu = true;
       if (d.hit) {
         if (!d.decided && Math.hypot(dx, dy) > 9) {
           d.decided = true;
@@ -217,7 +233,12 @@ export class CubeScene {
       this.tPitch = Math.max(-1.0, Math.min(0.9, d.pitch + dy * 0.008));
     });
     // ao soltar, a vista se ajeita sozinha: de quarto em quarto de volta, e reta ou espiando a base
-    const end = () => {
+    const end = (e: PointerEvent) => {
+      const d = this.drag;
+      if (d && !d.moveu && d.toque && e.type === 'pointerup') {
+        const st = d.toque.object as StickerMesh;
+        this.opts.onTap?.(st.userData.face, st.userData.index);
+      }
       if (this.drag && !this.drag.hit) {
         const q = Math.PI / 2;
         this.tYaw = Math.round(this.tYaw / q) * q;

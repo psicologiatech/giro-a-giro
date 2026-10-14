@@ -4,17 +4,21 @@ import { useState } from 'react';
 import { TODOS } from '../aulas/aulas';
 import { estrelas, loadDominio } from '../aulas/dominio';
 import { Mascot } from '../components/Mascot';
+import { licaoFeita, licaoLiberada, licoesDo, proximaLicao } from '../licoes';
 
-export function Trilha({ feitos, atual, onOpen, onPlay, onSoon, onRecomecar }: {
-  onRecomecar: () => void; feitos: number[]; atual: number; onOpen: (n: number) => void; onPlay: () => void; onSoon: () => void;
+export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, onPlay, onSoon, onRecomecar }: {
+  onRecomecar: () => void; feitos: number[]; licoes: string[]; atual: number; onOpen: (n: number) => void;
+  onLicao: (id: string) => void; onBloqueada: (texto: string) => void; onPlay: () => void; onSoon: () => void;
 }) {
   const vez = TODOS.find(e => e.n === atual);
+  const licaoVez = proximaLicao(atual, licoes, feitos);
+  let zig = 0;
   const dom = loadDominio();
   const [confirmar, setConfirmar] = useState(false);
   return (
     <div className="screen trilha">
       {atual === 0 ? (
-        <Speech>Oi, eu sou o Pingo! Vamos montar o cubo um passo de cada vez, do jeito mais fácil de aprender. Antes, vamos conhecer o cubo.</Speech>
+        <Speech>Oi, eu sou o Pingo! Vamos aprender a montar o cubo em lições curtinhas, um pedacinho de cada vez. A primeira é para conhecer o cubo.</Speech>
       ) : atual > 8 ? (
         <Speech mood="trofeu">Você passou pelos 8 passos! Agora é treinar até a mão fazer sozinha.</Speech>
       ) : vez?.pronto ? (
@@ -25,28 +29,29 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon, onRecomecar }: {
 
       {vez?.pronto && (
         <button className="btn btn-pop btn-big continuar" onClick={() => onOpen(atual)}>
-          <small>{atual === 0 ? 'Antes de começar' : feitos.length > 1 ? 'Continuar' : 'Começar'}</small>
-          {atual === 0 ? vez.titulo : `Passo ${atual} · ${vez.titulo}`}
+          <small>{feitos.length > 0 || licoes.length > 0 ? 'Continuar' : 'Começar'}</small>
+          {licaoVez ? licaoVez.titulo : atual === 0 ? vez.titulo : `Passo ${atual} · ${vez.titulo}`}
         </button>
       )}
 
       {feitos.length <= 1 && (
         <section className="about" aria-label="Como funciona">
           <h2>Feito para quem está começando</h2>
-          <p>Primeiro você conhece o cubo. Depois vêm 8 passos, e em cada um você vê:</p>
+          <p>Nunca pegou num cubo? Ótimo. Cada lição leva uns 2 minutos e ensina uma coisa só:</p>
           <ol className="journey">
-            <li><span><b>O objetivo</b> e como segurar o cubo.</span></li>
-            <li><span><b>As situações</b> que podem aparecer no seu cubo, e o que fazer em cada uma.</span></li>
-            <li><span><b>O treino</b>: você faz sem ajuda, até a mão lembrar.</span></li>
+            <li><span><b>Primeiro você vê</b> o Pingo fazer no cubo da tela.</span></li>
+            <li><span><b>Depois você faz</b>: toca nas peças e gira as faces com o dedo.</span></li>
+            <li><span><b>E, se quiser, no seu cubo</b> de verdade também.</span></li>
           </ol>
           <p className="note">Usa o método de camadas, o mais usado por quem está começando.</p>
         </section>
       )}
 
       <ol className="path" aria-label="Os 8 passos">
-        {TODOS.map((e, i) => {
-          const feito = feitos.includes(e.n), agora = e.n === atual && e.pronto;
-          return (
+        {TODOS.flatMap(e => {
+          const feito = feitos.includes(e.n), agora = e.n === atual && e.pronto && !licaoVez;
+          const i = zig++;
+          const passoNo = (
             <li key={e.n} className={`path-step ${agora ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(i * 1.1) * 72)}px` }}>
               {agora && <span className="agora-tag">agora</span>}
               <button className={`node ${e.pronto ? '' : 'locked'} ${feito ? 'node-ok' : ''}`} onClick={() => (e.pronto ? onOpen(e.n) : onSoon())}
@@ -63,6 +68,25 @@ export function Trilha({ feitos, atual, onOpen, onPlay, onSoon, onRecomecar }: {
               )}
             </li>
           );
+          // as lições do passo, em nós menores logo abaixo dele
+          const lis = licoesDo(e.n).map((l, k) => {
+            const ok = licaoFeita(l, licoes, feitos), livre = licaoLiberada(l, licoes, feitos), vezDela = licaoVez?.id === l.id;
+            const j = zig++;
+            return (
+              <li key={l.id} className={`path-step path-licao ${vezDela ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(j * 1.1) * 72)}px` }}>
+                {vezDela && <span className="agora-tag">agora</span>}
+                <button className={`node node-licao ${ok ? 'node-ok' : ''} ${!ok && !livre ? 'locked' : ''}`}
+                  onClick={() => (ok || livre ? onLicao(l.id) : onBloqueada('Faça as lições anteriores primeiro.'))}
+                  aria-label={`Lição ${k + 1}: ${l.titulo}${ok ? ', feita' : vezDela ? ', é a vez dela' : !livre ? ', bloqueada' : ''}`}
+                  style={{ ['--c' as string]: `var(--${e.cor})`, ['--lip' as string]: `var(--${e.cor}-lip)` }}>
+                  <span className="num">{k + 1}</span>
+                  {ok ? <span className="check" aria-hidden="true">✓</span> : !livre && <span className="lock"><IconLock /></span>}
+                </button>
+                <span className="node-label">{l.titulo}<small>{l.resumo}</small></span>
+              </li>
+            );
+          });
+          return [passoNo, ...lis];
         })}
       </ol>
       <section className="card legenda-estrelas">

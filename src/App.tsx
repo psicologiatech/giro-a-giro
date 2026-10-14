@@ -4,7 +4,8 @@ import { Inicio } from './screens/Inicio';
 import { Praticar, type Parte } from './screens/Praticar';
 import { MeuCubo } from './screens/MeuCubo';
 import { PassoView } from './screens/Aulas';
-import { Intro } from './screens/Intro';
+import { LicaoView } from './screens/Licao';
+import { LICOES, licoesDo, loadLicoes, passoCompleto, proximaLicao, saveLicoes, temLicoes } from './licoes';
 import { PASSOS, TODOS } from './aulas/aulas';
 import { loadFeitos, marcarAte, passoAtual, saveFeitos } from './aulas/progresso';
 import { Mascot } from './components/Mascot';
@@ -40,29 +41,57 @@ export default function App() {
   /** a pessoa praticou de verdade hoje (conta para a meta da semana) */
   const praticou = () => { if (marcarTreino()) { setToast('Meta da semana batida! 🔥'); } };
   const treino = loadTreino(), semana = naSemana(treino.dias), estrelasTotal = totalEstrelas(loadDominio());
-  const recomecar = () => { zerarTrilha(); setFeitos([]); setPasso(null); setTab('trilha'); setToast('Trilha recomeçada. Bora de novo!'); };
+  const recomecar = () => { zerarTrilha(); setFeitos([]); setLicoes([]); setLicao(null); setPasso(null); setTab('trilha'); setToast('Trilha recomeçada. Bora de novo!'); };
   const [verConta, setVerConta] = useState(false);
   const [feitos, setFeitos] = useState<number[]>(loadFeitos);
   useEffect(() => saveFeitos(feitos), [feitos]);
-  useEffect(() => { document.querySelector('.content')?.scrollTo(0, 0); }, [tab, passo]);
-  const go = (t: Tab) => { setTab(t); setPasso(null); setTreinoAgora(false); };
-  /** terminou o passo n: marca e leva para o seguinte (ou volta à trilha, se ainda não existe) */
-  const terminar = (n: number) => {
+  const [licoes, setLicoes] = useState<string[]>(loadLicoes);
+  useEffect(() => saveLicoes(licoes), [licoes]);
+  /** a lição aberta (id), ou null */
+  const [licao, setLicao] = useState<string | null>(null);
+  useEffect(() => { document.querySelector('.content')?.scrollTo(0, 0); }, [tab, passo, licao]);
+  const go = (t: Tab) => { setTab(t); setPasso(null); setLicao(null); setTreinoAgora(false); };
+  /** abre o passo n: se ele tem lições por fazer, abre a próxima lição; senão, a tela do passo */
+  const abrir = (n: number) => {
+    setTab('trilha'); setTreinoAgora(false);
+    if (temLicoes(n)) {
+      const prox = proximaLicao(n, licoes, feitos);
+      if (prox) { setLicao(prox.id); setPasso(null); return; }
+      if (n === 0) { setLicao(licoesDo(0)[0].id); setPasso(null); return; }
+    }
+    setLicao(null);
+    setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null);
+  };
+  /** marca o passo n como feito (estrelas, meta da semana, cubo montado no 8) */
+  const marcarPasso = (n: number) => {
     setP(q => earn(q, 0));
     if (n >= 1) { subir(n, FIZ); praticou(); }
     if (n === 8) { setP(q => ({ ...q, solves: q.solves + 1 })); setWin(true); }
     setFeitos(f => marcarAte(f, n));
+  };
+  /** terminou o passo n: marca e leva para o seguinte (ou volta à trilha, se ainda não existe) */
+  const terminar = (n: number) => {
+    marcarPasso(n);
     const prox = TODOS.find(e => e.n === n + 1);
-    if (prox?.pronto) { setPasso(n + 1); setToast(n === 0 ? 'Agora, o passo 1!' : `Passo ${n} feito! Agora, passo ${n + 1}.`); }
+    if (prox?.pronto) { abrir(n + 1); setToast(n === 0 ? 'Agora, o passo 1!' : `Passo ${n} feito! Agora, passo ${n + 1}.`); }
     else { setPasso(null); setToast(n === 0 ? 'Pronto!' : n >= 8 ? null : `Passo ${n} feito! O passo ${n + 1} chega em breve.`); }
   };
+  /** terminou uma lição: guarda; se fechou o passo, marca o passo */
+  const concluirLicao = (id: string) => {
+    const l = LICOES.find(x => x.id === id); if (!l) return;
+    const novas = [...new Set([...licoes, id])];
+    setLicoes(novas);
+    if (l.passo >= 1) praticou();
+    if (passoCompleto(l.passo, novas) && !feitos.includes(l.passo)) marcarPasso(l.passo);
+  };
+  const licaoAberta = licao ? LICOES.find(x => x.id === licao) : undefined;
   /** o cubo lido pela câmera está no passo n */
-  const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };
+  const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setLicao(null); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };
   const aula = passo !== null ? PASSOS.find(x => x.n === passo) : undefined;
   useEffect(() => saveProgress(p), [p]);
   // guarda na nuvem depois de cada mudança (se a pessoa entrou com o Google)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { conta.salvarDepois(); }, [p, feitos, tab, passo]);
+  useEffect(() => { conta.salvarDepois(); }, [p, feitos, licoes, tab, passo]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 2400); return () => clearTimeout(t); }, [toast]);
 
   return (
@@ -82,21 +111,28 @@ export default function App() {
       </header>
 
       <main className="content">
-        {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)}
-          onContinuar={() => { setTab('trilha'); setPasso(passoAtual(feitos)); }} onTrilha={() => go('trilha')}
+        {tab === 'inicio' && <Inicio p={p} feitos={feitos} atual={passoAtual(feitos)} licaoVez={proximaLicao(passoAtual(feitos), licoes, feitos)?.titulo}
+          onContinuar={() => abrir(passoAtual(feitos))} onTrilha={() => go('trilha')}
           onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} onPraticar={() => go('praticar')}
           onTreinoDia={() => { setPraticarEm(x => ({ parte: 'treino', k: x.k + 1 })); go('praticar'); }}
           onCubos={() => { setPraticarEm(x => ({ parte: 'cubos', k: x.k + 1 })); go('praticar'); }}
-          onIntro={() => { setTab('trilha'); setPasso(0); }} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
+          onIntro={() => abrir(0)} onOpenPasso={n => abrir(n)}
           conta={<CartaoConta conta={conta} onAbrir={() => setVerConta(true)} />} />}
-        {tab === 'trilha' && passo === 0 && <Intro sound={p.sound} onFinish={() => terminar(0)} />}
-        {tab === 'trilha' && passo === null && <Trilha onRecomecar={recomecar} feitos={feitos} atual={passoAtual(feitos)} onOpen={n => setPasso(n)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
-        {tab === 'trilha' && aula && <PassoView key={`${aula.n}-${treinoAgora}`} treinoAgora={treinoAgora} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
+        {tab === 'trilha' && licaoAberta && (() => {
+          const lista = licoesDo(licaoAberta.passo), k = lista.indexOf(licaoAberta);
+          const proxima = lista[k + 1] ?? null;
+          return <LicaoView key={licaoAberta.id} licao={licaoAberta} sound={p.sound} ultimaDoPasso={!proxima} proxima={proxima}
+            onSair={() => setLicao(null)} onConcluir={() => concluirLicao(licaoAberta.id)}
+            onProxima={() => { if (proxima) setLicao(proxima.id); else { setLicao(null); abrir(licaoAberta.passo + 1); } }} />;
+        })()}
+        {tab === 'trilha' && !licaoAberta && passo === null && <Trilha onRecomecar={recomecar} feitos={feitos} licoes={licoes} atual={passoAtual(feitos)}
+          onOpen={abrir} onLicao={id => setLicao(id)} onBloqueada={t => setToast(t)} onPlay={() => go('praticar')} onSoon={() => setToast('Este passo chega na próxima versão.')} />}
+        {tab === 'trilha' && !licaoAberta && aula && <PassoView key={`${aula.n}-${treinoAgora}`} treinoAgora={treinoAgora} passo={aula} feito={feitos.includes(aula.n)} sound={p.sound} onPratica={praticou}
           onFinish={() => terminar(aula.n)} onScan={() => { setLerAgora(k => k + 1); go('meucubo'); }} />}
         {tab === 'meucubo' && <MeuCubo key={lerAgora} lerAgora={lerAgora > 0} sound={p.sound} onOpenPasso={abrirPasso} onSaved={() => setToast('Cubo lido!')} onSolved={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); }} />}
-        {tab === 'praticar' && <Praticar key={praticarEm.k} passosTreino={passosDoPlano(loadRevisao(), feitos)} inicial={praticarEm.parte} onTreinarPasso={n => { setTab('trilha'); setPasso(n); setTreinoAgora(true); }} liberado={feitos.includes(8)} sound={p.sound}
+        {tab === 'praticar' && <Praticar key={praticarEm.k} passosTreino={passosDoPlano(loadRevisao(), feitos)} inicial={praticarEm.parte} onTreinarPasso={n => { setTab('trilha'); setLicao(null); setPasso(n); setTreinoAgora(true); }} liberado={feitos.includes(8)} sound={p.sound}
           onSolve={() => { praticou(); setP(q => ({ ...earn(q, 0), solves: q.solves + 1 })); setWin(true); }} onPratica={praticou}
-          onTrilha={() => go('trilha')} onOpenPasso={n => { setTab('trilha'); setPasso(n); }}
+          onTrilha={() => go('trilha')} onOpenPasso={n => abrir(n)}
           onScan={() => { setLerAgora(k => k + 1); setTab('meucubo'); setPasso(null); }} />}
       </main>
 

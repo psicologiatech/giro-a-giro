@@ -58,6 +58,7 @@ export function zerarTrilha() {
   try {
     localStorage.removeItem('giroagiro.passos.v1');
     localStorage.removeItem('giroagiro.pecas.v1');
+    localStorage.removeItem('giroagiro.licoes.v1');
     localStorage.removeItem(DKEY);
     localStorage.setItem(ZKEY, String(Date.now()));
   } catch { /* sem armazenamento */ }

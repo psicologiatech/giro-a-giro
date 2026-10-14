@@ -517,3 +517,46 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .inicio-cubos img { width: 52px; height: auto; }
 .inicio-cubos b { display: block; font-family: var(--display); font-size: 19px; line-height: 1.15; }
 .inicio-cubos small { display: block; color: var(--muted); font-size: 13.5px; line-height: 1.35; }
+
+/* ---------- lições (passos de formiga) ---------- */
+.licao { gap: 12px; }
+.licao-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.licao-sair { margin: 0; font-size: 22px; line-height: 1; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 2px solid var(--edge); color: var(--muted); }
+.licao-voz { margin: 0; font-size: 20px; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 2px solid var(--edge); }
+.licao-voz.on { background: var(--pop-soft); border-color: #FFC2DC; }
+.licao-barra { display: flex; gap: 5px; }
+.licao-barra i { flex: 1; height: 12px; border-radius: 99px; background: var(--edge); transition: background .25s; }
+.licao-barra i.ok { background: var(--green); }
+.licao-barra i.now { background: #FFC2DC; }
+.licao-kicker { margin: 0; }
+.licao-fala .bubble { margin-bottom: 14px; padding: 12px 14px 10px; }
+.licao-fala .bubble p { margin: 0; font-size: 18px; line-height: 1.4; }
+.ouvir { margin-top: 6px; border: 0; background: none; padding: 2px 0; font-weight: 600; font-size: 14px; color: var(--pop-lip); cursor: pointer; }
+.stage-licao { height: min(40dvh, 340px); }
+.stage-licao.tocar { cursor: pointer; }
+.destaque.contador { left: auto; right: 12px; background: var(--green); }
+.licao-acoes { display: flex; flex-direction: column; gap: 10px; }
+.licao-acoes .giro-pedido { text-align: center; font-size: 22px; }
+.licao-acoes .giro-pedido small { display: block; font-family: var(--body); font-weight: 400; font-size: 14px; color: var(--muted); }
+.licao-opcoes .opcao { grid-template-columns: 1fr; font-size: 17px; font-weight: 600; padding: 14px 16px; }
+.licao-ok { background: #F2FBF6; border-color: #BFEBD2; box-shadow: 0 4px 0 #BFEBD2; display: flex; flex-direction: column; gap: 12px; }
+.licao-ok p { margin: 0; font-size: 17px; display: flex; gap: 10px; align-items: flex-start; }
+.licao-check { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; }
+.licao-ok .btn-pop { --face: var(--green); --lip: var(--green-lip); }
+.licao-fim { align-items: center; text-align: center; padding-top: 24px; }
+.licao-fim h2 { font-size: 28px; }
+.licao-fim p { margin: 0; color: var(--muted); }
+.missao { display: flex; flex-direction: column; gap: 12px; }
+.missao .pecas { justify-content: center; }
+.missao-giros { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.missao-giros li { background: var(--surface); border: 2px solid var(--edge); border-radius: 16px; padding: 10px 14px; display: grid; gap: 2px; }
+.missao-giros li b { font-family: var(--display); font-size: 19px; color: var(--pop-lip); }
+.missao-giros li span { font-size: 14.5px; color: var(--muted); }
+.missao-giros li.now { border-color: var(--pop); background: var(--pop-soft); }
+/* lições na trilha: nós menores, logo abaixo do passo */
+.path-licao .node-licao { width: 58px; height: 54px; border-radius: 20px; }
+.path-licao .node-licao::after { left: 10px; top: 7px; width: 20px; height: 7px; }
+.path-licao .node-licao .num { font-size: 22px; }
+.path-licao .node-label { font-size: 15px; text-align: center; max-width: 220px; line-height: 1.2; }
+.path-licao .node-label small { display: block; font-family: var(--body); font-weight: 400; font-size: 12.5px; color: var(--muted); }
+.stage-licao.pequeno { height: min(28dvh, 240px); }

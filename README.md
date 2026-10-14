@@ -128,7 +128,7 @@ O plano é uma **escada**: começa só no passo 1, e o passo seguinte entra quan
 - **Cubo livre**: para brincar, com os giros do cubo inteiro (x, y, z)
 
 ### 🛒 Cubos que o Pingo recomenda
-Três cubos indicados, do mais em conta ao mais caprichado, com uma explicação do que faz um cubo ser bom para começar. Os links são de afiliada do Mercado Livre e isso aparece escrito na tela, antes dos cubos.
+Quatro cubos indicados, do mais em conta a um kit para presente, com uma explicação do que faz um cubo ser bom para começar. Os links são de afiliada do Mercado Livre e isso aparece escrito na tela, antes dos cubos.
 
 ### ☁️ Conta opcional
 Dá para usar sem conta, com tudo guardado no aparelho. Quem quiser entra com o Google e o progresso passa a ser sincronizado entre celular e computador (Firebase, plano gratuito). Cada pessoa só acessa o próprio progresso, e dá para apagar a conta pelo app. Veja a [política de privacidade](https://psicologiatech.github.io/giro-a-giro/privacidade.html).

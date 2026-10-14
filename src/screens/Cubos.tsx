@@ -27,6 +27,12 @@ export const CUBOS: Cubo[] = [
     nota: '★ 4,9 com quase 3 mil avaliações', link: 'https://meli.la/1UXNhpE',
     faces: ['#FFFFFF', '#F2453D', '#1DB863'],
   },
+  {
+    nome: 'Cubo Mágico Professor (Manual do Mundo)', preco: 106, para: 'Um kit diferente, bom para presente', cor: 'red',
+    texto: 'O cubo vem todo preto, com adesivos das 6 cores para colar. Dá para colar tudo de uma vez e seguir a trilha. Vem com saquinho e base. Não é magnético.',
+    nota: '★ 4,7 no Mercado Livre', link: 'https://meli.la/1GsKHb4',
+    faces: ['#2B2E38', '#2B2E38', '#2B2E38'],
+  },
 ];
 
 /** um cubo desenhado em perspectiva, nas cores dadas (topo, frente, lado) */
@@ -49,7 +55,7 @@ export function Cubos({ onVoltar, voltarTexto = '‹ Voltar' }: { onVoltar?: () 
   return (
     <div className="screen cubos">
       {onVoltar && <button className="back-btn self-start" onClick={onVoltar}>{voltarTexto}</button>}
-      <Speech mood="presente">Ainda não tem um cubo bom? Separei os que eu recomendo, do mais em conta ao mais caprichado.</Speech>
+      <Speech mood="presente">Ainda não tem um cubo bom? Separei os que eu recomendo, do mais em conta ao kit mais completo.</Speech>
 
       <p className="cubos-aviso">
         <b>Transparência:</b> estes são links de afiliada do Mercado Livre. Se você comprar por eles, o Giro a Giro ganha uma pequena comissão, e você não paga nada a mais. É isso que ajuda o app a continuar gratuito.

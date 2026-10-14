@@ -192,9 +192,9 @@ export const PASSO1: Licao[] = [
     id: 'p1-toda', passo: 1, titulo: 'A margarida inteira', resumo: 'As 4 pétalas, do começo ao fim',
     telas: [
       {
-        fala: 'Agora a margarida inteira, uma pétala de cada vez. Siga a seta e olhe o contador.', mood: 'aponta',
+        fala: 'Agora a margarida inteira, *sem a seta*: leia o giro pedido e faça. Se travar, ligue a seta.', mood: 'aponta',
         cubo: embaralhadoParaMargarida, foco: meioBranco, contador: contaPetalas,
-        tarefa: { tipo: 'girar', giros: MARGARIDA_TODA },
+        tarefa: { tipo: 'girar', giros: MARGARIDA_TODA, semSeta: true },
         acerto: 'Margarida completa! As 4 pétalas em volta do amarelo.',
       },
       {

@@ -41,6 +41,8 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   const [visto, setVisto] = useState(false);                      // já viu a demonstração (ver)
   const [legenda, setLegenda] = useState<string | null>(null);
   const [vozAuto, setVozAuto] = useVozAuto();
+  /** mostrar a seta rosa? (nas telas "sem seta", começa desligada) */
+  const [comSeta, setComSeta] = useState(true);
   const [, setTick] = useState(0);
 
   const scene = useRef<CubeScene | null>(null);
@@ -79,6 +81,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
     if (tela.cubo) state.current = tela.cubo();
     inicioTela.current = clone(state.current);
     setAcertou(null); setMsg(null); setAchados([]); setG(0); setErradas([]); setVisto(false); setLegenda(null);
+    setComSeta(!(tela.tarefa.tipo === 'girar' && tela.tarefa.semSeta));
     scene.current?.look(!!tela.base);
     pintar();
     if (vozAuto) falar(tela.fala);
@@ -89,9 +92,9 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
   // seta rosa: o próximo giro a fazer, ou o giro da pergunta
   const seta = !tela || acertou || tocando ? null
-    : plano ? (plano.giros[g] && !ehGiroInteiro(plano.giros[g]) ? plano.giros[g] : null)
+    : plano ? (comSeta && plano.giros[g] && !ehGiroInteiro(plano.giros[g]) ? plano.giros[g] : null)
     : tela.tarefa.tipo === 'escolha' ? tela.tarefa.seta ?? null : null;
-  useEffect(() => { scene.current?.hint(seta); }, [seta, i]);
+  useEffect(() => { scene.current?.hint(seta); }, [seta, i, comSeta]);
 
   const acerto = (texto?: string) => {
     const t = texto ?? ELOGIOS[Math.floor(Math.random() * ELOGIOS.length)];
@@ -240,7 +243,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
           {cont && <span className="destaque contador">{cont.n} de {cont.total} {cont.rotulo}</span>}
           {tf.tipo === 'tocar' && (tf.quantos ?? 1) > 1 && <span className="destaque contador">{achados.length} de {tf.quantos}</span>}
           {!legenda && <span className="stage-hint">{
-            tf.tipo === 'girar' && fazendo ? (plano?.giros[g] && ehGiroInteiro(plano.giros[g]) ? 'Agora o cubo inteiro: use o botão abaixo.' : 'Arraste a camada com o dedo, seguindo a seta.')
+            tf.tipo === 'girar' && fazendo ? (plano?.giros[g] && ehGiroInteiro(plano.giros[g]) ? 'Agora o cubo inteiro: use o botão abaixo.' : comSeta ? 'Arraste a camada com o dedo, seguindo a seta.' : 'Leia o giro pedido abaixo e arraste a camada.')
             : tf.tipo === 'tocar' && fazendo ? 'Toque no quadradinho. Arraste para virar o cubo.'
             : 'Arraste para virar o cubo.'}</span>}
         </div>
@@ -266,6 +269,9 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
           {plano.giros[g] && ehGiroInteiro(plano.giros[g])
             ? <button className="btn btn-pop btn-big" onClick={() => onMove(plano.giros[g], 700)} disabled={tocando}>↻ {describe(plano.giros[g])}</button>
             : <button className="btn" onClick={mostrarProximo} disabled={tocando}>Me mostra</button>}
+          {tf.tipo === 'girar' && tf.semSeta && (
+            <label className="toggle toggle-seta"><input type="checkbox" checked={comSeta} onChange={e => setComSeta(e.target.checked)} /> Mostrar a seta</label>
+          )}
         </div>
       )}
 

@@ -15,8 +15,9 @@ export type Tarefa =
   | { tipo: 'tocar'; alvo: (p: Piece, face: Face, s: CubeState) => boolean; quantos?: number;
       erro?: (p: Piece, face: Face, s: CubeState) => string }
   /** fazer giros no cubo da tela, nesta ordem (seta mostra o próximo; giro errado é desfeito).
-   *  Giros duplos (F2) viram dois giros; giros do cubo inteiro (x, y, z) ganham um botão. "falas" explica cada giro. */
-  | { tipo: 'girar'; giros: string[]; falas?: string[] }
+   *  Giros duplos (F2) viram dois giros; giros do cubo inteiro (x, y, z) ganham um botão. "falas" explica cada giro.
+   *  semSeta: começa sem a seta (a pessoa lê o comando e faz); dá para ligar a seta se precisar. */
+  | { tipo: 'girar'; giros: string[]; falas?: string[]; semSeta?: boolean }
   /** escolher a resposta certa; "seta" mostra um giro no cubo enquanto pergunta */
   | { tipo: 'escolha'; opcoes: { texto: string; certo?: boolean; porque?: string }[]; seta?: string }
   /** convite para fazer no cubo de verdade (sempre dá para seguir sem cubo) */

@@ -118,9 +118,9 @@ function licaoTodo(p: Passo): Licao {
   return {
     id: `p${p.n}-todo`, passo: p.n, titulo: `O passo ${p.n} inteiro`, resumo: 'Do começo ao fim, na tela', telas: [
       {
-        fala: 'Agora o passo inteiro, do começo ao fim. Siga a seta: embaixo aparece em que parte você está.', mood: 'aponta',
+        fala: 'Agora o passo inteiro, *sem a seta*: leia o giro pedido e faça. Se travar, ligue a seta ou toque em Me mostra.', mood: 'aponta',
         cubo: () => demoInicio(p), foco: p.foco,
-        tarefa: { tipo: 'girar', giros, falas },
+        tarefa: { tipo: 'girar', giros, falas, semSeta: true },
         acerto: p.n === 8 ? 'Cubo montado! Você fez os 8 passos.' : `Passo ${p.n} completo na tela!`,
       },
       {

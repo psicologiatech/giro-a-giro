@@ -69,7 +69,7 @@ export function Praticar({ passosTreino = [], liberado, sound, onSolve, onPratic
   ];
   return (
     <div className="screen praticar">
-      <Speech mood="trofeu">Você já sabe montar o cubo! Agora é treinar até a mão fazer sozinha.</Speech>
+      <Speech mood="magico">Você já sabe montar o cubo! Agora é treinar até a mão fazer sozinha.</Speech>
       <ul className="praticar-menu">
         {ITENS.map(it => (
           <li key={it.id}>

@@ -198,7 +198,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   if (fim) return (
     <div className="screen licao licao-fim">
       <Confetti />
-      <Mascot mood={ultimaDoPasso ? 'trofeu' : 'festa'} size={150} />
+      <Mascot mood={ultimaDoPasso ? (licao.passo === 8 ? 'magico' : 'trofeu') : 'festa'} size={150} />
       <h2>{ultimaDoPasso ? (licao.passo === 0 ? 'Você conhece o cubo!' : `Passo ${licao.passo} completo!`) : 'Lição concluída!'}</h2>
       <p>{ultimaDoPasso
         ? licao.passo === 0 ? 'Peças, faces e giros: agora você tem tudo para o passo 1.' : 'Mais uma parte do cubo no lugar. Bora para a próxima?'

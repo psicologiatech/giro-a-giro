@@ -16,8 +16,9 @@ export type Tarefa =
       erro?: (p: Piece, face: Face, s: CubeState) => string }
   /** fazer giros no cubo da tela, nesta ordem (seta mostra o próximo; giro errado é desfeito).
    *  Giros duplos (F2) viram dois giros; giros do cubo inteiro (x, y, z) ganham um botão. "falas" explica cada giro.
-   *  semSeta: começa sem a seta (a pessoa lê o comando e faz); dá para ligar a seta se precisar. */
-  | { tipo: 'girar'; giros: string[]; falas?: string[]; semSeta?: boolean }
+   *  semSeta: começa sem a seta (a pessoa lê o comando e faz); dá para ligar a seta se precisar.
+   *  pausas: depois do giro de índice "depois" (na lista original), para e mostra o texto (ex.: fim de uma fórmula). */
+  | { tipo: 'girar'; giros: string[]; falas?: string[]; semSeta?: boolean; pausas?: { depois: number; texto: string }[] }
   /** escolher a resposta certa; "seta" mostra um giro no cubo enquanto pergunta */
   | { tipo: 'escolha'; opcoes: { texto: string; certo?: boolean; porque?: string }[]; seta?: string }
   /** convite para fazer no cubo de verdade (sempre dá para seguir sem cubo) */
@@ -56,13 +57,18 @@ export interface Licao {
 /* ---------- ajudas para escrever as lições ---------- */
 
 /** giros duplos viram dois giros simples (com a fala repetida), do jeito que se faz com o dedo */
-export function expandir(giros: string[], falas?: string[]): { giros: string[]; falas: (string | undefined)[] } {
-  const g: string[] = [], f: (string | undefined)[] = [];
+export function expandir(giros: string[], falas?: string[], pausas?: { depois: number; texto: string }[]):
+  { giros: string[]; falas: (string | undefined)[]; pausas: Map<number, string> } {
+  const g: string[] = [], f: (string | undefined)[] = [], fim: number[] = [];
   giros.forEach((m, k) => {
     const fala = falas?.[k];
     if (m.endsWith('2')) { g.push(m[0], m[0]); f.push(fala, fala); } else { g.push(m); f.push(fala); }
+    fim[k] = g.length;   // quantos giros simples foram feitos ao terminar o giro k
   });
-  return { giros: g, falas: f };
+  // a pausa vale quando a pessoa já fez "fim[depois]" giros simples (e nunca no último)
+  const ps = new Map<number, string>();
+  for (const p of pausas ?? []) if (fim[p.depois] !== undefined && fim[p.depois] < g.length) ps.set(fim[p.depois], p.texto);
+  return { giros: g, falas: f, pausas: ps };
 }
 export const ehGiroInteiro = (m: string) => 'xyz'.includes(m[0]);
 

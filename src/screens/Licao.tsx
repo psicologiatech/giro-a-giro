@@ -29,7 +29,9 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   const [fim, setFim] = useState(false);
   const tela: Tela | undefined = licao.telas[i];
   /** os giros a fazer nesta tela, já com os duplos separados */
-  const plano = useMemo(() => tela?.tarefa.tipo === 'girar' ? expandir(tela.tarefa.giros, tela.tarefa.falas) : null, [tela]);
+  const plano = useMemo(() => tela?.tarefa.tipo === 'girar' ? expandir(tela.tarefa.giros, tela.tarefa.falas, tela.tarefa.pausas) : null, [tela]);
+  /** pausa entre uma parte e outra (texto), ou null */
+  const [pausa, setPausa] = useState<string | null>(null);
   const letras = licao.passo >= 4;
   const nomeGiro = (m: string) => letras ? `${describe(m)} · ${m}` : describe(m);
   const [acertou, setAcertou] = useState<string | null>(null);   // texto do acerto (null = ainda fazendo)
@@ -81,7 +83,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
     if (tela.cubo) state.current = tela.cubo();
     inicioTela.current = clone(state.current);
     setAcertou(null); setMsg(null); setAchados([]); setG(0); setErradas([]); setVisto(false); setLegenda(null);
-    setComSeta(!(tela.tarefa.tipo === 'girar' && tela.tarefa.semSeta));
+    setComSeta(!(tela.tarefa.tipo === 'girar' && tela.tarefa.semSeta)); setPausa(null);
     scene.current?.look(!!tela.base);
     pintar();
     if (vozAuto) falar(tela.fala);
@@ -91,7 +93,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   useEffect(pintar);
 
   // seta rosa: o próximo giro a fazer, ou o giro da pergunta
-  const seta = !tela || acertou || tocando ? null
+  const seta = !tela || acertou || tocando || pausa ? null
     : plano ? (comSeta && plano.giros[g] && !ehGiroInteiro(plano.giros[g]) ? plano.giros[g] : null)
     : tela.tarefa.tipo === 'escolha' ? tela.tarefa.seta ?? null : null;
   useEffect(() => { scene.current?.hint(seta); }, [seta, i, comSeta]);
@@ -142,7 +144,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
   /** giro feito com o dedo */
   const onMove = async (m: string, dur = 280) => {
-    if (!tela || !plano || busy.current || acertou) return;
+    if (!tela || !plano || busy.current || acertou || pausa) return;
     const certo = plano.giros[g];
     busy.current = true; setMsg(null);
     await turn(m, dur);
@@ -150,6 +152,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
       const ng = g + 1; setG(ng);
       if (sound) sfx.click(); buzz(10);
       if (ng >= plano.giros.length) acerto(tela.acerto);
+      else if (plano.pausas.has(ng)) { const t = plano.pausas.get(ng)!; setPausa(t); if (vozAuto) falar(t); }
     } else {
       erro(`Esse foi *${describe(m).toLowerCase()}*. Vou desfazer. Tente: *${describe(certo).toLowerCase()}*.`);
       await sleep(550); await turn(invertMove(m), 300);
@@ -238,7 +241,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
       {tf.tipo !== 'missao' && (
         <div className={`stage stage-licao ${tf.tipo === 'tocar' && fazendo ? 'tocar' : ''} ${tf.tipo === 'escolha' || tf.tipo === 'nocubo' ? 'pequeno' : ''}`}>
           <Cube3D onReady={s => { scene.current = s; s.look(!!tela.base); pintar(); setTick(t => t + 1); }}
-            options={{ canTurn: () => tf.tipo === 'girar' && fazendo && !busy.current, onMove, onTap }} />
+            options={{ canTurn: () => tf.tipo === 'girar' && fazendo && !busy.current && !pausa, onMove, onTap }} />
           {legenda && <span className="demo-giro">{legenda}</span>}
           {cont && <span className="destaque contador">{cont.n} de {cont.total} {cont.rotulo}</span>}
           {tf.tipo === 'tocar' && (tf.quantos ?? 1) > 1 && <span className="destaque contador">{achados.length} de {tf.quantos}</span>}
@@ -262,7 +265,14 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
         )
       )}
 
-      {fazendo && plano && (
+      {fazendo && plano && pausa && (
+        <section className="card licao-pausa" aria-live="polite">
+          <p><Rico t={pausa} /></p>
+          <button className="btn btn-pop btn-big" onClick={() => setPausa(null)}>Continuar</button>
+        </section>
+      )}
+
+      {fazendo && plano && !pausa && (
         <div className="licao-acoes">
           <p className="giro-pedido">{tocando ? 'Olhe…' : <>Agora: <b>{nomeGiro(plano.giros[g] ?? '')}</b></>}{plano.giros.length > 1 && <small>giro {Math.min(g + 1, plano.giros.length)} de {plano.giros.length}</small>}</p>
           {plano.falas[g] && !tocando && <p className="giro-fala">{plano.falas[g]}</p>}

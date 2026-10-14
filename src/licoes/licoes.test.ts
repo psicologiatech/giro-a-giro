@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyMove, clone, faceOfNormal, type CubeState, type Face } from '../cube/model';
 import { LICOES, licaoLiberada, proximaLicao, passoCompleto, licoesDo } from '.';
 import { MARGARIDA_TODA, margarida } from './passo1';
-import { petala } from './tipos';
+import { expandir, petala } from './tipos';
 import { amareloEmCima } from '../aulas/aulas';
 import { applyAlg, invertAlg } from '../cube/model';
 import { PASSOS } from '../aulas/aulas';
@@ -76,6 +76,16 @@ describe('lições', () => {
       const s = t.cubo!(); if (t.tarefa.tipo === 'girar') applyAlg(s, t.tarefa.giros);
       expect(p.pronto(s, p.meta()) || emQuePasso(s) > p.n, `passo ${p.n} inteiro`).toBe(true);
     }
+  });
+
+  it('pausas entre as partes caem no fim de cada fórmula (ex.: passo 5 inteiro, depois dos giros 6, 8 e 14)', () => {
+    const t = LICOES.find(x => x.id === 'p5-todo')!.telas[0].tarefa;
+    if (t.tipo !== 'girar') throw new Error('esperava girar');
+    const e = expandir(t.giros, t.falas, t.pausas);
+    expect([...e.pausas.keys()]).toEqual([6, 8, 14]);
+    const L = LICOES.find(x => x.id === 'p5-L')!.telas.find(x => x.tarefa.tipo === 'girar')!.tarefa;
+    if (L.tipo !== 'girar') throw new Error('esperava girar');
+    expect([...expandir(L.giros, L.falas, L.pausas).pausas.keys()]).toEqual([6]);
   });
 
   it('o cubo embaralhado do passo 1 tem os 4 meios brancos fora do lugar', () => {

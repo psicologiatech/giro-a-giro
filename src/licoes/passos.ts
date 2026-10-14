@@ -67,6 +67,11 @@ function alvoDoCaso(p: Passo, c: Caso): (x: Piece) => boolean {
 function licaoDoCaso(p: Passo, c: Caso): Licao {
   const cubo = () => setupOf(p, c);
   const giros = c.lances.map(l => l.m), falas = c.lances.map(l => l.fala);
+  // quando uma fórmula termina e outra começa (a fala anuncia "Virou…" ou "saiu"), uma pausa para olhar o cubo
+  const pausas = c.lances.flatMap((l, k) => {
+    const m = l.fala.match(/(Virou[^.!]*[.!]|A peça saiu[^.!]*[.!])/);
+    return m && k < c.lances.length - 1 ? [{ depois: k, texto: `Fórmula completa! ${m[1]} Olhe o cubo: agora vem a próxima parte, do começo.` }] : [];
+  });
   const n = giros.length;
   const continua = !!c.depois;
   const telas: Tela[] = [
@@ -80,7 +85,7 @@ function licaoDoCaso(p: Passo, c: Caso): Licao {
     },
     {
       fala: 'Sua vez. Siga a seta: embaixo aparece o que cada giro faz.', cubo, destaque: alvoDoCaso(p, c),
-      tarefa: { tipo: 'girar', giros, falas },
+      tarefa: { tipo: 'girar', giros, falas, pausas },
       acerto: n >= 3 && n <= 10 ? 'Isso! Mais uma vez, para a mão começar a lembrar.' : continua ? 'Isso! O cubo virou outra situação: é só olhar de novo e seguir.' : 'Situação resolvida!',
     },
   ];
@@ -113,14 +118,19 @@ export function licaoQual(p: Passo): Licao {
 
 /** o passo inteiro no cubo da tela, e depois (se quiser) no seu cubo */
 function licaoTodo(p: Passo): Licao {
-  const giros: string[] = [], falas: string[] = [];
-  for (const parte of p.demo.partes) for (const m of parte.m.split(' ')) { giros.push(m); falas.push(parte.legenda); }
+  const giros: string[] = [], falas: string[] = [], pausas: { depois: number; texto: string }[] = [];
+  p.demo.partes.forEach((parte, k) => {
+    for (const m of parte.m.split(' ')) { giros.push(m); falas.push(parte.legenda); }
+    const prox = p.demo.partes[k + 1];
+    // entre uma parte e outra, uma pausa para olhar o cubo antes de seguir
+    if (prox) pausas.push({ depois: giros.length - 1, texto: `Parte feita! Olhe o cubo antes de seguir. Agora: *${prox.legenda.charAt(0).toLowerCase() + prox.legenda.slice(1)}*.` });
+  });
   return {
     id: `p${p.n}-todo`, passo: p.n, titulo: `O passo ${p.n} inteiro`, resumo: 'Do começo ao fim, na tela', telas: [
       {
         fala: 'Agora o passo inteiro, *sem a seta*: leia o giro pedido e faça. Se travar, ligue a seta ou toque em Me mostra.', mood: 'aponta',
         cubo: () => demoInicio(p), foco: p.foco,
-        tarefa: { tipo: 'girar', giros, falas, semSeta: true },
+        tarefa: { tipo: 'girar', giros, falas, semSeta: true, pausas },
         acerto: p.n === 8 ? 'Cubo montado! Você fez os 8 passos.' : `Passo ${p.n} completo na tela!`,
       },
       {

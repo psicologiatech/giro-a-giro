@@ -16,7 +16,7 @@ export function CartaoConta({ conta, onAbrir }: { conta: Conta; onAbrir: () => v
   );
   return (
     <section className="card conta-card">
-      <Mascot mood="presente" size={64} />
+      <Mascot mood="cubo" size={64} />
       <div>
         <h3>Guardar meu progresso</h3>
         <p>Entre com o Google para não perder seus passos e tempos se trocar de celular. É opcional.</p>

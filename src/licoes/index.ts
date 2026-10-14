@@ -5,9 +5,12 @@
  */
 import { FASE0 } from './fase0';
 import { PASSO1 } from './passo1';
+import { PASSOS_2A8, licaoQual } from './passos';
+import { PASSOS } from '../aulas/aulas';
 import type { Licao } from './tipos';
 
-export const LICOES: Licao[] = [...FASE0, ...PASSO1];
+// no passo 1, "Qual é a situação?" vem antes da margarida inteira
+export const LICOES: Licao[] = [...FASE0, ...PASSO1.slice(0, -1), licaoQual(PASSOS[0]), ...PASSO1.slice(-1), ...PASSOS_2A8];
 export const licoesDo = (passo: number) => LICOES.filter(l => l.passo === passo);
 export const temLicoes = (passo: number) => licoesDo(passo).length > 0;
 

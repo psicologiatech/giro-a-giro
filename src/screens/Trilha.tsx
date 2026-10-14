@@ -50,8 +50,21 @@ export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, on
       <ol className="path" aria-label="Os 8 passos">
         {TODOS.flatMap(e => {
           const feito = feitos.includes(e.n), agora = e.n === atual && e.pronto && !licaoVez;
-          const i = zig++;
-          const passoNo = (
+          const i = licoesDo(e.n).length ? 0 : zig++;
+          const temL = licoesDo(e.n).length > 0;
+          const passoNo = temL ? (
+            // passo com lições: vira um título de seção; as lições abaixo são o caminho
+            <li key={e.n} className="path-secao">
+              <button className={`passo-secao ${feito ? 'ok' : ''}`} onClick={() => (e.pronto ? onOpen(e.n) : onSoon())}
+                style={{ ['--c' as string]: `var(--${e.cor})`, ['--lip' as string]: `var(--${e.cor}-lip)` }}
+                aria-label={`${e.n === 0 ? 'Conhecer o cubo' : `Passo ${e.n}: ${e.titulo}`}${feito ? ', feito' : ''}`}>
+                <span className="secao-n">{e.n === 0 ? '?' : e.n}</span>
+                <span className="secao-txt"><small>{e.n === 0 ? 'Antes de tudo' : `Passo ${e.n} de 8`}</small><b>{e.n === 0 ? 'Conhecer o cubo' : e.titulo}</b></span>
+                {e.n >= 1 && <span className="estrelas" aria-label={`${estrelas(dom, e.n)} de 3 estrelas`}>{[1, 2, 3].map(k => <i key={k} className={k <= estrelas(dom, e.n) ? 'on' : ''}>★</i>)}</span>}
+                {feito && <span className="secao-ok" aria-hidden="true">✓</span>}
+              </button>
+            </li>
+          ) : (
             <li key={e.n} className={`path-step ${agora ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(i * 1.1) * 72)}px` }}>
               {agora && <span className="agora-tag">agora</span>}
               <button className={`node ${e.pronto ? '' : 'locked'} ${feito ? 'node-ok' : ''}`} onClick={() => (e.pronto ? onOpen(e.n) : onSoon())}

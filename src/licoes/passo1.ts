@@ -199,7 +199,7 @@ export const PASSO1: Licao[] = [
       },
       {
         fala: 'Agora no seu cubo. Ache um meio branco que ainda não é pétala e me diga onde ele está.', mood: 'cubo',
-        tarefa: { tipo: 'missao', passo: 1, total: 4, peca: 'pétala' },
+        tarefa: { tipo: 'missao', passo: 1 },
         acerto: 'Passo 1 completo!',
       },
     ],

@@ -14,14 +14,15 @@ export type Tarefa =
   /** tocar em peças ou faces; "quantos" peças diferentes que batem com o alvo */
   | { tipo: 'tocar'; alvo: (p: Piece, face: Face, s: CubeState) => boolean; quantos?: number;
       erro?: (p: Piece, face: Face, s: CubeState) => string }
-  /** fazer giros no cubo da tela, nesta ordem (seta mostra o próximo; giro errado é desfeito) */
-  | { tipo: 'girar'; giros: string[] }
+  /** fazer giros no cubo da tela, nesta ordem (seta mostra o próximo; giro errado é desfeito).
+   *  Giros duplos (F2) viram dois giros; giros do cubo inteiro (x, y, z) ganham um botão. "falas" explica cada giro. */
+  | { tipo: 'girar'; giros: string[]; falas?: string[] }
   /** escolher a resposta certa; "seta" mostra um giro no cubo enquanto pergunta */
   | { tipo: 'escolha'; opcoes: { texto: string; certo?: boolean; porque?: string }[]; seta?: string }
   /** convite para fazer no cubo de verdade (sempre dá para seguir sem cubo) */
   | { tipo: 'nocubo'; feito: string; semCubo?: string }
   /** missão no cubo de verdade: escolher a situação de cada peça, ver o que fazer e repetir até completar */
-  | { tipo: 'missao'; passo: number; total: number; peca: string };
+  | { tipo: 'missao'; passo: number };
 
 export interface Tela {
   fala: string;
@@ -52,6 +53,17 @@ export interface Licao {
 }
 
 /* ---------- ajudas para escrever as lições ---------- */
+
+/** giros duplos viram dois giros simples (com a fala repetida), do jeito que se faz com o dedo */
+export function expandir(giros: string[], falas?: string[]): { giros: string[]; falas: (string | undefined)[] } {
+  const g: string[] = [], f: (string | undefined)[] = [];
+  giros.forEach((m, k) => {
+    const fala = falas?.[k];
+    if (m.endsWith('2')) { g.push(m[0], m[0]); f.push(fala, fala); } else { g.push(m); f.push(fala); }
+  });
+  return { giros: g, falas: f };
+}
+export const ehGiroInteiro = (m: string) => 'xyz'.includes(m[0]);
 
 /** a peça (e o adesivo) que está numa posição da face (0..8) */
 export function pecaEm(s: CubeState, face: Face, index: number): Piece | undefined {

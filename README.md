@@ -51,12 +51,12 @@ Aprender como numa boa aula: um passo de cada vez, vendo as situações que pode
 
 ## 🗺️ A trilha
 
-**Em passos de formiga.** A trilha é feita de lições curtinhas (uns 2 minutos cada), com uma ideia por tela. Cada tela só avança quando a pessoa *faz* algo: tocar na peça certa, girar a face pedida, responder uma pergunta. O Pingo pode ler as falas em voz alta, com a voz do próprio aparelho. Já estão neste formato:
+**Em passos de formiga.** A trilha inteira é feita de lições curtinhas (uns 2 minutos cada), com uma ideia por tela, para fazer tudo no cubo da tela, sem precisar de cubo. Cada tela só avança quando a pessoa *faz* algo: tocar na peça certa, girar a face pedida, responder uma pergunta. O Pingo pode ler as falas em voz alta, com a voz do próprio aparelho.
 
 - **Conhecer o cubo** (7 lições): faces e cores, centros, meios e quinas, como segurar, e os giros do topo, da direita e da frente.
-- **Passo 1 · Margarida** (7 lições): o que é a margarida, achar os meios brancos, uma situação por lição e a margarida inteira, na tela e no seu cubo.
-
-Os passos 2 a 8 ainda estão no formato anterior e vão ganhar lições no mesmo molde.
+- **Cada passo** tem: o objetivo, os gestos novos que ele pede (cubo inteiro, esquerda, letras, base, tombar), uma lição por situação (olhar, ver o Pingo fazer, fazer, repetir), "Qual é a situação?" e o passo inteiro do começo ao fim.
+- **No cubo de verdade (opcional):** no fim de cada passo, a pessoa escolhe pela *imagem* a situação parecida com a do seu cubo, e o Pingo mostra o que fazer.
+- **As letras** (R, U, F, L…) só aparecem a partir do passo 4, depois de uma lição própria.
 
 <table>
 <tr><th>Passo</th><th>O que você faz</th><th>Como os cubistas chamam</th><th>Situações</th></tr>

@@ -56,8 +56,8 @@ export default function App() {
     setTab('trilha'); setTreinoAgora(false);
     if (temLicoes(n)) {
       const prox = proximaLicao(n, licoes, feitos);
-      if (prox) { setLicao(prox.id); setPasso(null); return; }
-      if (n === 0) { setLicao(licoesDo(0)[0].id); setPasso(null); return; }
+      // tudo feito: abre a primeira lição do passo, para rever (a tela antiga do passo fica só para o treino)
+      setLicao((prox ?? licoesDo(n)[0]).id); setPasso(null); return;
     }
     setLicao(null);
     setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null);
@@ -86,7 +86,12 @@ export default function App() {
   };
   const licaoAberta = licao ? LICOES.find(x => x.id === licao) : undefined;
   /** o cubo lido pela câmera está no passo n */
-  const abrirPasso = (n: number) => { setFeitos(f => marcarAte(f, n - 1)); setTab('trilha'); setLicao(null); setPasso(TODOS.find(e => e.n === n)?.pronto ? n : null); };
+  /** o cubo lido pela câmera está no passo n: marca os anteriores e abre as lições dele */
+  const abrirPasso = (n: number) => {
+    const novos = marcarAte(feitos, n - 1); setFeitos(novos); setTab('trilha'); setPasso(null);
+    const l = n <= 8 ? (proximaLicao(n, licoes, novos) ?? licoesDo(n)[0]) : null;
+    setLicao(l ? l.id : null);
+  };
   const aula = passo !== null ? PASSOS.find(x => x.n === passo) : undefined;
   useEffect(() => saveProgress(p), [p]);
   // guarda na nuvem depois de cada mudança (se a pessoa entrou com o Google)

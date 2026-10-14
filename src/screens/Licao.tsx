@@ -8,7 +8,8 @@ import { describe } from '../cube/describe';
 import { PASSOS, greyKeys, setupOf, type Caso } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 import { calar, falar, temVoz, useVozAuto } from '../voz';
-import { chavesDe, pecaEm, type Licao, type Tela } from '../licoes/tipos';
+import { chavesDe, ehGiroInteiro, expandir, pecaEm, type Licao, type Tela } from '../licoes/tipos';
+import { CuboMini } from '../components/CuboMini';
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const ELOGIOS = ['Isso!', 'Certo!', 'Boa!', 'Muito bem!'];
@@ -21,11 +22,16 @@ export function Rico({ t }: { t: string }) {
 /** uma lição: telas curtas, cada uma com uma tarefa; só avança quando a pessoa faz */
 export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConcluir, onProxima }: {
   licao: Licao; sound: boolean; ultimaDoPasso: boolean; proxima: Licao | null;
+  /** (as letras aparecem a partir do passo 4, depois da lição das letras) */
   onSair: () => void; onConcluir: () => void; onProxima: () => void;
 }) {
   const [i, setI] = useState(0);
   const [fim, setFim] = useState(false);
   const tela: Tela | undefined = licao.telas[i];
+  /** os giros a fazer nesta tela, já com os duplos separados */
+  const plano = useMemo(() => tela?.tarefa.tipo === 'girar' ? expandir(tela.tarefa.giros, tela.tarefa.falas) : null, [tela]);
+  const letras = licao.passo >= 4;
+  const nomeGiro = (m: string) => letras ? `${describe(m)} · ${m}` : describe(m);
   const [acertou, setAcertou] = useState<string | null>(null);   // texto do acerto (null = ainda fazendo)
   const [msg, setMsg] = useState<string | null>(null);
   const [achados, setAchados] = useState<string[]>([]);          // peças achadas (tocar)
@@ -83,7 +89,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
   // seta rosa: o próximo giro a fazer, ou o giro da pergunta
   const seta = !tela || acertou || tocando ? null
-    : tela.tarefa.tipo === 'girar' ? tela.tarefa.giros[g] ?? null
+    : plano ? (plano.giros[g] && !ehGiroInteiro(plano.giros[g]) ? plano.giros[g] : null)
     : tela.tarefa.tipo === 'escolha' ? tela.tarefa.seta ?? null : null;
   useEffect(() => { scene.current?.hint(seta); }, [seta, i]);
 
@@ -110,11 +116,12 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
     busy.current = true; setTocando(true);
     state.current = clone(inicioTela.current); pintar();
     await sleep(300);
+    const longa = tela.tarefa.giros.length > 8;   // fórmula comprida: um pouco mais rápido
     for (const m of tela.tarefa.giros) {
       if (!alive.current) return;
-      setLegenda(describe(m)); scene.current?.hint(m); await sleep(500); scene.current?.hint(null);
-      await turn(m, m.endsWith('2') ? 900 : 750);
-      await sleep(350);
+      setLegenda(nomeGiro(m)); if (!ehGiroInteiro(m)) { scene.current?.hint(m); await sleep(longa ? 300 : 500); scene.current?.hint(null); }
+      await turn(m, (m.endsWith('2') ? 900 : 750) * (longa ? 0.75 : 1));
+      await sleep(longa ? 200 : 350);
     }
     if (!alive.current) return;
     setLegenda(null); setTocando(false); setVisto(true); busy.current = false;
@@ -122,24 +129,24 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
   /** "me mostra": o Pingo faz o próximo giro e desfaz, para a pessoa repetir */
   const mostrarProximo = async () => {
-    if (!tela || tela.tarefa.tipo !== 'girar' || busy.current) return;
-    const m = tela.tarefa.giros[g]; if (!m) return;
+    if (!plano || busy.current) return;
+    const m = plano.giros[g]; if (!m) return;
     busy.current = true; setTocando(true); setMsg(null);
-    setLegenda(describe(m)); scene.current?.hint(m); await sleep(500); scene.current?.hint(null);
+    setLegenda(nomeGiro(m)); if (!ehGiroInteiro(m)) { scene.current?.hint(m); await sleep(500); scene.current?.hint(null); }
     await turn(m, 800); await sleep(600); await turn(invertMove(m), 450);
     setLegenda(null); setTocando(false); busy.current = false;
   };
 
   /** giro feito com o dedo */
-  const onMove = async (m: string) => {
-    if (!tela || tela.tarefa.tipo !== 'girar' || busy.current || acertou) return;
-    const certo = tela.tarefa.giros[g];
+  const onMove = async (m: string, dur = 280) => {
+    if (!tela || !plano || busy.current || acertou) return;
+    const certo = plano.giros[g];
     busy.current = true; setMsg(null);
-    await turn(m, 280);
+    await turn(m, dur);
     if (m === certo) {
       const ng = g + 1; setG(ng);
       if (sound) sfx.click(); buzz(10);
-      if (ng >= tela.tarefa.giros.length) acerto(tela.acerto);
+      if (ng >= plano.giros.length) acerto(tela.acerto);
     } else {
       erro(`Esse foi *${describe(m).toLowerCase()}*. Vou desfazer. Tente: *${describe(certo).toLowerCase()}*.`);
       await sleep(550); await turn(invertMove(m), 300);
@@ -233,7 +240,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
           {cont && <span className="destaque contador">{cont.n} de {cont.total} {cont.rotulo}</span>}
           {tf.tipo === 'tocar' && (tf.quantos ?? 1) > 1 && <span className="destaque contador">{achados.length} de {tf.quantos}</span>}
           {!legenda && <span className="stage-hint">{
-            tf.tipo === 'girar' && fazendo ? 'Arraste a camada com o dedo, seguindo a seta.'
+            tf.tipo === 'girar' && fazendo ? (plano?.giros[g] && ehGiroInteiro(plano.giros[g]) ? 'Agora o cubo inteiro: use o botão abaixo.' : 'Arraste a camada com o dedo, seguindo a seta.')
             : tf.tipo === 'tocar' && fazendo ? 'Toque no quadradinho. Arraste para virar o cubo.'
             : 'Arraste para virar o cubo.'}</span>}
         </div>
@@ -252,10 +259,13 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
         )
       )}
 
-      {fazendo && tf.tipo === 'girar' && (
+      {fazendo && plano && (
         <div className="licao-acoes">
-          <p className="giro-pedido">{tocando ? 'Olhe…' : <>Agora: <b>{describe(tf.giros[g] ?? '')}</b></>}{tf.giros.length > 1 && <small> · giro {Math.min(g + 1, tf.giros.length)} de {tf.giros.length}</small>}</p>
-          <button className="btn" onClick={mostrarProximo} disabled={tocando}>Me mostra</button>
+          <p className="giro-pedido">{tocando ? 'Olhe…' : <>Agora: <b>{nomeGiro(plano.giros[g] ?? '')}</b></>}{plano.giros.length > 1 && <small>giro {Math.min(g + 1, plano.giros.length)} de {plano.giros.length}</small>}</p>
+          {plano.falas[g] && !tocando && <p className="giro-fala">{plano.falas[g]}</p>}
+          {plano.giros[g] && ehGiroInteiro(plano.giros[g])
+            ? <button className="btn btn-pop btn-big" onClick={() => onMove(plano.giros[g], 700)} disabled={tocando}>↻ {describe(plano.giros[g])}</button>
+            : <button className="btn" onClick={mostrarProximo} disabled={tocando}>Me mostra</button>}
         </div>
       )}
 
@@ -274,7 +284,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
         </div>
       )}
 
-      {fazendo && tf.tipo === 'missao' && <Missao passo={tf.passo} total={tf.total} peca={tf.peca} sound={sound} vozAuto={vozAuto} onFeito={() => acerto(tela.acerto)} />}
+      {fazendo && tf.tipo === 'missao' && <Missao passo={tf.passo} letras={letras} sound={sound} vozAuto={vozAuto} onFeito={() => acerto(tela.acerto)} />}
 
       {acertou && (
         <section className="card licao-ok" aria-live="polite">
@@ -286,13 +296,16 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   );
 }
 
-/** missão no cubo de verdade: escolhe a situação da peça, vê o que fazer, faz no cubo; repete até completar */
-function Missao({ passo, total, peca, sound, vozAuto, onFeito }: {
-  passo: number; total: number; peca: string; sound: boolean; vozAuto: boolean; onFeito: () => void;
+/** missão no cubo de verdade: escolhe pela imagem a situação do seu cubo, vê o que fazer, faz no cubo; repete até completar */
+const DE_BAIXO = new Set(['1.base']);
+function Missao({ passo, letras, sound, vozAuto, onFeito }: {
+  passo: number; letras: boolean; sound: boolean; vozAuto: boolean; onFeito: () => void;
 }) {
   const p = PASSOS.find(x => x.n === passo)!;
+  const total = p.total ?? 4;
   const [feitas, setFeitas] = useState(0);
   const [caso, setCaso] = useState<Caso | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const scene = useRef<CubeScene | null>(null);
   const state = useRef<CubeState>([]);
   const [tocando, setTocando] = useState(false);
@@ -300,6 +313,8 @@ function Missao({ passo, total, peca, sound, vozAuto, onFeito }: {
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const foco = (x: Piece) => p.foco(x);
+  const imagens = useMemo(() => p.casos.map(c => setupOf(p, c)), [p]);
+  const nome = (m: string) => letras ? `${describe(m)} · ${m}` : describe(m);
 
   const vez = useRef(0);   // cada demonstração nova cancela a anterior
   const mostrar = async (c: Caso) => {
@@ -312,12 +327,12 @@ function Missao({ passo, total, peca, sound, vozAuto, onFeito }: {
     for (let k = 0; k < c.lances.length; k++) {
       if (!viva()) return;
       const m = c.lances[k].m; setAgora(k);
-      const qs = m.endsWith('2') ? [m[0], m[0]] : [m];
+      const qs = expandir([m]).giros;
       for (const q of qs) {
         if (!viva()) return;
-        sc.hint(q); await sleep(500); sc.hint(null);
+        if (!ehGiroInteiro(q)) { sc.hint(q); await sleep(500); sc.hint(null); }
         applyMove(state.current, q);
-        await sc.turn(q, facelets(state.current), 750, greyKeys(state.current, foco));
+        await sc.turn(q, facelets(state.current), ehGiroInteiro(q) ? 700 : 750, greyKeys(state.current, foco));
         await sleep(250);
       }
       await sleep(350);
@@ -327,41 +342,48 @@ function Missao({ passo, total, peca, sound, vozAuto, onFeito }: {
   };
   useEffect(() => { if (caso && vozAuto) falar(caso.ver); }, [caso, vozAuto]);
 
-  const fiz = () => {
-    const n = feitas + 1; setFeitas(n); setCaso(null);
+  const contar = () => {
+    const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null);
     if (sound) sfx.good(); buzz(20);
     if (n >= total) onFeito();
+  };
+  const fiz = () => {
+    if (caso?.depois) { setCaso(null); setAviso('Boa! Agora olhe o seu cubo de novo e escolha a imagem da situação nova.'); if (sound) sfx.click(); return; }
+    contar();
   };
 
   return (
     <div className="missao">
-      <div className="pecas" role="img" aria-label={`${feitas} de ${total} prontas`}>
-        {Array.from({ length: total }, (_, k) => <span key={k} className={k < feitas ? 'ok' : k === feitas ? 'now' : ''}>{k < feitas ? '✓' : k + 1}</span>)}
-      </div>
+      {total > 1 && (
+        <div className="pecas" role="img" aria-label={`${feitas} de ${total} prontas`}>
+          {Array.from({ length: total }, (_, k) => <span key={k} className={k < feitas ? 'ok' : k === feitas ? 'now' : ''}>{k < feitas ? '✓' : k + 1}</span>)}
+        </div>
+      )}
       {!caso ? (
         <>
-          <h3 className="sec-title">{feitas === 0 ? `Onde está o meio branco no seu cubo?` : `${feitas} de ${total}! E o próximo meio branco, onde está?`}</h3>
-          <ul className="casos">
+          {aviso && <p className="vez-msg sua">{aviso}</p>}
+          <h3 className="sec-title">{total > 1 && feitas > 0 ? `${feitas} de ${total}! Qual imagem parece com a próxima peça no seu cubo?` : 'Qual imagem parece com o seu cubo?'}</h3>
+          <ul className="casos-img">
             {p.casos.map((c, k) => (
               <li key={c.id}>
-                <button className="caso" onClick={() => setCaso(c)}>
-                  <span className="caso-n">{String.fromCharCode(65 + k)}</span>
-                  <span><b>{c.nome}</b><small>{c.ver}</small></span>
-                  <span className="caso-go" aria-hidden="true">›</span>
+                <button className="caso-img" onClick={() => setCaso(c)}>
+                  <CuboMini estado={imagens[k]} foco={foco} deBaixo={DE_BAIXO.has(`${passo}.${c.id}`)} tamanho={104} />
+                  <span>{c.nome}</span>
                 </button>
               </li>
             ))}
           </ul>
-          <button className="btn" onClick={fiz}>Esse já é {peca}: contar e procurar outro</button>
+          <button className="btn" onClick={contar}>{total > 1 ? 'Essa peça já está certa no meu cubo' : 'Já está pronto no meu cubo'}</button>
           <button className="link-btn" onClick={onFeito}>Estou sem cubo: terminar a lição</button>
         </>
       ) : (
         <>
           <div className="stage stage-licao">
             <Cube3D onReady={s => { scene.current = s; mostrar(caso); }} options={{ canTurn: () => false }} />
+            <span className="destaque">{caso.nome}</span>
           </div>
           <ol className="missao-giros">
-            {caso.lances.map((l, k) => <li key={k} className={k === agora ? 'now' : ''}><b>{describe(l.m)}</b><span>{l.fala}</span></li>)}
+            {caso.lances.map((l, k) => <li key={k} className={k === agora ? 'now' : ''}><b>{nome(l.m)}</b><span>{l.fala}</span></li>)}
           </ol>
           <div className="licao-acoes">
             <button className="btn btn-pop btn-big" onClick={fiz} disabled={tocando}>Fiz no meu cubo</button>

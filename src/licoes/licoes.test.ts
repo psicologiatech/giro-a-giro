@@ -5,6 +5,8 @@ import { MARGARIDA_TODA, margarida } from './passo1';
 import { petala } from './tipos';
 import { amareloEmCima } from '../aulas/aulas';
 import { applyAlg, invertAlg } from '../cube/model';
+import { PASSOS } from '../aulas/aulas';
+import { emQuePasso } from '../aulas/progresso';
 
 /** o cubo de cada tela, seguindo a lição como a pessoa faria */
 function estados(l: (typeof LICOES)[number]): CubeState[] {
@@ -59,6 +61,21 @@ describe('lições', () => {
     expect(antes).toBe(4);
     // só usa os giros ensinados na fase 0
     expect(MARGARIDA_TODA.every(m => ['U', "U'", 'R', "R'", 'F', "F'"].includes(m))).toBe(true);
+  });
+
+  it('passos 2 a 8: cada situação feita na tela resolve o que promete, e o passo inteiro termina pronto', () => {
+    for (const p of PASSOS.filter(x => x.n >= 2)) {
+      for (const c of p.casos) {
+        const l = LICOES.find(x => x.id === `p${p.n}-${c.id}`)!;
+        expect(l, `${p.n}.${c.id}`).toBeTruthy();
+        const t = l.telas.find(x => x.tarefa.tipo === 'girar')!;
+        const s = t.cubo!(); if (t.tarefa.tipo === 'girar') applyAlg(s, t.tarefa.giros);
+        if (!c.depois) expect(p.pronto(s, p.meta()), `${p.n}.${c.id}`).toBe(true);
+      }
+      const todo = LICOES.find(x => x.id === `p${p.n}-todo`)!, t = todo.telas[0];
+      const s = t.cubo!(); if (t.tarefa.tipo === 'girar') applyAlg(s, t.tarefa.giros);
+      expect(p.pronto(s, p.meta()) || emQuePasso(s) > p.n, `passo ${p.n} inteiro`).toBe(true);
+    }
   });
 
   it('o cubo embaralhado do passo 1 tem os 4 meios brancos fora do lugar', () => {

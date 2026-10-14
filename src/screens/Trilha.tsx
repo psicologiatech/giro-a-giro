@@ -1,10 +1,10 @@
 import { Speech } from '../components/Mascot';
 import { IconLock } from '../components/Icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TODOS } from '../aulas/aulas';
 import { estrelas, loadDominio } from '../aulas/dominio';
 import { Mascot } from '../components/Mascot';
-import { licaoFeita, licaoLiberada, licoesDo, proximaLicao } from '../licoes';
+import { LICOES, licaoFeita, licaoLiberada, licoesDo, proximaLicao } from '../licoes';
 
 export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, onPlay, onSoon, onRecomecar }: {
   onRecomecar: () => void; feitos: number[]; licoes: string[]; atual: number; onOpen: (n: number) => void;
@@ -12,6 +12,15 @@ export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, on
 }) {
   const vez = TODOS.find(e => e.n === atual);
   const licaoVez = proximaLicao(atual, licoes, feitos);
+  /** onde a pessoa parou: a lição da vez; ou, para quem já tinha os passos feitos, a primeira lição ainda não feita */
+  const ondeParou = licaoVez ?? LICOES.find(l => !licoes.includes(l.id)) ?? null;
+  // ao abrir a trilha, rola até onde parou (depois do "volta ao topo" das trocas de tela)
+  useEffect(() => {
+    if (!ondeParou) return;
+    const t = setTimeout(() => document.querySelector(`[data-licao="${ondeParou.id}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   let zig = 0;
   const dom = loadDominio();
   const [confirmar, setConfirmar] = useState(false);
@@ -27,6 +36,12 @@ export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, on
         <Speech mood="festa">Você terminou o passo {atual - 1}! O passo {atual} chega na próxima versão. Enquanto isso, treine os anteriores.</Speech>
       )}
 
+      {!vez && ondeParou && (
+        <button className="btn btn-pop btn-big continuar" onClick={() => onLicao(ondeParou.id)}>
+          <small>Continuar de onde parou</small>
+          {ondeParou.passo === 0 ? 'Conhecer o cubo' : `Passo ${ondeParou.passo}`} · {ondeParou.titulo}
+        </button>
+      )}
       {vez?.pronto && (
         <button className="btn btn-pop btn-big continuar" onClick={() => onOpen(atual)}>
           <small>{feitos.length > 0 || licoes.length > 0 ? 'Continuar' : 'Começar'}</small>
@@ -83,11 +98,11 @@ export function Trilha({ feitos, licoes, atual, onOpen, onLicao, onBloqueada, on
           );
           // as lições do passo, em nós menores logo abaixo dele
           const lis = licoesDo(e.n).map((l, k) => {
-            const ok = licaoFeita(l, licoes, feitos), livre = licaoLiberada(l, licoes, feitos), vezDela = licaoVez?.id === l.id;
+            const ok = licaoFeita(l, licoes, feitos), livre = licaoLiberada(l, licoes, feitos), vezDela = ondeParou?.id === l.id;
             const j = zig++;
             return (
-              <li key={l.id} className={`path-step path-licao ${vezDela ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(j * 1.1) * 72)}px` }}>
-                {vezDela && <span className="agora-tag">agora</span>}
+              <li key={l.id} data-licao={l.id} className={`path-step path-licao ${vezDela ? 'agora' : ''}`} style={{ ['--x' as string]: `${Math.round(Math.sin(j * 1.1) * 72)}px` }}>
+                {vezDela && <span className="agora-tag">{licaoVez ? 'agora' : 'continuar'}</span>}
                 <button className={`node node-licao ${ok ? 'node-ok' : ''} ${!ok && !livre ? 'locked' : ''}`}
                   onClick={() => (ok || livre ? onLicao(l.id) : onBloqueada('Faça as lições anteriores primeiro.'))}
                   aria-label={`Lição ${k + 1}: ${l.titulo}${ok ? ', feita' : vezDela ? ', é a vez dela' : !livre ? ', bloqueada' : ''}`}

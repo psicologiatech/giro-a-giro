@@ -582,3 +582,9 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .toggle-seta { justify-content: center; }
 .licao-pausa { background: #FFF8E1; border-color: #FFE08A; box-shadow: 0 4px 0 #FFE08A; display: flex; flex-direction: column; gap: 12px; }
 .licao-pausa p { margin: 0; font-size: 17px; }
+.missao-agora { display: flex; flex-direction: column; gap: 6px; text-align: center; border-color: #FFC2DC; box-shadow: 0 4px 0 #FFC2DC; }
+.missao-agora small { color: var(--muted); font-size: 13.5px; }
+.missao-agora b { font-family: var(--display); font-size: 25px; color: var(--pop-lip); line-height: 1.15; }
+.missao-agora span { color: var(--ink); font-size: 15.5px; margin-bottom: 6px; }
+.missao-agora.pronto { border-color: #BFEBD2; box-shadow: 0 4px 0 #BFEBD2; background: #F2FBF6; }
+.missao-agora.pronto b { color: var(--green-lip); }

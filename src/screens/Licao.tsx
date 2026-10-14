@@ -325,46 +325,48 @@ function Missao({ passo, letras, sound, vozAuto, onFeito }: {
   const scene = useRef<CubeScene | null>(null);
   const state = useRef<CubeState>([]);
   const [tocando, setTocando] = useState(false);
-  const [agora, setAgora] = useState(-1);
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const foco = (x: Piece) => p.foco(x);
   const imagens = useMemo(() => p.casos.map(c => setupOf(p, c)), [p]);
   const nome = (m: string) => letras ? `${describe(m)} · ${m}` : describe(m);
 
-  const vez = useRef(0);   // cada demonstração nova cancela a anterior
-  const mostrar = async (c: Caso) => {
+  /** passo a passo: a pessoa faz um giro no cubo dela e toca em "Fiz"; o cubo da tela faz o mesmo giro */
+  const [k, setK] = useState(0);
+  const [cena, setCena] = useState(0);   // muda quando o cubo da tela fica pronto
+  const pintarSetup = (c: Caso) => {
     const sc = scene.current; if (!sc) return;
-    const minha = ++vez.current;
-    const viva = () => alive.current && vez.current === minha;
-    setTocando(true);
     state.current = setupOf(p, c); sc.setGrey(greyKeys(state.current, foco)); sc.paint(facelets(state.current));
-    await sleep(800);
-    for (let k = 0; k < c.lances.length; k++) {
-      if (!viva()) return;
-      const m = c.lances[k].m; setAgora(k);
-      const qs = expandir([m]).giros;
-      for (const q of qs) {
-        if (!viva()) return;
-        if (!ehGiroInteiro(q)) { sc.hint(q); await sleep(500); sc.hint(null); }
-        applyMove(state.current, q);
-        await sc.turn(q, facelets(state.current), ehGiroInteiro(q) ? 700 : 750, greyKeys(state.current, foco));
-        await sleep(250);
-      }
-      await sleep(350);
-    }
-    if (!viva()) return;
-    setAgora(-1); setTocando(false);
   };
+  const girar = async (m: string, voltar = false) => {
+    const sc = scene.current; if (!sc) return;
+    setTocando(true);
+    const qs = expandir([m]).giros.map(q => voltar ? invertMove(q) : q);
+    for (const q of qs) {
+      if (!alive.current) return;
+      if (!ehGiroInteiro(q)) { sc.hint(q); await sleep(450); sc.hint(null); }
+      applyMove(state.current, q);
+      await sc.turn(q, facelets(state.current), ehGiroInteiro(q) ? 700 : 650, greyKeys(state.current, foco));
+    }
+    if (!alive.current) return;
+    setTocando(false);
+  };
+  const proximo = async () => { if (!caso || tocando || k >= caso.lances.length) return; await girar(caso.lances[k].m); setK(k + 1); };
+  const anterior = async () => { if (!caso || tocando || k === 0) return; await girar(caso.lances[k - 1].m, true); setK(k - 1); };
+  const recomecar = () => { if (!caso) return; setK(0); pintarSetup(caso); setCena(c => c + 1); };
+  // a seta mostra o giro da vez no cubo da tela, para comparar com o seu
+  useEffect(() => { if (caso && !tocando) scene.current?.hint(k < caso.lances.length && !ehGiroInteiro(caso.lances[k].m) ? caso.lances[k].m : null); }, [caso, k, tocando, cena]);
+  useEffect(() => { if (caso) setTimeout(() => document.querySelector('.missao .stage')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80); }, [caso]);
   useEffect(() => { if (caso && vozAuto) falar(caso.ver); }, [caso, vozAuto]);
+  useEffect(() => { if (caso && vozAuto && k < caso.lances.length) falar(`${describe(caso.lances[k].m)}. ${caso.lances[k].fala}`); }, [caso, k, vozAuto]);
 
   const contar = () => {
-    const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null);
+    const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null); setK(0);
     if (sound) sfx.good(); buzz(20);
     if (n >= total) onFeito();
   };
   const fiz = () => {
-    if (caso?.depois) { setCaso(null); setAviso('Boa! Agora olhe o seu cubo de novo e escolha a imagem da situação nova.'); if (sound) sfx.click(); return; }
+    if (caso?.depois) { setCaso(null); setK(0); setAviso('Boa! Agora olhe o seu cubo de novo e escolha a imagem da situação nova.'); if (sound) sfx.click(); return; }
     contar();
   };
 
@@ -382,7 +384,7 @@ function Missao({ passo, letras, sound, vozAuto, onFeito }: {
           <ul className="casos-img">
             {p.casos.map((c, k) => (
               <li key={c.id}>
-                <button className="caso-img" onClick={() => setCaso(c)}>
+                <button className="caso-img" onClick={() => { setK(0); setCaso(c); }}>
                   <CuboMini estado={imagens[k]} foco={foco} deBaixo={DE_BAIXO.has(`${passo}.${c.id}`)} tamanho={104} />
                   <span>{c.nome}</span>
                 </button>
@@ -394,20 +396,30 @@ function Missao({ passo, letras, sound, vozAuto, onFeito }: {
         </>
       ) : (
         <>
-          <div className="stage stage-licao">
-            <Cube3D onReady={s => { scene.current = s; mostrar(caso); }} options={{ canTurn: () => false }} />
+          <div className="stage stage-licao pequeno">
+            <Cube3D onReady={s => { scene.current = s; pintarSetup(caso); setCena(c => c + 1); }} options={{ canTurn: () => false }} />
             <span className="destaque">{caso.nome}</span>
+            <span className="destaque contador">{Math.min(k + (k < caso.lances.length ? 1 : 0), caso.lances.length)} de {caso.lances.length}</span>
           </div>
-          <ol className="missao-giros">
-            {caso.lances.map((l, k) => <li key={k} className={k === agora ? 'now' : ''}><b>{nome(l.m)}</b><span>{l.fala}</span></li>)}
-          </ol>
-          <div className="licao-acoes">
-            <button className="btn btn-pop btn-big" onClick={fiz} disabled={tocando}>Fiz no meu cubo</button>
-            <div className="row">
-              <button className="btn" onClick={() => mostrar(caso)} disabled={tocando}>Ver de novo</button>
-              <button className="btn" onClick={() => setCaso(null)} disabled={tocando}>Escolher outra</button>
-            </div>
-          </div>
+          {k < caso.lances.length ? (
+            <section className="card missao-agora" aria-live="polite">
+              <small>Giro {k + 1} de {caso.lances.length}: faça no seu cubo</small>
+              <b>{nome(caso.lances[k].m)}</b>
+              <span>{caso.lances[k].fala}</span>
+              <div className="row">
+                <button className="btn" onClick={anterior} disabled={tocando || k === 0}>◀ Voltar</button>
+                <button className="btn btn-pop" onClick={proximo} disabled={tocando}>Fiz ▶</button>
+              </div>
+            </section>
+          ) : (
+            <section className="card missao-agora pronto" aria-live="polite">
+              <b>Todos os giros feitos!</b>
+              <span>Seu cubo está igual ao da tela?</span>
+              <button className="btn btn-pop btn-big" onClick={fiz}>Sim, ficou igual</button>
+              <button className="btn" onClick={recomecar}>Não: ver do começo</button>
+            </section>
+          )}
+          <button className="link-btn" onClick={() => { setCaso(null); setK(0); }} disabled={tocando}>Escolher outra imagem</button>
         </>
       )}
     </div>

@@ -5,7 +5,9 @@
  */
 export const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyD5tF7uL7xgrKCNdJP_6EHhp1aF8wK4CFo',
-  authDomain: 'giro-a-giro.firebaseapp.com',
+  // o login passa pelo próprio site (arquivos em psicologiatech.github.io/__/auth/), e não pelo
+  // firebaseapp.com: assim funciona no app Android e em navegadores que isolam o armazenamento
+  authDomain: 'psicologiatech.github.io',
   projectId: 'giro-a-giro',
   appId: '1:957070502819:web:9d1885bdfab6e1d74f8816',
 };

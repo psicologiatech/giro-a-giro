@@ -8,6 +8,14 @@ import { FIREBASE_CONFIG, nuvemDisponivel } from './config';
 import { gravarLocal, igual, lerLocal, mesclar, type Dados } from './sync';
 
 const LOGADO = 'giroagiro.nuvem.v1';
+
+/** aberto como app instalado (Play Store ou "adicionar à tela inicial"), e não numa aba do navegador */
+const appInstalado = () => {
+  try {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || document.referrer.startsWith('android-app://');
+  } catch { return false; }
+};
 export interface Usuario { uid: string; nome: string; email: string }
 type Estado = 'sem-nuvem' | 'carregando' | 'fora' | 'dentro' | 'erro';
 
@@ -70,7 +78,7 @@ export function useConta() {
     setEstado('carregando');
     let parar = () => {};
     firebase().then(async ({ auth, A }) => {
-      await A.getRedirectResult(auth).catch(() => null);
+      await A.getRedirectResult(auth).catch(e => { console.warn(e); setErro('Não deu para entrar agora. Tente de novo.'); });
       parar = A.onAuthStateChanged(auth, async u => {
         if (!u) { setUsuario(null); setEstado('fora'); return; }
         setUsuario({ uid: u.uid, nome: u.displayName ?? '', email: u.email ?? '' });
@@ -87,6 +95,9 @@ export function useConta() {
       const { auth, A } = await firebase();
       const provedor = new A.GoogleAuthProvider();
       try { localStorage.setItem(LOGADO, '1'); } catch { /* */ }
+      // no app instalado (Android/Play Store) a janelinha do Google abre como outra tela e não volta:
+      // lá o login abre no lugar do app e retorna para ele
+      if (appInstalado()) { await A.signInWithRedirect(auth, provedor); return; }
       let r: import('firebase/auth').UserCredential;
       try { r = await A.signInWithPopup(auth, provedor); }
       catch (e) {

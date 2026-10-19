@@ -167,6 +167,9 @@ h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; margin
 .sq { aspect-ratio: 1; border: 0; border-radius: 5px; padding: 0; }
 .sq.empty { background: repeating-linear-gradient(45deg, #CBD3E4 0 4px, #E6EBF5 4px 8px); }
 .sq:disabled { cursor: default; }
+.sq.warn { outline: 3px solid #FF8A00; outline-offset: 1px; position: relative; z-index: 1; animation: sq-pisca 1s ease-in-out infinite; }
+@keyframes sq-pisca { 50% { outline-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .sq.warn { animation: none; } }
 .sq.sel { outline: 3px solid var(--pop); outline-offset: 1px; position: relative; z-index: 1; }
 .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .swatch { aspect-ratio: 1; border: 2px solid rgba(30,34,82,.25); border-radius: 12px; display: grid; place-items: end center; padding: 0 0 2px;

@@ -6,7 +6,7 @@ import { FACES, NORMAL, faceletIndex, solved, type CubeState, type Face, type Fa
  */
 export type CheckResult =
   | { ok: true; state: CubeState }
-  | { ok: false; reason: 'contagem' | 'centros' | 'peca' | 'canto' | 'meio' | 'paridade'; message: string; counts?: Record<Face, number> };
+  | { ok: false; reason: 'contagem' | 'centros' | 'peca' | 'canto' | 'meio' | 'paridade'; message: string; counts?: Record<Face, number>; onde?: string[] };
 
 const NAMES: Record<Face, string> = { U: 'branco', D: 'amarelo', F: 'verde', B: 'azul', R: 'vermelho', L: 'laranja' };
 const plural: Record<Face, string> = { U: 'brancos', D: 'amarelos', F: 'verdes', B: 'azuis', R: 'vermelhos', L: 'laranjas' };
@@ -41,7 +41,7 @@ export function fromFacelets(f: Facelets): CheckResult {
     const seen = normals.map(n => ({ n, color: f[faceOf(n)][faceletIndex(faceOf(n), slot)] }));
     const want = seen.map(s => s.color).sort().join('');
     const match = pieces.find(p => !used.has(p.id) && p.stickers.map(s => s.color).sort().join('') === want);
-    if (!match) return { ok: false, reason: 'peca', message: `Há uma peça com cores que não existem juntas (${seen.map(s => NAMES[s.color]).join(', ')}). Confira essa peça.` };
+    if (!match) return { ok: false, reason: 'peca', onde: normals.map(n => `${faceOf(n)}${faceletIndex(faceOf(n), slot)}`), message: `Há uma peça com cores que não existem juntas (${seen.map(s => NAMES[s.color]).join(', ')}). Confira essa peça.` };
     used.add(match.id);
     const piece: Piece = { id: match.id, home: match.home, pos: [...slot] as Vec, stickers: seen.map(s => ({ color: s.color, n: [...s.n] as Vec })) };
     out.push(piece);

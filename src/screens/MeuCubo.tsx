@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Speech } from '../components/Mascot';
 import { Cube3D } from '../components/Cube3D';
 import { FaceNet, type Net } from '../components/FaceNet';
@@ -7,7 +7,7 @@ import { classify, similarCenters, type RGB } from '../scan/color';
 import { fromFacelets, COLOR_NAMES } from '../cube/fromFacelets';
 import { FACES, type Face, type Facelets } from '../cube/model';
 import { STICKER_COLORS } from '../cube/CubeScene';
-import { loadMyCube, saveMyCube } from '../scan/store';
+import { loadMyCube, saveMyCube, loadRascunho, saveRascunho } from '../scan/store';
 import { sfx, buzz } from '../feedback';
 import { Montar, loadMontar, clearMontar } from './Montar';
 import type { CubeState } from '../cube/model';
@@ -29,18 +29,25 @@ const emptyNet = (): Net => Object.fromEntries(FACES.map(f => [f, Array.from({ l
 
 export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { lerAgora?: boolean; sound: boolean; onSaved: () => void; onSolved: () => void; onOpenPasso: (n: number) => void }) {
   const saved = useMemo(loadMyCube, []);
-  const [mode, setMode] = useState<Mode>(lerAgora ? 'ler' : saved ? 'pronto' : 'inicio');
+  const rascunho = useMemo(() => loadRascunho<Net>(), []);
+  const [mode, setMode] = useState<Mode>(lerAgora ? 'ler' : rascunho ? 'revisar' : saved ? 'pronto' : 'inicio');
   const [cube, setCube] = useState<Facelets | null>(saved);
   const [step, setStep] = useState(0);
   const [samples, setSamples] = useState<Partial<Record<Face, RGB[]>>>({});
   const [shot, setShot] = useState<RGB[] | null>(null);
   const [camError, setCamError] = useState<string | null>(null);
-  const [net, setNet] = useState<Net>(emptyNet);
+  const [net, setNet] = useState<Net>(() => rascunho ?? emptyNet());
   const [msg, setMsg] = useState<string | null>(null);
+  const [marcar, setMarcar] = useState<Set<string>>(new Set());
+  const avisoRef = useRef<HTMLParagraphElement>(null);
+
+  // enquanto confere as cores, guarda a leitura: se sair da tela e voltar, ela continua aqui
+  useEffect(() => { if (mode === 'revisar') saveRascunho(net); }, [mode, net]);
   const [start, setStart] = useState<CubeState | null>(null);
 
-  const startScan = () => { setSamples({}); setStep(0); setShot(null); setCamError(null); setMode('ler'); };
-  const startPaint = () => { setNet(emptyNet()); setMsg(null); setMode('revisar'); };
+  const startScan = () => { saveRascunho(null); setSamples({}); setStep(0); setShot(null); setCamError(null); setMsg(null); setMarcar(new Set()); setMode('ler'); };
+  const startPaint = () => { setNet(emptyNet()); setMsg(null); setMarcar(new Set()); setMode('revisar'); };
+  const descartar = () => { saveRascunho(null); setMsg(null); setMarcar(new Set()); setMode(cube ? 'pronto' : 'inicio'); };
 
   const capture = (rgb: RGB[]) => {
     if (rgb.length !== 9) return;
@@ -64,14 +71,23 @@ export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { l
   };
 
   const check = (n: Net) => {
-    if (FACES.some(f => n[f].some(c => !c))) { setMsg('Ainda faltam quadradinhos sem cor. Toque neles para escolher.'); return false; }
+    const vazios = FACES.flatMap(f => n[f].map((c, i) => (c ? '' : `${f}${i}`))).filter(Boolean);
+    if (vazios.length) { setMsg('Ainda faltam quadradinhos sem cor. Toque neles para escolher.'); setMarcar(new Set(vazios)); return false; }
     const r = fromFacelets(n as Facelets);
-    setMsg(r.ok ? null : r.message);
-    return r.ok;
+    if (r.ok) { setMsg(null); setMarcar(new Set()); return true; }
+    setMsg(r.message);
+    // aponta onde conferir: as cores que sobraram, ou a peça com cores impossíveis
+    const sobra = r.counts ? FACES.filter(c => r.counts![c] > 9) : [];
+    setMarcar(new Set(r.onde ?? FACES.flatMap(f => n[f].map((c, i) => (i !== 4 && c && sobra.includes(c) ? `${f}${i}` : ''))).filter(Boolean)));
+    return false;
   };
   const confirm = () => {
-    if (!check(net)) { if (sound) sfx.oops(); return; }
-    saveMyCube(net as Facelets); setCube(net as Facelets); clearMontar();
+    if (!check(net)) {
+      if (sound) sfx.oops(); buzz([30, 40, 30]);
+      setTimeout(() => avisoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      return;
+    }
+    saveRascunho(null); saveMyCube(net as Facelets); setCube(net as Facelets); clearMontar();
     if (sound) sfx.good(); buzz([20, 30, 40]);
     setMode('pronto'); onSaved();
   };
@@ -124,18 +140,24 @@ export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { l
           <Camera onCapture={capture} onError={setCamError} />
         )}
         {msg && <p className="warn-msg" role="alert">{msg}</p>}
-        <button className="link-btn" onClick={() => setMode('inicio')}>Cancelar</button>
+        <button className="link-btn" onClick={() => setMode(cube ? 'pronto' : 'inicio')}>Cancelar</button>
       </div>
     );
   }
 
   if (mode === 'revisar') return (
     <div className="screen meucubo">
-      <Speech mood={msg ? 'hmm' : 'aponta'}>{msg ?? 'Confira as cores. Se alguma estiver errada, toque nela para trocar.'}</Speech>
-      <FaceNet net={net} onChange={n => { setNet(n); setMsg(null); }} />
+      <Speech mood={msg ? 'hmm' : 'aponta'}>{msg ? 'Quase! Tem alguma cor que não fecha. Veja o aviso logo acima do botão.' : 'Confira as cores. Se alguma estiver errada, toque nela para trocar.'}</Speech>
+      <FaceNet net={net} highlight={marcar} onChange={n => { setNet(n); setMsg(null); setMarcar(new Set()); }} />
       <p className="net-tip">O cubo aberto: branco em cima, verde no meio, amarelo embaixo.</p>
+      {msg && (
+        <p className="warn-msg" role="alert" ref={avisoRef}>
+          {msg}{marcar.size > 0 && ' Os quadradinhos para conferir estão piscando.'} Toque num quadradinho para trocar a cor.
+        </p>
+      )}
       <button className="btn btn-pop btn-big" onClick={confirm}>Está igual ao meu cubo</button>
       <button className="link-btn" onClick={startScan}>Ler tudo de novo com a câmera</button>
+      <button className="link-btn" onClick={descartar}>Descartar esta leitura</button>
     </div>
   );
 
@@ -151,7 +173,7 @@ export function MeuCubo({ sound, onSaved, onSolved, onOpenPasso, lerAgora }: { l
     setStart(r.state); setMode('montar');
   };
   return <Pronto cube={cube!} onOpenPasso={onOpenPasso} resumable={!!loadMontar()} onMontar={montar} onRescan={startScan} onFix={() => { setNet(cube as Net); setMsg(null); setMode('revisar'); }}
-    onForget={() => { saveMyCube(null); setCube(null); setMode('inicio'); }} />;
+    onForget={() => { saveMyCube(null); saveRascunho(null); setCube(null); setMode('inicio'); }} />;
 }
 
 function Pronto({ cube, resumable, onMontar, onRescan, onFix, onForget, onOpenPasso }: { cube: Facelets; resumable: boolean; onOpenPasso: (n: number) => void; onMontar: () => void; onRescan: () => void; onFix: () => void; onForget: () => void }) {

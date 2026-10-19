@@ -7,7 +7,6 @@ import { applyMove, clone, facelets, invertMove, type CubeState, type Face, type
 import { describe } from '../cube/describe';
 import { PASSOS, greyKeys, setupOf, type Caso } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
-import { calar, falar, temVoz, useVozAuto } from '../voz';
 import { chavesDe, ehGiroInteiro, expandir, pecaEm, type Licao, type Tela } from '../licoes/tipos';
 import { CuboMini } from '../components/CuboMini';
 
@@ -42,7 +41,6 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   const [tocando, setTocando] = useState(false);                  // o Pingo está mostrando giros
   const [visto, setVisto] = useState(false);                      // já viu a demonstração (ver)
   const [legenda, setLegenda] = useState<string | null>(null);
-  const [vozAuto, setVozAuto] = useVozAuto();
   /** mostrar a seta rosa? (nas telas "sem seta", começa desligada) */
   const [comSeta, setComSeta] = useState(true);
   const [, setTick] = useState(0);
@@ -52,7 +50,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   const inicioTela = useRef<CubeState>(clone(state.current));
   const busy = useRef(false);
   const alive = useRef(true);
-  useEffect(() => { alive.current = true; return () => { alive.current = false; calar(); }; }, []);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
 
   /** o foco vale até outra tela mudar (null = tudo colorido) */
   const foco = useMemo(() => {
@@ -86,7 +84,6 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
     setComSeta(!(tela.tarefa.tipo === 'girar' && tela.tarefa.semSeta)); setPausa(null);
     scene.current?.look(!!tela.base);
     pintar();
-    if (vozAuto) falar(tela.fala);
     if (tela.tarefa.tipo === 'ver') { const t = setTimeout(() => mostrar(), 900); return () => clearTimeout(t); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, licao]);
@@ -102,15 +99,12 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
     const t = texto ?? ELOGIOS[Math.floor(Math.random() * ELOGIOS.length)];
     setAcertou(t); setMsg(null);
     if (sound) sfx.good(); buzz(25);
-    if (vozAuto) falar(t);
     setTimeout(() => document.querySelector('.licao-ok')?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 80);
   };
   const erro = (t: string) => {
     setMsg(t); if (sound) sfx.oops(); buzz([20, 40, 20]);
-    if (vozAuto) falar(t);
   };
   const avancar = () => {
-    calar();
     if (i + 1 < licao.telas.length) { setI(i + 1); document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' }); }
     else { setFim(true); onConcluir(); if (sound) sfx.win(); buzz([30, 50, 70]); }
   };
@@ -152,7 +146,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
       const ng = g + 1; setG(ng);
       if (sound) sfx.click(); buzz(10);
       if (ng >= plano.giros.length) acerto(tela.acerto);
-      else if (plano.pausas.has(ng)) { const t = plano.pausas.get(ng)!; setPausa(t); if (vozAuto) falar(t); }
+      else if (plano.pausas.has(ng)) { const t = plano.pausas.get(ng)!; setPausa(t); }
     } else {
       erro(`Esse foi *${describe(m).toLowerCase()}*. Vou desfazer. Tente: *${describe(certo).toLowerCase()}*.`);
       await sleep(550); await turn(invertMove(m), 300);
@@ -217,16 +211,10 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
   return (
     <div className="screen licao">
       <div className="licao-head">
-        <button className="icon-btn licao-sair" onClick={() => { calar(); onSair(); }} aria-label="Sair da lição">✕</button>
+        <button className="icon-btn licao-sair" onClick={onSair} aria-label="Sair da lição">✕</button>
         <div className="licao-barra" role="progressbar" aria-valuemin={0} aria-valuemax={licao.telas.length} aria-valuenow={i + (acertou ? 1 : 0)} aria-label={`Tela ${i + 1} de ${licao.telas.length}`}>
           {licao.telas.map((_, k) => <i key={k} className={k < i || (k === i && acertou) ? 'ok' : k === i ? 'now' : ''} />)}
         </div>
-        {temVoz() && (
-          <button className={`icon-btn licao-voz ${vozAuto ? 'on' : ''}`} onClick={() => setVozAuto(!vozAuto)}
-            aria-pressed={vozAuto} aria-label={vozAuto ? 'Pingo lê sozinho: ligado' : 'Pingo lê sozinho: desligado'} title="O Pingo lê as falas sozinho">
-            {vozAuto ? '🔊' : '🔈'}
-          </button>
-        )}
       </div>
       <p className="passo-kicker licao-kicker">{licao.passo === 0 ? 'Conhecer o cubo' : `Passo ${licao.passo}`} · {licao.titulo}</p>
 
@@ -234,7 +222,6 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
         <Mascot mood={acertou ? 'festa' : tela.mood ?? 'oi'} size={84} />
         <div className="bubble">
           <p aria-live="polite"><Rico t={tela.fala} /></p>
-          {temVoz() && <button className="ouvir" onClick={() => falar(tela.fala)} aria-label="Ouvir o Pingo">🔊 Ouvir</button>}
         </div>
       </div>
 
@@ -300,7 +287,7 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
         </div>
       )}
 
-      {fazendo && tf.tipo === 'missao' && <Missao passo={tf.passo} letras={letras} sound={sound} vozAuto={vozAuto} onFeito={() => acerto(tela.acerto)} />}
+      {fazendo && tf.tipo === 'missao' && <Missao passo={tf.passo} letras={letras} sound={sound} onFeito={() => acerto(tela.acerto)} />}
 
       {acertou && (
         <section className="card licao-ok" aria-live="polite">
@@ -314,8 +301,8 @@ export function LicaoView({ licao, sound, ultimaDoPasso, proxima, onSair, onConc
 
 /** missão no cubo de verdade: escolhe pela imagem a situação do seu cubo, vê o que fazer, faz no cubo; repete até completar */
 const DE_BAIXO = new Set(['1.base']);
-function Missao({ passo, letras, sound, vozAuto, onFeito }: {
-  passo: number; letras: boolean; sound: boolean; vozAuto: boolean; onFeito: () => void;
+function Missao({ passo, letras, sound, onFeito }: {
+  passo: number; letras: boolean; sound: boolean; onFeito: () => void;
 }) {
   const p = PASSOS.find(x => x.n === passo)!;
   const total = p.total ?? 4;
@@ -357,8 +344,6 @@ function Missao({ passo, letras, sound, vozAuto, onFeito }: {
   // a seta mostra o giro da vez no cubo da tela, para comparar com o seu
   useEffect(() => { if (caso && !tocando) scene.current?.hint(k < caso.lances.length && !ehGiroInteiro(caso.lances[k].m) ? caso.lances[k].m : null); }, [caso, k, tocando, cena]);
   useEffect(() => { if (caso) setTimeout(() => document.querySelector('.missao .stage')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80); }, [caso]);
-  useEffect(() => { if (caso && vozAuto) falar(caso.ver); }, [caso, vozAuto]);
-  useEffect(() => { if (caso && vozAuto && k < caso.lances.length) falar(`${describe(caso.lances[k].m)}. ${caso.lances[k].fala}`); }, [caso, k, vozAuto]);
 
   const contar = () => {
     const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null); setK(0);

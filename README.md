@@ -51,7 +51,7 @@ Aprender como numa boa aula: um passo de cada vez, vendo as situações que pode
 
 ## 🗺️ A trilha
 
-**Em passos de formiga.** A trilha inteira é feita de lições curtinhas (uns 2 minutos cada), com uma ideia por tela, para fazer tudo no cubo da tela, sem precisar de cubo. Cada tela só avança quando a pessoa *faz* algo: tocar na peça certa, girar a face pedida, responder uma pergunta. O Pingo pode ler as falas em voz alta, com a voz do próprio aparelho.
+**Em passos de formiga.** A trilha inteira é feita de lições curtinhas (uns 2 minutos cada), com uma ideia por tela, para fazer tudo no cubo da tela, sem precisar de cubo. Cada tela só avança quando a pessoa *faz* algo: tocar na peça certa, girar a face pedida, responder uma pergunta.
 
 - **Conhecer o cubo** (7 lições): faces e cores, centros, meios e quinas, como segurar, e os giros do topo, da direita e da frente.
 - **Cada passo** tem: o objetivo, os gestos novos que ele pede (cubo inteiro, esquerda, letras, base, tombar), uma lição por situação (olhar, ver o Pingo fazer, fazer, repetir), "Qual é a situação?" e o passo inteiro do começo ao fim.
@@ -152,7 +152,6 @@ O Giro a Giro é um **PWA**: instalado, ele ganha ícone, abre em tela cheia e f
 1. 🤖 **App Android na Google Play**: o mesmo PWA, empacotado (teste fechado com 12 pessoas por 14 dias)
 2. 🛡️ **App Check do Firebase**: proteção extra da nuvem, perto do lançamento
 3. 📐 **Tablet**: telas aproveitando o espaço maior (cubo e instruções lado a lado)
-4. 🦯 **Acessível para pessoas cegas**: compatível com leitor de tela, com o Pingo falando as instruções em voz e pensado para cubos táteis
 
 ---
 

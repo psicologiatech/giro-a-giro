@@ -3,12 +3,13 @@ import { Cube3D } from '../components/Cube3D';
 import { Mascot } from '../components/Mascot';
 import { Confetti } from '../components/Confetti';
 import type { CubeScene } from '../cube/CubeScene';
-import { applyMove, clone, facelets, invertMove, type CubeState, type Face, type Piece } from '../cube/model';
+import { applyAlg, applyMove, clone, facelets, invertMove, type CubeState, type Face, type Piece } from '../cube/model';
 import { describe } from '../cube/describe';
 import { PASSOS, greyKeys, setupOf, type Caso } from '../aulas/aulas';
 import { sfx, buzz } from '../feedback';
 import { chavesDe, ehGiroInteiro, expandir, pecaEm, type Licao, type Tela } from '../licoes/tipos';
 import { CuboMini } from '../components/CuboMini';
+import { TopoMini } from '../components/TopoMini';
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const ELOGIOS = ['Isso!', 'Certo!', 'Boa!', 'Muito bem!'];
@@ -316,10 +317,14 @@ function Missao({ passo, letras, sound, onFeito }: {
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const foco = (x: Piece) => p.foco(x);
   const imagens = useMemo(() => p.casos.map(c => setupOf(p, c)), [p]);
+  // do passo 5 em diante, a imagem é a face amarela vista de frente, com os lados em volta.
+  // No passo 7 o amarelo fica de frente para você: tomba a imagem para mostrar essa face.
+  const vistaTopo = useMemo(() => imagens.map(s => (passo === 7 ? applyAlg(s, 'x') : s)), [imagens, passo]);
   const nome = (m: string) => letras ? `${describe(m)} · ${m}` : describe(m);
 
   /** passo a passo: a pessoa faz um giro no cubo dela e toca em "Fiz"; o cubo da tela faz o mesmo giro */
   const [k, setK] = useState(0);
+  const [naoIgual, setNaoIgual] = useState(false);
   const [cena, setCena] = useState(0);   // muda quando o cubo da tela fica pronto
   const pintarSetup = (c: Caso) => {
     const sc = scene.current; if (!sc) return;
@@ -340,18 +345,23 @@ function Missao({ passo, letras, sound, onFeito }: {
   };
   const proximo = async () => { if (!caso || tocando || k >= caso.lances.length) return; await girar(caso.lances[k].m); setK(k + 1); };
   const anterior = async () => { if (!caso || tocando || k === 0) return; await girar(caso.lances[k - 1].m, true); setK(k - 1); };
-  const recomecar = () => { if (!caso) return; setK(0); pintarSetup(caso); setCena(c => c + 1); };
+  const recomecar = () => { if (!caso) return; setK(0); setNaoIgual(false); pintarSetup(caso); setCena(c => c + 1); };
+  const outraImagem = () => { setCaso(null); setK(0); setNaoIgual(false); };
   // a seta mostra o giro da vez no cubo da tela, para comparar com o seu
   useEffect(() => { if (caso && !tocando) scene.current?.hint(k < caso.lances.length && !ehGiroInteiro(caso.lances[k].m) ? caso.lances[k].m : null); }, [caso, k, tocando, cena]);
   useEffect(() => { if (caso) setTimeout(() => document.querySelector('.missao .stage')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80); }, [caso]);
 
   const contar = () => {
-    const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null); setK(0);
+    const n = feitas + 1; setFeitas(n); setCaso(null); setAviso(null); setK(0); setNaoIgual(false);
     if (sound) sfx.good(); buzz(20);
     if (n >= total) onFeito();
   };
   const fiz = () => {
-    if (caso?.depois) { setCaso(null); setK(0); setAviso('Boa! Agora olhe o seu cubo de novo e escolha a imagem da situação nova.'); if (sound) sfx.click(); return; }
+    if (caso?.depois) {
+      setCaso(null); setK(0); setNaoIgual(false);
+      setAviso(`Boa! ${caso.depois.replace(/^Faça igual no seu cubo\.\s*/, '')}`);
+      if (sound) sfx.click(); return;
+    }
     contar();
   };
 
@@ -366,11 +376,20 @@ function Missao({ passo, letras, sound, onFeito }: {
         <>
           {aviso && <p className="vez-msg sua">{aviso}</p>}
           <h3 className="sec-title">{total > 1 && feitas > 0 ? `${feitas} de ${total}! Qual imagem parece com a próxima peça no seu cubo?` : 'Qual imagem parece com o seu cubo?'}</h3>
+          {passo >= 5 && (
+            <p className="note casos-legenda">
+              {passo === 7
+                ? 'Desenhos da face amarela de frente para você. As faixas em volta são os lados do cubo; a de baixo é o lado apoiado na mesa.'
+                : 'Desenhos do topo visto de cima. As faixas em volta são os lados do cubo; a de baixo é a frente, o lado virado para você.'}
+            </p>
+          )}
           <ul className="casos-img">
             {p.casos.map((c, k) => (
               <li key={c.id}>
                 <button className="caso-img" onClick={() => { setK(0); setCaso(c); }}>
-                  <CuboMini estado={imagens[k]} foco={foco} deBaixo={DE_BAIXO.has(`${passo}.${c.id}`)} tamanho={104} />
+                  {passo >= 5
+                    ? <TopoMini estado={vistaTopo[k]} foco={foco} modo={passo <= 6 ? 'amarelo' : 'cores'} tamanho={112} rotulo={c.nome} perto={passo === 7 ? 'embaixo' : 'frente'} />
+                    : <CuboMini estado={imagens[k]} foco={foco} deBaixo={DE_BAIXO.has(`${passo}.${c.id}`)} tamanho={104} />}
                   <span>{c.nome}</span>
                 </button>
               </li>
@@ -398,13 +417,24 @@ function Missao({ passo, letras, sound, onFeito }: {
             </section>
           ) : (
             <section className="card missao-agora pronto" aria-live="polite">
-              <b>Todos os giros feitos!</b>
-              <span>Seu cubo está igual ao da tela?</span>
-              <button className="btn btn-pop btn-big" onClick={fiz}>Sim, ficou igual</button>
-              <button className="btn" onClick={recomecar}>Não: ver do começo</button>
+              {!naoIgual ? (
+                <>
+                  <b>Todos os giros feitos!</b>
+                  <span>Seu cubo está igual ao da tela?</span>
+                  <button className="btn btn-pop btn-big" onClick={fiz}>Sim, ficou igual</button>
+                  <button className="btn" onClick={() => setNaoIgual(true)}>Não ficou igual</button>
+                </>
+              ) : (
+                <>
+                  <b>Sem problema, acontece muito.</b>
+                  <span>Se o seu cubo mudou para outra situação, é só escolher a imagem de novo e seguir dela. Se acha que errou algum giro, veja os giros do começo.</span>
+                  <button className="btn btn-pop btn-big" onClick={outraImagem}>Escolher a imagem de novo</button>
+                  <button className="btn" onClick={recomecar}>Ver os giros do começo</button>
+                </>
+              )}
             </section>
           )}
-          <button className="link-btn" onClick={() => { setCaso(null); setK(0); }} disabled={tocando}>Escolher outra imagem</button>
+          <button className="link-btn" onClick={outraImagem} disabled={tocando}>Escolher outra imagem</button>
         </>
       )}
     </div>
